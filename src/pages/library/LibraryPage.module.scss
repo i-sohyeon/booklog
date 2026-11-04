@@ -1,0 +1,106 @@
+.toolbar {
+  position: sticky;
+  top: calc(var(--header-height) + env(safe-area-inset-top));
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  margin-inline: calc(var(--page-gutter) * -1);
+  padding-inline: var(--page-gutter);
+  background: var(--color-bg);
+  @include up('md') {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    > [role='tablist'] {
+      flex: 1;
+      border-bottom: 0;
+    }
+  }
+  @include up('lg') {
+    top: 0;
+  }
+}
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  @include up('md') {
+    padding-block: var(--space-1);
+  }
+}
+.sort select {
+  height: 36px;
+  padding: 0 var(--space-8) 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23736a5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  appearance: none;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.viewToggle {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+  button {
+    border-radius: 6px;
+    &[aria-pressed='true'] {
+      background: var(--color-surface);
+      color: var(--color-text);
+      box-shadow: var(--shadow-xs);
+    }
+  }
+}
+
+.panel {
+  padding-top: var(--space-4);
+  @include up('md') {
+    padding-top: var(--space-8);
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6) var(--space-4);
+  @include up('sm') {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  @include up('md') {
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-8) var(--space-6);
+  }
+  @include up('xl') {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.list {
+  max-width: 760px;
+}
+.listProgress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 140px;
+  span {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
+.date {
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+}

@@ -1,0 +1,125 @@
+.cover {
+  --cover-bg: var(--plum-700);
+  --cover-fg: #f3e9fb;
+  --cover-accent: rgb(255 255 255 / 0.18);
+  position: relative;
+  flex-shrink: 0;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-cover);
+  overflow: hidden;
+  background: var(--cover-bg);
+  color: var(--cover-fg);
+  box-shadow: var(--shadow-cover);
+  container-type: inline-size;
+  isolation: isolate;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.xs { width: 40px; }
+.sm { width: 56px; }
+.md { width: 88px; }
+.lg { width: 120px; }
+.xl { width: 160px; }
+.fluid { width: 100%; }
+
+// 책등 음영 — 실제 책의 입체감을 표현
+.spine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgb(0 0 0 / 0.22) 0%,
+    rgb(255 255 255 / 0.14) 3%,
+    rgb(0 0 0 / 0.06) 6%,
+    transparent 12%,
+    transparent 92%,
+    rgb(0 0 0 / 0.06) 100%
+  );
+  z-index: 2;
+}
+
+.generated {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 11cqw 10cqw 9cqw 14cqw;
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 11.5cqw;
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+  @include line-clamp(4);
+}
+
+.author {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  font-size: 7.5cqw;
+  font-weight: 500;
+  opacity: 0.82;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ornament {
+  position: absolute;
+  z-index: 0;
+}
+
+// ---- layouts ----
+.cover[data-layout='classic'] {
+  .title {
+    padding-top: 6cqw;
+    border-top: 1.5cqw solid var(--cover-accent);
+  }
+}
+.cover[data-layout='band'] {
+  .ornament {
+    left: 0;
+    right: 0;
+    top: 58%;
+    height: 14%;
+    background: var(--cover-accent);
+  }
+}
+.cover[data-layout='orb'] {
+  .ornament {
+    width: 72cqw;
+    height: 72cqw;
+    right: -18cqw;
+    bottom: 14cqw;
+    border-radius: 50%;
+    background: var(--cover-accent);
+  }
+}
+
+// 작은 표지에서는 제목만 남기고 단순화
+.xs .author,
+.sm .author {
+  display: none;
+}
+
+// ---- tones ----
+.cover[data-tone='plum'] { --cover-bg: #4a1f73; --cover-fg: #f3e9fb; --cover-accent: rgb(227 169 75 / 0.55); }
+.cover[data-tone='forest'] { --cover-bg: #26473b; --cover-fg: #eaf2ea; --cover-accent: rgb(234 242 234 / 0.16); }
+.cover[data-tone='navy'] { --cover-bg: #1e2a47; --cover-fg: #e8ecf5; --cover-accent: rgb(232 236 245 / 0.14); }
+.cover[data-tone='clay'] { --cover-bg: #a5492d; --cover-fg: #fbede6; --cover-accent: rgb(251 237 230 / 0.2); }
+.cover[data-tone='mustard'] { --cover-bg: #d9a441; --cover-fg: #2a2112; --cover-accent: rgb(42 33 18 / 0.14); }
+.cover[data-tone='charcoal'] { --cover-bg: #2c2926; --cover-fg: #f1ece4; --cover-accent: rgb(227 169 75 / 0.4); }
+.cover[data-tone='rose'] { --cover-bg: #e2b4ad; --cover-fg: #3a1f1c; --cover-accent: rgb(58 31 28 / 0.12); }
+.cover[data-tone='sea'] { --cover-bg: #3f7a84; --cover-fg: #eaf5f6; --cover-accent: rgb(234 245 246 / 0.18); }

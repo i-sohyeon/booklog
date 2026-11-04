@@ -1,0 +1,116 @@
+.card {
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--color-border);
+}
+.header {
+  margin-bottom: var(--space-5);
+}
+
+.goal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px dashed var(--color-border-strong);
+}
+.ringValue {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ringUnit {
+  margin-top: 4px;
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+}
+.goalText {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.goalRate {
+  font-family: var(--font-serif);
+  font-size: var(--text-title-1);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-brand);
+  small {
+    font-size: 0.55em;
+  }
+}
+.goalDesc {
+  margin-top: var(--space-2);
+  padding-right: var(--space-8);
+  font-size: var(--text-caption);
+  line-height: var(--leading-snug);
+  color: var(--color-text-secondary);
+}
+.edit {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
+.monthHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-6);
+}
+.monthTitle {
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+.streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding-inline: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--ochre-100);
+  color: #7a4f0f;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  svg {
+    width: 14px;
+    height: 14px;
+    color: var(--ochre-600);
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: var(--space-4) 0 var(--space-5);
+  > div {
+    padding-inline: var(--space-3);
+    &:first-child {
+      padding-left: 0;
+    }
+    & + div {
+      border-left: 1px solid var(--color-border);
+    }
+  }
+  dt {
+    font-size: var(--text-micro);
+    color: var(--color-text-tertiary);
+  }
+  dd {
+    margin-top: 2px;
+    font-size: var(--text-title-2);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--tracking-tight);
+    small {
+      margin-left: 2px;
+      font-size: var(--text-micro);
+      font-weight: 500;
+      color: var(--color-text-tertiary);
+    }
+  }
+}

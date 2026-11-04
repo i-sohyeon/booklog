@@ -1,0 +1,12 @@
+.grid {
+  display: grid;
+  gap: var(--space-4);
+  @include up('sm') {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.error {
+  margin-top: var(--space-3);
+  font-size: var(--text-caption);
+  color: var(--color-danger);
+}

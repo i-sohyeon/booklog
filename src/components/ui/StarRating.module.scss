@@ -1,0 +1,53 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+.stars {
+  display: inline-flex;
+  gap: 1px;
+}
+.star {
+  position: relative;
+  display: inline-block;
+  width: var(--star);
+  height: var(--star);
+  svg {
+    width: var(--star);
+    height: var(--star);
+  }
+}
+.empty {
+  color: var(--paper-300);
+  fill: var(--paper-300);
+}
+.full {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  color: var(--color-accent);
+  svg {
+    fill: currentColor;
+  }
+}
+.sm { --star: 13px; }
+.md { --star: 18px; }
+.lg { --star: 30px; .stars { gap: 4px; } }
+
+.hits {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+}
+.hit {
+  cursor: pointer;
+  &:has(input:focus-visible) {
+    @include focus-ring;
+    border-radius: 2px;
+  }
+}

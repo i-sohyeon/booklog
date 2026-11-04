@@ -1,0 +1,20 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding-inline: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--ochre-100);
+  color: #7a4f0f;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  white-space: nowrap;
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+  &:hover {
+    background: #f5e3bf;
+  }
+}

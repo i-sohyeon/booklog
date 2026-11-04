@@ -1,0 +1,38 @@
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.text {
+  min-width: 0;
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--text-title-2);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+.desc {
+  margin-top: var(--space-1);
+  font-size: var(--text-label);
+  color: var(--color-text-tertiary);
+}
+.more {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 32px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  &:hover {
+    color: var(--color-text);
+  }
+}

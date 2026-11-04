@@ -1,0 +1,57 @@
+.masthead {
+  padding-block: var(--space-6) var(--space-8);
+  @include up('lg') {
+    padding-top: 0;
+    padding-bottom: var(--space-10);
+  }
+}
+.date {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+}
+.name {
+  color: var(--color-text-brand);
+}
+.lede {
+  margin-top: var(--space-3);
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}
+
+.onboarding {
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  margin-bottom: var(--space-12);
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-12);
+  grid-template-areas:
+    'reading'
+    'overview'
+    'notes';
+  @include up('lg') {
+    grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
+    grid-template-areas:
+      'reading overview'
+      'notes overview';
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-10);
+    row-gap: var(--space-12);
+    align-items: start;
+  }
+}
+.reading { grid-area: reading; min-width: 0; }
+.overview {
+  grid-area: overview;
+  min-width: 0;
+  @include up('lg') {
+    position: sticky;
+    top: var(--space-10);
+  }
+}
+.notes { grid-area: notes; min-width: 0; }

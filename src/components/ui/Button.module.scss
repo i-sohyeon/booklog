@@ -1,0 +1,179 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  letter-spacing: var(--tracking-snug);
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  &:disabled,
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  svg {
+    width: 1.15em;
+    height: 1.15em;
+    flex-shrink: 0;
+  }
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+}
+
+// ---- sizes (터치 타깃 최소 44px 확보: md 이상) ----
+.sm {
+  min-height: 36px;
+  padding-inline: var(--space-4);
+  font-size: var(--text-caption);
+}
+.md {
+  min-height: 44px;
+  padding-inline: var(--space-5);
+  font-size: var(--text-label);
+}
+.lg {
+  min-height: 52px;
+  padding-inline: var(--space-6);
+  font-size: var(--text-body-lg);
+}
+.block {
+  display: flex;
+  width: 100%;
+}
+
+// ---- variants ----
+.primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--color-primary-hover);
+    }
+  }
+  &:active:not(:disabled) {
+    background: var(--color-primary-pressed);
+  }
+}
+.secondary {
+  background: var(--color-primary-subtle);
+  color: var(--color-text-brand);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--color-primary-muted);
+    }
+  }
+}
+.outline {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      border-color: var(--ink-400);
+      background: var(--color-surface-hover);
+    }
+  }
+}
+.ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--color-surface-sunken);
+      color: var(--color-text);
+    }
+  }
+}
+.danger {
+  background: var(--clay-100);
+  color: var(--color-danger);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: #f3d3c7;
+    }
+  }
+}
+
+.spinner {
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ---- Icon button ----
+.icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+.icon-md {
+  width: 44px;
+  height: 44px;
+}
+.icon-sm {
+  width: 36px;
+  height: 36px;
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+.icon-ghost {
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--color-surface-sunken);
+      color: var(--color-text);
+    }
+  }
+}
+.icon-soft {
+  background: var(--color-surface-sunken);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--paper-200);
+      color: var(--color-text);
+    }
+  }
+}
+.icon-solid {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+}

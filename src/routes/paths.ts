@@ -1,0 +1,22 @@
+/** 모든 경로를 한 곳에서 관리 (문자열 하드코딩 방지) */
+export const paths = {
+  home: '/',
+  library: '/library',
+  search: '/search',
+  book: (bookId: string) => `/books/${encodeURIComponent(bookId)}`,
+  bookRecord: (bookId: string) => `/books/${encodeURIComponent(bookId)}/record`,
+  noteNew: (bookId: string, kind: 'memo' | 'quote' = 'memo') => `/books/${encodeURIComponent(bookId)}/notes/new?kind=${kind}`,
+  noteEdit: (bookId: string, noteId: string) => `/books/${encodeURIComponent(bookId)}/notes/${encodeURIComponent(noteId)}`,
+  review: (bookId: string) => `/books/${encodeURIComponent(bookId)}/review`,
+  notes: '/notes',
+  stats: '/stats',
+  feed: '/feed',
+  user: (handle: string) => `/users/${encodeURIComponent(handle)}`,
+  clubs: '/clubs',
+  club: (clubId: string) => `/clubs/${encodeURIComponent(clubId)}`,
+  me: '/me',
+  login: '/login',
+  signup: '/signup',
+  resetPassword: '/reset-password',
+  updatePassword: '/account/password',
+} as const;

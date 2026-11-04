@@ -1,0 +1,43 @@
+.bar {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--paper-200);
+}
+.sm { height: 4px; }
+.md { height: 6px; }
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  transition: width var(--duration-slow) var(--ease-out);
+}
+.brand .fill { background: var(--color-primary); }
+.accent .fill { background: var(--color-accent); }
+
+.ring {
+  position: relative;
+  flex-shrink: 0;
+  svg {
+    transform: rotate(-90deg);
+  }
+}
+.track {
+  fill: none;
+  stroke: var(--paper-200);
+}
+.indicator {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 800ms var(--ease-out);
+}
+.ringContent {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
