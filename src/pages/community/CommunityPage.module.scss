@@ -1,0 +1,16 @@
+.desktopAction {
+  display: none;
+  @include up('lg') {
+    display: contents;
+  }
+}
+.panel {
+  margin-top: var(--space-5);
+}
+.filters {
+  margin-block: var(--space-5) var(--space-3);
+}
+.posts {
+  display: flex;
+  flex-direction: column;
+}

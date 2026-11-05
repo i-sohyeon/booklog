@@ -1,0 +1,31 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding-inline: 6px;
+  margin-left: -6px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--duration-fast) var(--ease-out);
+  svg {
+    width: 16px;
+    height: 16px;
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  &:hover {
+    color: var(--color-text);
+  }
+}
+.liked {
+  color: var(--clay-600);
+  svg {
+    fill: currentColor;
+    transform: scale(1.08);
+  }
+  &:hover {
+    color: var(--clay-600);
+  }
+}

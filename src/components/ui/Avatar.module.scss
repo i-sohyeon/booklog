@@ -4,16 +4,20 @@
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--plum-200), var(--ochre-100));
-  color: var(--plum-800);
-  font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: var(--font-bold);
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
+  &[data-tone='plum'] { background: var(--plum-100); color: var(--plum-800); }
+  &[data-tone='ochre'] { background: var(--ochre-100); color: #6b4510; }
+  &[data-tone='sage'] { background: var(--sage-100); color: #2d5a3c; }
+  &[data-tone='clay'] { background: var(--clay-100); color: #8a3520; }
+  &[data-tone='sea'] { background: #ddecee; color: #2c5d64; }
+  &[data-tone='ink'] { background: var(--paper-200); color: var(--ink-700); }
 }
+.xs { width: 24px; height: 24px; font-size: 11px; }
 .sm { width: 32px; height: 32px; font-size: 13px; }
 .md { width: 40px; height: 40px; font-size: 16px; }
 .lg { width: 72px; height: 72px; font-size: 28px; }

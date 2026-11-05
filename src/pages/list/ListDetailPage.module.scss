@@ -1,0 +1,27 @@
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: calc(var(--space-3) * -1);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+  strong {
+    color: var(--color-text-secondary);
+  }
+}
+.spacer {
+  flex: 1;
+}
+.books {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.addSheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 280px;
+}

@@ -6,7 +6,7 @@
   gap: var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--radius-full);
-  font-weight: 600;
+  font-weight: var(--font-bold);
   letter-spacing: var(--tracking-snug);
   white-space: nowrap;
   user-select: none;

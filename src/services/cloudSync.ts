@@ -1,4 +1,4 @@
-import type { Book, Genre, LibraryEntry, ReadingGoal, ReadingNote, ReadingSession } from '@/types/book';
+import type { Book, Genre, LibraryEntry, Quote, RecordVisibility } from '@/types/book';
 import { supabase } from '@/lib/supabase';
 import { AuthNotConfiguredError } from './auth';
 import type { LibraryState } from '@/store/libraryStore';
@@ -7,8 +7,8 @@ import type { LibraryState } from '@/store/libraryStore';
  * 로컬(브라우저) 서재 ↔ Supabase 계정 데이터 이관.
  * 테이블 정의: supabase/schema.sql
  *
- * 현재는 사용자가 직접 실행하는 "올리기 / 불러오기" 방식입니다.
- * 실시간 자동 동기화는 다음 단계에서 스토어 액션 단위로 확장합니다.
+ * 서재 기록만 옮깁니다. 문장 사진은 아직 기기에만 남고(텍스트만 이관),
+ * 커뮤니티·모임은 서버 테이블이 생긴 뒤 연결합니다.
  */
 type Snapshot = Omit<LibraryState, 'dataSource'>;
 
@@ -34,37 +34,17 @@ interface EntryRow {
   status: LibraryEntry['status'];
   added_at: string;
   updated_at: string;
-  started_at: string | null;
   finished_at: string | null;
-  current_page: number;
   rating: number | null;
+  one_liner: string | null;
   review: string | null;
-  review_visibility: LibraryEntry['reviewVisibility'] | null;
-}
-
-interface NoteRow {
-  id: string;
-  user_id: string;
-  book_id: string;
-  kind: ReadingNote['kind'];
-  content: string;
-  page: number | null;
-  visibility: ReadingNote['visibility'];
-  created_at: string;
-  updated_at: string | null;
-}
-
-interface SessionRow {
-  user_id: string;
-  date: string;
-  book_id: string;
-  pages: number;
-}
-
-interface GoalRow {
-  user_id: string;
-  year: number;
-  target_books: number;
+  spoiler: boolean;
+  quotes: Quote[];
+  place: string | null;
+  occasion: string | null;
+  tags: string[];
+  read_count: number;
+  visibility: RecordVisibility;
 }
 
 const toBookRow = (b: Book): BookRow => ({
@@ -111,14 +91,13 @@ function check<T>(res: { data: T; error: { message: string } | null }): T {
 
 const inList = (ids: string[]) => `(${ids.map((id) => `"${id.replace(/"/g, '\\"')}"`).join(',')})`;
 
-/** 이 기기의 서재로 계정 데이터를 덮어씁니다 (서재/메모 기준 — 기기에 없는 항목은 계정에서 삭제) */
-export async function uploadLibrary(userId: string, s: Snapshot): Promise<{ books: number; notes: number }> {
+/** 이 기기의 서재로 계정 데이터를 덮어씁니다 (기기에 없는 책은 계정에서 삭제) */
+export async function uploadLibrary(userId: string, s: Snapshot): Promise<{ books: number }> {
   const db = client();
-  const books = Object.values(s.books).filter((b) => s.entries[b.id]);
   const entries = Object.values(s.entries).filter((e) => s.books[e.bookId]);
+  const books = entries.map((e) => s.books[e.bookId]!);
 
   if (books.length) check(await db.from('books').upsert(books.map(toBookRow)));
-
   if (entries.length) {
     const rows: EntryRow[] = entries.map((e) => ({
       user_id: userId,
@@ -126,71 +105,33 @@ export async function uploadLibrary(userId: string, s: Snapshot): Promise<{ book
       status: e.status,
       added_at: e.addedAt,
       updated_at: e.updatedAt,
-      started_at: e.startedAt ?? null,
       finished_at: e.finishedAt ?? null,
-      current_page: e.currentPage,
       rating: e.rating ?? null,
+      one_liner: e.oneLiner ?? null,
       review: e.review ?? null,
-      review_visibility: e.reviewVisibility ?? null,
+      spoiler: Boolean(e.spoiler),
+      // 사진은 용량 문제로 아직 올리지 않음 — 텍스트 문장만
+      quotes: (e.quotes ?? []).filter((q) => q.text).map(({ id, text, createdAt }) => ({ id, text, createdAt })),
+      place: e.place ?? null,
+      occasion: e.occasion ?? null,
+      tags: e.tags ?? [],
+      read_count: e.readCount ?? 1,
+      visibility: e.visibility ?? {},
     }));
     check(await db.from('library_entries').upsert(rows));
     check(await db.from('library_entries').delete().eq('user_id', userId).not('book_id', 'in', inList(entries.map((e) => e.bookId))));
   } else {
     check(await db.from('library_entries').delete().eq('user_id', userId));
   }
-
-  const notes = s.notes.filter((n) => s.entries[n.bookId]);
-  if (notes.length) {
-    const rows: NoteRow[] = notes.map((n) => ({
-      id: n.id,
-      user_id: userId,
-      book_id: n.bookId,
-      kind: n.kind,
-      content: n.content,
-      page: n.page ?? null,
-      visibility: n.visibility,
-      created_at: n.createdAt,
-      updated_at: n.updatedAt ?? null,
-    }));
-    check(await db.from('reading_notes').upsert(rows));
-    check(await db.from('reading_notes').delete().eq('user_id', userId).not('id', 'in', inList(notes.map((n) => n.id))));
-  } else {
-    check(await db.from('reading_notes').delete().eq('user_id', userId));
-  }
-
-  const sessions = s.sessions.filter((x) => s.entries[x.bookId] && x.pages > 0);
-  if (sessions.length) {
-    const rows: SessionRow[] = sessions.map((x) => ({ user_id: userId, date: x.date, book_id: x.bookId, pages: x.pages }));
-    check(await db.from('reading_sessions').upsert(rows));
-  }
-
-  const goal: GoalRow = { user_id: userId, year: s.goal.year, target_books: s.goal.targetBooks };
-  check(await db.from('reading_goals').upsert(goal));
-
-  return { books: entries.length, notes: notes.length };
+  return { books: entries.length };
 }
 
 /** 계정에 저장된 서재를 내려받습니다 */
 export async function downloadLibrary(userId: string): Promise<Snapshot> {
   const db = client();
-  const [entries, notes, sessions, goals] = await Promise.all([
-    db.from('library_entries').select('*').eq('user_id', userId),
-    db.from('reading_notes').select('*').eq('user_id', userId),
-    db.from('reading_sessions').select('*').eq('user_id', userId),
-    db.from('reading_goals').select('*').eq('user_id', userId),
-  ]);
-  const entryRows = check(entries) as EntryRow[];
-  const noteRows = check(notes) as NoteRow[];
-  const sessionRows = check(sessions) as SessionRow[];
-  const goalRows = check(goals) as GoalRow[];
-
+  const entryRows = check(await db.from('library_entries').select('*').eq('user_id', userId)) as EntryRow[];
   const bookIds = entryRows.map((e) => e.book_id);
   const bookRows = bookIds.length ? (check(await db.from('books').select('*').in('id', bookIds)) as BookRow[]) : [];
-
-  const year = new Date().getFullYear();
-  const goalRow = goalRows.find((g) => g.year === year);
-  const goal: ReadingGoal = { year, targetBooks: goalRow?.target_books ?? 12 };
-
   return {
     books: Object.fromEntries(bookRows.map((r) => [r.id, fromBookRow(r)])),
     entries: Object.fromEntries(
@@ -201,29 +142,20 @@ export async function downloadLibrary(userId: string): Promise<Snapshot> {
           status: r.status,
           addedAt: r.added_at,
           updatedAt: r.updated_at,
-          startedAt: r.started_at ?? undefined,
           finishedAt: r.finished_at ?? undefined,
-          currentPage: r.current_page,
           rating: r.rating !== null ? Number(r.rating) : undefined,
+          oneLiner: r.one_liner ?? undefined,
           review: r.review ?? undefined,
-          reviewVisibility: r.review_visibility ?? undefined,
+          spoiler: r.spoiler || undefined,
+          quotes: r.quotes?.length ? r.quotes : undefined,
+          place: r.place ?? undefined,
+          occasion: r.occasion ?? undefined,
+          tags: r.tags?.length ? r.tags : undefined,
+          readCount: r.read_count > 1 ? r.read_count : undefined,
+          visibility: r.visibility ?? undefined,
         } satisfies LibraryEntry,
       ]),
     ),
-    notes: noteRows.map(
-      (r): ReadingNote => ({
-        id: r.id,
-        bookId: r.book_id,
-        kind: r.kind,
-        content: r.content,
-        page: r.page ?? undefined,
-        visibility: r.visibility,
-        createdAt: r.created_at,
-        updatedAt: r.updated_at ?? undefined,
-      }),
-    ),
-    sessions: sessionRows.map((r): ReadingSession => ({ date: r.date, bookId: r.book_id, pages: r.pages })),
-    goal,
   };
 }
 

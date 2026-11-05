@@ -1,6 +1,6 @@
 import type { UserProfile } from '@/types/user';
 
-/** [SAMPLE] 로그인/Supabase 연결 전 임시 사용자 */
+/** [SAMPLE] 로그인 전 임시 사용자 */
 export const SAMPLE_USER: UserProfile = {
   id: 'user-sample',
   nickname: '소현',

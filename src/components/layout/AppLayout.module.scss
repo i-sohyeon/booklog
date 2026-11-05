@@ -42,13 +42,18 @@
   align-items: center;
   gap: var(--space-3);
 }
-.headerAvatar {
+.headerIcon {
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
-  margin-right: -6px;
+  margin-right: -10px;
   border-radius: 50%;
+  color: var(--color-text);
+  svg {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 // ---------- Main ----------
@@ -87,16 +92,6 @@
   flex-direction: column;
   gap: 2px;
 }
-.sideGroup {
-  margin: var(--space-5) var(--space-3) var(--space-2);
-  font-size: var(--text-micro);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-text-tertiary);
-  &:first-child {
-    margin-top: 0;
-  }
-}
 .sideLink {
   display: flex;
   align-items: center;
@@ -105,7 +100,7 @@
   padding-inline: var(--space-3);
   border-radius: var(--radius-sm);
   font-size: var(--text-body);
-  font-weight: 500;
+  font-weight: var(--font-medium);
   color: var(--color-text-secondary);
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
   svg {
@@ -118,20 +113,13 @@
     color: var(--color-text);
   }
   &.active {
-    background: var(--color-surface);
+    background: var(--paper-200);
     color: var(--color-text);
-    font-weight: 600;
-    box-shadow: var(--shadow-xs), inset 0 0 0 1px var(--color-border);
-    svg {
-      color: var(--color-primary);
-    }
+    font-weight: var(--font-bold);
   }
 }
-.soon {
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-tertiary);
+.sideRecord {
+  margin: var(--space-6) var(--space-1) 0;
 }
 .sideBottom {
   margin-top: auto;
@@ -190,7 +178,7 @@
   justify-content: center;
   gap: 3px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: var(--font-medium);
   color: var(--color-text-tertiary);
   transition: color var(--duration-fast) var(--ease-out);
   svg {
@@ -200,19 +188,10 @@
   }
   &.active {
     color: var(--color-text);
-    font-weight: 600;
+    font-weight: var(--font-bold);
     svg {
-      color: var(--color-primary);
+      color: var(--color-text);
       stroke-width: 2.1;
-    }
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      width: 24px;
-      height: 2px;
-      border-radius: 0 0 2px 2px;
-      background: var(--color-primary);
     }
   }
 }

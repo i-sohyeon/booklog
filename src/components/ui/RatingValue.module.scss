@@ -1,0 +1,26 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  svg {
+    color: var(--color-accent);
+    fill: currentColor;
+  }
+  strong {
+    font-weight: var(--font-bold);
+    color: var(--color-text);
+  }
+}
+.sm {
+  font-size: var(--text-micro);
+  svg { width: 12px; height: 12px; }
+}
+.md {
+  font-size: var(--text-label);
+  svg { width: 15px; height: 15px; }
+}
+.count {
+  color: var(--color-text-tertiary);
+}

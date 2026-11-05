@@ -1,0 +1,100 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-5);
+  & + & {
+    border-top: 1px solid var(--color-border);
+  }
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.who {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  strong {
+    font-size: var(--text-label);
+    font-weight: var(--font-bold);
+  }
+  span {
+    font-size: var(--text-micro);
+    color: var(--color-text-tertiary);
+  }
+}
+.quote {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--plum-300);
+  font-size: var(--text-body-lg);
+  line-height: 1.75;
+  cite {
+    display: block;
+    margin-top: var(--space-1);
+    font-style: normal;
+    font-size: var(--text-micro);
+    color: var(--color-text-tertiary);
+  }
+}
+.body,
+.bodyClamp {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  white-space: pre-line;
+}
+.bodyClamp {
+  @include line-clamp(4);
+}
+.tag {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  align-self: flex-start;
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+  > div {
+    width: 24px;
+  }
+  span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font-size: var(--text-micro);
+    color: var(--color-text-tertiary);
+    line-height: 1.35;
+  }
+  strong {
+    font-size: var(--text-caption);
+    font-weight: var(--font-bold);
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.comments {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}

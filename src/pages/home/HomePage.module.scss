@@ -1,57 +1,285 @@
-.masthead {
-  padding-block: var(--space-6) var(--space-8);
+.greeting {
+  padding-block: var(--space-6);
   @include up('lg') {
     padding-top: 0;
-    padding-bottom: var(--space-10);
   }
 }
 .date {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-1);
   font-size: var(--text-caption);
-  font-weight: 600;
   color: var(--color-text-tertiary);
 }
-.name {
-  color: var(--color-text-brand);
+.hello {
+  font-size: var(--text-title-1);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
 }
-.lede {
-  margin-top: var(--space-3);
+
+// ---- 오늘의 추천: 큰 표지가 주인공 ----
+.pick {
+  --tint: var(--plum-50);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-6) var(--space-8);
+  border-radius: var(--radius-xl);
+  background: var(--tint);
+  text-align: center;
+  @include up('md') {
+    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    justify-items: start;
+    column-gap: var(--space-10);
+    padding: var(--space-10);
+    text-align: left;
+  }
+  &[data-tone='forest'] { --tint: #e6eee8; }
+  &[data-tone='navy'] { --tint: #e5e8f0; }
+  &[data-tone='clay'] { --tint: #f5e6df; }
+  &[data-tone='mustard'] { --tint: #f6ecd6; }
+  &[data-tone='charcoal'] { --tint: #ece8e2; }
+  &[data-tone='rose'] { --tint: #f6e7e4; }
+  &[data-tone='sea'] { --tint: #e2eef0; }
+}
+.eyebrow {
+  font-size: var(--text-caption);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+  @include up('md') {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+  }
+}
+.pickCover {
+  width: min(176px, 48vw);
+  transition: transform var(--duration-base) var(--ease-out);
+  > div {
+    box-shadow: var(--shadow-lg);
+  }
+  &:hover {
+    transform: translateY(-4px);
+  }
+  @include up('md') {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: 100%;
+  }
+}
+.pickText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  @include up('md') {
+    grid-column: 2;
+    align-items: flex-start;
+  }
+}
+.pickTitle {
+  font-size: var(--text-title-1);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+}
+.pickAuthor {
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.pickLine {
+  margin-block: var(--space-2) var(--space-3);
+  max-width: 32ch;
   font-size: var(--text-body);
+  line-height: var(--leading-snug);
+  color: var(--color-text-secondary);
+}
+.pickActions {
+  @include up('md') {
+    grid-column: 2;
+  }
+}
+.inShelf {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-caption);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.section {
+  margin-top: var(--space-12);
+}
+.muted {
+  font-size: var(--text-label);
+  color: var(--color-text-tertiary);
+}
+
+// ---- 읽는 중: 표지 + 제목 가로 스크롤 ----
+.rail {
+  @include rail;
+  padding-bottom: var(--space-2);
+}
+.readingItem {
+  width: 112px;
+  @include up('md') {
+    width: 132px;
+  }
+}
+.readingLink {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  &:hover .readingTitle {
+    color: var(--color-text-brand);
+  }
+}
+.readingTitle {
+  font-size: var(--text-label);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-snug);
+  @include line-clamp(2);
+}
+
+// ---- 친구 피드 ----
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.feedItem {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+.feedWho {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-label);
+}
+.feedName {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.feedWhen {
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.feedRow {
+  display: flex;
+  gap: var(--space-4);
+}
+.feedCover {
+  width: 84px;
+  flex-shrink: 0;
+}
+.feedBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.feedTitle {
+  font-size: var(--text-body-lg);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-snug);
+  &:hover {
+    color: var(--color-text-brand);
+  }
+}
+.feedLine {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
   color: var(--color-text-secondary);
 }
 
-.onboarding {
-  border-radius: var(--radius-xl);
+// ---- 내 독서모임 일정 ----
+.clubs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.clubCard {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: inset 0 0 0 1px var(--color-border);
-  margin-bottom: var(--space-12);
-}
-
-.layout {
-  display: grid;
-  gap: var(--space-12);
-  grid-template-areas:
-    'reading'
-    'overview'
-    'notes';
-  @include up('lg') {
-    grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
-    grid-template-areas:
-      'reading overview'
-      'notes overview';
-    grid-template-rows: auto 1fr;
-    column-gap: var(--space-10);
-    row-gap: var(--space-12);
-    align-items: start;
+  &[data-live] {
+    box-shadow: inset 0 0 0 1.5px var(--plum-300);
   }
 }
-.reading { grid-area: reading; min-width: 0; }
-.overview {
-  grid-area: overview;
+.clubCover {
+  width: 56px;
+}
+.clubBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
-  @include up('lg') {
-    position: sticky;
-    top: var(--space-10);
+}
+.clubWhen {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-caption);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+  svg {
+    width: 14px;
+    height: 14px;
   }
 }
-.notes { grid-area: notes; min-width: 0; }
+.liveDot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--clay-600);
+  }
+}
+.clubName {
+  font-size: var(--text-body);
+  font-weight: var(--font-bold);
+  @include line-clamp(1);
+  &:hover {
+    color: var(--color-text-brand);
+  }
+}
+.clubMeta {
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.clubEnter {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+}
+.clubEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}

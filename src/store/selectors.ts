@@ -1,5 +1,6 @@
-import type { Book, LibraryEntry, ReadingNote, ReadingSession, ReadingStatus } from '@/types/book';
-import { parseDateKey, toDateKey, daysAgo } from '@/lib/date';
+import type { Book, Genre, LibraryEntry, ReadingStatus } from '@/types/book';
+import type { RatingSummary } from '@/types/social';
+import { SAMPLE_RATING_BASE } from '@/mocks/social';
 
 export interface ShelfItem {
   book: Book;
@@ -23,64 +24,55 @@ export function sortByRecent(items: ShelfItem[]): ShelfItem[] {
   return [...items].sort((a, b) => b.entry.updatedAt.localeCompare(a.entry.updatedAt));
 }
 
-export function progressOf(item: ShelfItem): number {
-  if (item.book.pageCount <= 0) return 0;
-  return Math.min(1, item.entry.currentPage / item.book.pageCount);
+/** 다 읽은 책 — 완독일 최신순 */
+export function finishedBooks(items: ShelfItem[], year?: number): ShelfItem[] {
+  return items
+    .filter((i) => i.entry.status === 'done' && i.entry.finishedAt && (!year || i.entry.finishedAt.startsWith(`${year}-`)))
+    .sort((a, b) => (b.entry.finishedAt ?? '').localeCompare(a.entry.finishedAt ?? ''));
 }
 
-export function countByStatus(items: ShelfItem[]): Record<ReadingStatus | 'all', number> {
-  const counts = { all: items.length, want: 0, reading: 0, done: 0, paused: 0 };
-  for (const i of items) counts[i.entry.status] += 1;
-  return counts;
+export interface ReadingProfile {
+  count: number;
+  averageRating: number | null;
+  genres: Array<{ name: Genre; count: number }>;
+  authors: Array<{ name: string; count: number }>;
 }
 
-/** 올해 완독한 책 */
-export function finishedInYear(items: ShelfItem[], year: number): ShelfItem[] {
-  return items.filter((i) => i.entry.status === 'done' && i.entry.finishedAt?.startsWith(`${year}-`));
-}
-
-export interface MonthSummary {
-  year: number;
-  month: number; // 0-11
-  pages: number;
-  readingDays: number;
-  finished: number;
-  /** 날짜(1~말일) → 읽은 쪽수 */
-  daily: Map<number, number>;
-}
-
-export function monthSummary(items: ShelfItem[], sessions: ReadingSession[], ref = new Date()): MonthSummary {
-  const year = ref.getFullYear();
-  const month = ref.getMonth();
-  const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
-  const daily = new Map<number, number>();
-  for (const s of sessions) {
-    if (!s.date.startsWith(prefix)) continue;
-    const day = Number(s.date.slice(8, 10));
-    daily.set(day, (daily.get(day) ?? 0) + s.pages);
+/** 마이 페이지 통계 — 권수, 평균 별점, 많이 읽은 장르·작가 */
+export function readingProfile(done: ShelfItem[]): ReadingProfile {
+  const rated = done.filter((i) => i.entry.rating);
+  const genreMap = new Map<Genre, number>();
+  const authorMap = new Map<string, number>();
+  for (const { book } of done) {
+    genreMap.set(book.genre, (genreMap.get(book.genre) ?? 0) + 1);
+    for (const a of book.authors) authorMap.set(a, (authorMap.get(a) ?? 0) + 1);
   }
-  const pages = [...daily.values()].reduce((a, b) => a + b, 0);
-  const finished = items.filter((i) => i.entry.status === 'done' && i.entry.finishedAt?.startsWith(prefix)).length;
-  return { year, month, pages, readingDays: daily.size, finished, daily };
+  const sorted = <T,>(m: Map<T, number>) => [...m.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  return {
+    count: done.length,
+    averageRating: rated.length ? rated.reduce((a, i) => a + (i.entry.rating ?? 0), 0) / rated.length : null,
+    genres: sorted(genreMap),
+    authors: sorted(authorMap).filter((a) => a.count > 0),
+  };
 }
 
-/** 오늘(또는 어제)부터 거꾸로 이어지는 연속 독서일 */
-export function readingStreak(sessions: ReadingSession[], ref = new Date()): number {
-  const days = new Set(sessions.filter((s) => s.pages > 0).map((s) => s.date));
-  let offset = days.has(toDateKey(ref)) ? 0 : 1;
-  let streak = 0;
-  while (days.has(toDateKey(daysAgo(offset, ref)))) {
-    streak += 1;
-    offset += 1;
+/**
+ * [SAMPLE] 책별 평점 분포.
+ * 샘플 기준값(평균·인원)으로 분포를 만들고, 내 별점이 있으면 한 표를 더합니다.
+ */
+export function ratingSummary(bookId: string, myRating?: number): RatingSummary {
+  const [avg, count] = SAMPLE_RATING_BASE[bookId] ?? [0, 0];
+  const distribution = Array<number>(10).fill(0);
+  if (count > 0) {
+    const weights = distribution.map((_, i) => {
+      const score = (i + 1) / 2;
+      return Math.exp(-((score - avg) ** 2) / (2 * 0.6 ** 2));
+    });
+    const total = weights.reduce((a, b) => a + b, 0);
+    weights.forEach((w, i) => (distribution[i] = Math.round((w / total) * count)));
   }
-  return streak;
-}
-
-export function recentNotes(notes: ReadingNote[], limit = 3): ReadingNote[] {
-  return [...notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit);
-}
-
-export function lastSessionDate(sessions: ReadingSession[], bookId: string): Date | null {
-  const latest = sessions.filter((s) => s.bookId === bookId).sort((a, b) => b.date.localeCompare(a.date))[0];
-  return latest ? parseDateKey(latest.date) : null;
+  if (myRating) distribution[Math.round(myRating * 2) - 1]! += 1;
+  const n = distribution.reduce((a, b) => a + b, 0);
+  const sum = distribution.reduce((a, c, i) => a + c * ((i + 1) / 2), 0);
+  return { average: n ? sum / n : 0, count: n, distribution };
 }

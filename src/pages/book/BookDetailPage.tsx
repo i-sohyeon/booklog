@@ -1,12 +1,14 @@
-import { useId, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
-import { ArrowLeft, CalendarDays, NotebookPen, PenLine, Plus, Quote, Trash2 } from 'lucide-react';
-import type { Book, ReadingStatus } from '@/types/book';
-import { NOTE_KIND_LABEL, READING_STATUS_LABEL, VISIBILITY_LABEL } from '@/types/book';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { ArrowLeft, BookCheck, BookMarked, BookOpen, ListPlus, Lock, PenLine, Trash2 } from 'lucide-react';
+import type { Book, ReadingStatus, RecordVisibility } from '@/types/book';
+import { READING_STATUS_LABEL } from '@/types/book';
 import { useLibraryStore } from '@/store/libraryStore';
+import { ratingSummary } from '@/store/selectors';
 import { useAsync } from '@/hooks/useAsync';
+import { useReviews } from '@/hooks/useSocial';
 import { bookSearchService } from '@/services/bookSearch';
-import { formatDate, formatRelative } from '@/lib/date';
+import { formatDate } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import {
   Badge,
@@ -17,14 +19,16 @@ import {
   ErrorState,
   IconButton,
   LoadingRegion,
-  ProgressBar,
   Sheet,
   Skeleton,
   StarRating,
+  Tabs,
   useToast,
 } from '@/components/ui';
-import { AddToShelfSheet, DatesSheet, ProgressSheet, StatusPicker } from '@/components/book';
-import { VisibilityIcon } from '@/components/editor/VisibilityField';
+import { RatingDistribution } from '@/components/book/RatingDistribution';
+import { ReviewCard } from '@/components/social/ReviewCard';
+import { AddToListSheet } from '@/components/social/ListSheets';
+import { useRecord } from '@/components/record';
 import styles from './BookDetailPage.module.scss';
 
 export function BookDetailPage() {
@@ -32,21 +36,21 @@ export function BookDetailPage() {
   const cached = useLibraryStore((s) => s.books[bookId]);
   const remote = useAsync(cached ? null : (signal) => bookSearchService.getById(bookId, { signal }), [bookId, Boolean(cached)]);
   const navigate = useNavigate();
-
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate(paths.home));
 
   let content;
   if (cached) content = <BookDetail book={cached} />;
-  else if (remote.status === 'loading' || remote.status === 'idle') content = <DetailSkeleton />;
+  else if (remote.status === 'loading' || remote.status === 'idle')
+    content = (
+      <LoadingRegion label="책 정보를 불러오는 중">
+        <div className={styles.hero}>
+          <Skeleton variant="cover" width={168} />
+        </div>
+      </LoadingRegion>
+    );
   else if (remote.status === 'error') content = <ErrorState onRetry={remote.retry} />;
   else if (!remote.data)
-    content = (
-      <EmptyState
-        title="책을 찾을 수 없어요"
-        description="삭제되었거나 잘못된 주소일 수 있어요."
-        action={<ButtonLink to={paths.search}>도서 검색으로</ButtonLink>}
-      />
-    );
+    content = <EmptyState title="책을 찾을 수 없어요" description="삭제되었거나 잘못된 주소일 수 있어요." action={<ButtonLink to={paths.discover}>발견으로</ButtonLink>} />;
   else content = <BookDetail book={remote.data} />;
 
   return (
@@ -61,243 +65,176 @@ export function BookDetailPage() {
   );
 }
 
-function DetailSkeleton() {
-  return (
-    <LoadingRegion label="책 정보를 불러오는 중">
-      <div className={styles.hero}>
-        <div className={styles.heroInner}>
-          <Skeleton variant="cover" width={148} />
-          <div className={styles.heroText}>
-            <Skeleton variant="text" width="70%" height={28} />
-            <Skeleton variant="text" width="40%" />
-          </div>
-        </div>
-      </div>
-    </LoadingRegion>
-  );
+type Sort = 'likes' | 'recent';
+
+const STATUS_BUTTONS: Array<{ status: ReadingStatus; icon: typeof BookOpen }> = [
+  { status: 'want', icon: BookMarked },
+  { status: 'reading', icon: BookOpen },
+  { status: 'done', icon: BookCheck },
+];
+
+function visibilityLabel(v?: RecordVisibility) {
+  const n = Object.values(v ?? {}).filter(Boolean).length;
+  return n === 0 ? '나만 보는 기록이에요' : `${n}개 항목을 공개 중이에요`;
 }
 
 function BookDetail({ book }: { book: Book }) {
   const entry = useLibraryStore((s) => s.entries[book.id]);
-  const allNotes = useLibraryStore((s) => s.notes);
   const setStatus = useLibraryStore((s) => s.setStatus);
-  const setRating = useLibraryStore((s) => s.setRating);
   const removeBook = useLibraryStore((s) => s.removeBook);
+  const start = useRecord((s) => s.start);
   const showToast = useToast((s) => s.show);
-  const notes = useMemo(
-    () => allNotes.filter((n) => n.bookId === book.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [allNotes, book.id],
-  );
+  const allReviews = useReviews();
+  const [sort, setSort] = useState<Sort>('likes');
+  const [listOpen, setListOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
-  const [addOpen, setAddOpen] = useState(false);
-  const [progressOpen, setProgressOpen] = useState(false);
-  const [removeOpen, setRemoveOpen] = useState(false);
-  const [datesOpen, setDatesOpen] = useState(false);
-  const pickerName = useId();
+  const summary = ratingSummary(book.id, entry?.status === 'done' ? entry.rating : undefined);
+  const reviews = useMemo(() => {
+    const list = allReviews.filter((r) => r.bookId === book.id && !r.isMine);
+    return sort === 'likes' ? list.sort((a, b) => b.likeCount - a.likeCount) : list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [allReviews, book.id, sort]);
 
-  const pct = entry ? Math.round((entry.currentPage / book.pageCount) * 100) : 0;
-
-  const changeStatus = (status: ReadingStatus) => {
-    if (!entry || entry.status === status) return;
-    setStatus(book.id, status);
-    showToast(`${READING_STATUS_LABEL[status]} 상태로 바꿨어요`);
+  const chooseStatus = (status: ReadingStatus) => {
+    if (status === 'done') return start({ book, step: 'finish' });
+    if (entry?.status === status) {
+      removeBook(book.id);
+      showToast('서재에서 뺐어요');
+      return;
+    }
+    setStatus(book, status);
+    showToast(status === 'want' ? '읽고 싶은 책에 담았어요' : '읽는 중으로 표시했어요');
   };
 
   return (
     <>
       <section className={styles.hero} data-tone={book.coverTone}>
-        <div className={styles.heroInner}>
-          <BookCover book={book} size="fluid" decorative={false} className={styles.cover} />
-          <div className={styles.heroText}>
-            <Badge tone="outline">{book.genre}</Badge>
-            <h1 className={styles.title}>{book.title}</h1>
-            {book.subtitle && <p className={styles.subtitle}>{book.subtitle}</p>}
-            <p className={styles.byline}>
-              {book.authors.join(', ')} 지음
-              {book.translators && ` · ${book.translators.join(', ')} 옮김`}
-            </p>
-            <dl className={styles.facts}>
-              <div>
-                <dt>출판사</dt>
-                <dd>{book.publisher}</dd>
-              </div>
-              <div>
-                <dt>출간</dt>
-                <dd>{book.publishedAt.replace('-', '.')}</dd>
-              </div>
-              <div>
-                <dt>쪽수</dt>
-                <dd>{book.pageCount}쪽</dd>
-              </div>
-            </dl>
-            {!entry && (
-              <Button className={styles.addBtn} leadingIcon={<Plus aria-hidden />} onClick={() => setAddOpen(true)}>
-                서재에 담기
-              </Button>
-            )}
-          </div>
-        </div>
+        <BookCover book={book} size="fluid" decorative={false} className={styles.cover} />
       </section>
 
       <div className={styles.body}>
-        {entry && (
-          <section className={styles.card} aria-labelledby="my-reading">
-            <div className={styles.cardHead}>
-              <h2 id="my-reading" className={styles.h2}>
-                나의 독서
-              </h2>
-              <IconButton label="서재에서 삭제" size="sm" onClick={() => setRemoveOpen(true)}>
+        <header className={styles.head}>
+          <Badge tone="outline">{book.genre}</Badge>
+          <h1 className={styles.title}>{book.title}</h1>
+          <p className={styles.byline}>
+            {book.authors.join(', ')}
+            {book.translators && ` · ${book.translators.join(', ')} 옮김`}
+          </p>
+          <p className={styles.pub}>
+            {book.publisher} · {book.publishedAt.slice(0, 4)}
+          </p>
+        </header>
+
+        {/* ---- 내 상태: 읽고 싶어요 / 읽는 중 / 다 읽었어요 ---- */}
+        <div className={styles.statusRow} role="group" aria-label="내 독서 상태">
+          {STATUS_BUTTONS.map(({ status, icon: Icon }) => {
+            const active = entry?.status === status;
+            return (
+              <button key={status} type="button" className={styles.statusBtn} aria-pressed={active} onClick={() => chooseStatus(status)}>
+                <Icon aria-hidden />
+                {READING_STATUS_LABEL[status]}
+              </button>
+            );
+          })}
+        </div>
+
+        {entry?.status === 'done' && (
+          <section className={styles.mine} aria-label="내 기록">
+            <div className={styles.mineHead}>
+              <span className={styles.mineLabel}>
+                {entry.finishedAt ? `${formatDate(entry.finishedAt)} 완독` : '완독'}
+                {entry.readCount && entry.readCount > 1 && <span className={styles.reread}>{entry.readCount}회독</span>}
+              </span>
+              <StarRating value={entry.rating} size="md" />
+            </div>
+            {entry.oneLiner ? <p className={styles.mineLine}>{entry.oneLiner}</p> : <p className={styles.muted}>한 줄 평을 남기지 않았어요.</p>}
+            {entry.review && <p className={styles.mineReview}>{entry.review}</p>}
+            {Boolean(entry.quotes?.length || entry.tags?.length) && (
+              <p className={styles.mineMeta}>
+                {entry.quotes?.length ? `기억하고 싶은 문장 ${entry.quotes.length}개` : null}
+                {entry.quotes?.length && entry.tags?.length ? ' · ' : null}
+                {entry.tags?.map((t) => `#${t}`).join(' ')}
+              </p>
+            )}
+            <p className={styles.privacy}>
+              <Lock aria-hidden />
+              {visibilityLabel(entry.visibility)}
+            </p>
+            <div className={styles.mineActions}>
+              <ButtonLink to={paths.recordEdit(book.id)} size="sm" variant="outline" leadingIcon={<PenLine aria-hidden />}>
+                기록 자세히 쓰기
+              </ButtonLink>
+              <IconButton label="기록 삭제" size="sm" onClick={() => setConfirmRemove(true)}>
                 <Trash2 />
               </IconButton>
             </div>
-
-            <StatusPicker name={pickerName} value={entry.status} onChange={changeStatus} layout="row" />
-
-            {(entry.status === 'reading' || entry.status === 'paused') && (
-              <div className={styles.progress}>
-                <div className={styles.progressNums}>
-                  <strong>{pct}%</strong>
-                  <span>
-                    {entry.currentPage} / {book.pageCount}쪽
-                  </span>
-                </div>
-                <ProgressBar value={pct / 100} label="진행률" />
-                <Button variant="secondary" block leadingIcon={<PenLine aria-hidden />} onClick={() => setProgressOpen(true)} className={styles.progressBtn}>
-                  진도 기록하기
-                </Button>
-              </div>
-            )}
-
-            {entry.status === 'done' && (
-              <div className={styles.rating}>
-                <p className={styles.label}>나의 별점</p>
-                <StarRating
-                  value={entry.rating}
-                  size="lg"
-                  onChange={(v) => {
-                    setRating(book.id, v);
-                  }}
-                />
-                <p className={styles.ratingValue}>{entry.rating ? `${entry.rating.toFixed(1)}점` : '별을 눌러 평가해 보세요'}</p>
-              </div>
-            )}
-
-            <div className={styles.datesRow}>
-            <dl className={styles.dates}>
-              <div>
-                <dt>서재에 담은 날</dt>
-                <dd>{formatDate(entry.addedAt)}</dd>
-              </div>
-              {entry.startedAt && (
-                <div>
-                  <dt>읽기 시작</dt>
-                  <dd>{formatDate(entry.startedAt)}</dd>
-                </div>
-              )}
-              {entry.finishedAt && (
-                <div>
-                  <dt>완독</dt>
-                  <dd>{formatDate(entry.finishedAt)}</dd>
-                </div>
-              )}
-            </dl>
-            {(entry.startedAt || entry.status !== 'want') && (
-              <Button variant="ghost" size="sm" leadingIcon={<CalendarDays aria-hidden />} onClick={() => setDatesOpen(true)}>
-                기간 수정
-              </Button>
-            )}
-            </div>
           </section>
         )}
 
-        {entry && (
-          <section aria-labelledby="review" className={styles.section}>
-            <div className={styles.cardHead}>
-              <h2 id="review" className={styles.h2}>
-                나의 리뷰
-              </h2>
-              <ButtonLink to={paths.review(book.id)} size="sm" variant="ghost" leadingIcon={<PenLine aria-hidden />}>
-                {entry.review ? '수정' : '쓰기'}
-              </ButtonLink>
-            </div>
-            {entry.review ? (
-              <Link to={paths.review(book.id)} className={styles.reviewCard}>
-                {entry.rating ? <StarRating value={entry.rating} size="md" /> : null}
-                <p>{entry.review}</p>
-                <span className={styles.visibility}>
-                  <VisibilityIcon value={entry.reviewVisibility ?? 'private'} /> {VISIBILITY_LABEL[entry.reviewVisibility ?? 'private']}
-                </span>
-              </Link>
-            ) : (
-              <p className={styles.muted}>
-                {entry.status === 'done' ? '책을 덮은 뒤의 감상을 남겨보세요.' : '완독 후 감상을 남기거나, 지금까지의 생각을 먼저 적어둘 수 있어요.'}
-              </p>
-            )}
-          </section>
-        )}
+        <button type="button" className={styles.textBtn} onClick={() => setListOpen(true)}>
+          <ListPlus aria-hidden /> 내 리스트에 담기
+        </button>
 
-        <section aria-labelledby="about" className={styles.section}>
+        <section className={styles.section} aria-labelledby="about">
           <h2 id="about" className={styles.h2}>
-            책 소개
+            줄거리
           </h2>
           <p className={styles.desc}>{book.description}</p>
         </section>
 
-        {entry && (
-          <section aria-labelledby="notes" className={styles.section}>
-            <div className={styles.cardHead}>
-              <h2 id="notes" className={styles.h2}>
-                메모와 문장 <span className={styles.count}>{notes.length}</span>
-              </h2>
-            </div>
-            <div className={styles.noteActions}>
-              <ButtonLink to={paths.noteNew(book.id, 'memo')} variant="outline" size="sm" leadingIcon={<NotebookPen aria-hidden />}>
-                메모 쓰기
-              </ButtonLink>
-              <ButtonLink to={paths.noteNew(book.id, 'quote')} variant="outline" size="sm" leadingIcon={<Quote aria-hidden />}>
-                문장 담기
-              </ButtonLink>
-            </div>
-            {notes.length === 0 ? (
-              <p className={styles.muted}>아직 이 책에 남긴 메모나 문장이 없어요.</p>
-            ) : (
-              <ul role="list" className={styles.notes}>
-                {notes.map((n) => (
-                  <li key={n.id}>
-                    <Link to={paths.noteEdit(book.id, n.id)} className={n.kind === 'quote' ? styles.quote : undefined} aria-label={`${NOTE_KIND_LABEL[n.kind]} 수정: ${n.content.slice(0, 30)}`}>
-                      <p>{n.content}</p>
-                      <span>
-                        {NOTE_KIND_LABEL[n.kind]}
-                        {n.page !== undefined && ` · p.${n.page}`} · {VISIBILITY_LABEL[n.visibility]} · {formatRelative(n.createdAt)}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+        <section className={styles.section} aria-labelledby="ratings">
+          <h2 id="ratings" className={styles.h2}>
+            평점 <Badge tone="outline">샘플</Badge>
+          </h2>
+          {summary.count > 0 ? <RatingDistribution summary={summary} /> : <p className={styles.muted}>아직 평가가 없어요.</p>}
+        </section>
+
+        <section className={styles.section} aria-labelledby="reviews">
+          <div className={styles.reviewsHead}>
+            <h2 id="reviews" className={styles.h2}>
+              후기 <span className={styles.count}>{reviews.length}</span>
+            </h2>
+            {reviews.length > 1 && (
+              <Tabs<Sort>
+                label="정렬"
+                variant="pill"
+                value={sort}
+                onChange={setSort}
+                controls="review-list"
+                items={[
+                  { value: 'likes', label: '공감순' },
+                  { value: 'recent', label: '최신순' },
+                ]}
+              />
             )}
-          </section>
-        )}
+          </div>
+          <div id="review-list" role="tabpanel" aria-label="후기 목록">
+            {reviews.length === 0 ? (
+              <p className={styles.muted}>아직 후기가 없어요. 다 읽었다면 첫 한 줄 평을 남겨주세요.</p>
+            ) : (
+              reviews.map((r) => <ReviewCard key={r.id} review={r} showBook={false} variant="row" />)
+            )}
+          </div>
+        </section>
       </div>
 
-      {!entry && <AddToShelfSheet book={addOpen ? book : null} onClose={() => setAddOpen(false)} />}
-      <ProgressSheet target={progressOpen && entry ? { book, entry } : null} onClose={() => setProgressOpen(false)} />
-      <DatesSheet entry={datesOpen && entry ? entry : null} onClose={() => setDatesOpen(false)} />
+      <AddToListSheet book={listOpen ? book : null} onClose={() => setListOpen(false)} />
       <Sheet
-        open={removeOpen}
-        onClose={() => setRemoveOpen(false)}
-        title="서재에서 삭제할까요?"
-        description="이 책의 진도와 메모가 함께 삭제되며 되돌릴 수 없어요."
+        open={confirmRemove}
+        onClose={() => setConfirmRemove(false)}
+        title="기록을 삭제할까요?"
+        description="별점·한 줄 평·문장 등 이 책의 기록이 모두 삭제되며 되돌릴 수 없어요."
         footer={
           <>
-            <Button variant="outline" onClick={() => setRemoveOpen(false)}>
+            <Button variant="outline" onClick={() => setConfirmRemove(false)}>
               취소
             </Button>
             <Button
               variant="danger"
               onClick={() => {
                 removeBook(book.id);
-                setRemoveOpen(false);
-                showToast('서재에서 삭제했어요');
+                setConfirmRemove(false);
+                showToast('기록을 삭제했어요');
               }}
             >
               삭제
@@ -305,7 +242,7 @@ function BookDetail({ book }: { book: Book }) {
           </>
         }
       >
-        <p className={styles.muted}>「{book.title}」</p>
+        {null}
       </Sheet>
     </>
   );

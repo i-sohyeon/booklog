@@ -9,7 +9,7 @@ export function SampleDataBadge() {
   const isSample = useLibraryStore((s) => s.dataSource === 'sample');
   if (!isSample) return null;
   return (
-    <Link to={`${paths.me}#data`} className={styles.badge} title="샘플 데이터로 표시 중입니다. 마이페이지에서 비울 수 있어요.">
+    <Link to={`${paths.settings}#data`} className={styles.badge} title="샘플 데이터로 표시 중입니다. 설정에서 비울 수 있어요.">
       <FlaskConical aria-hidden />
       샘플 데이터
     </Link>

@@ -24,7 +24,7 @@
   background: var(--color-surface-inverse);
   color: var(--color-text-inverse);
   font-size: var(--text-label);
-  font-weight: 500;
+  font-weight: var(--font-medium);
   box-shadow: var(--shadow-lg);
   animation: in var(--duration-slow) var(--ease-out);
   svg {

@@ -1,262 +1,156 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { BarChart3, ChevronRight, CloudDownload, CloudUpload, KeyRound, LogIn, LogOut, NotebookPen, Settings, Target, UsersRound } from 'lucide-react';
-import { useLibraryStore } from '@/store/libraryStore';
-import { useAuthStore } from '@/store/authStore';
-import { useShelf } from '@/hooks/useShelf';
+import { ChevronRight, Plus, Settings } from 'lucide-react';
+import { SAMPLE_FOLLOWERS, SAMPLE_MEMBERS } from '@/mocks/social';
+import { useSocialStore } from '@/store/socialStore';
 import { useProfile } from '@/hooks/useProfile';
-import { countByStatus } from '@/store/selectors';
-import { authErrorMessage, authService } from '@/services/auth';
-import { downloadLibrary, readLastSync, uploadLibrary, writeLastSync } from '@/services/cloudSync';
-import { formatRelative } from '@/lib/date';
+import { useClubs, useLists, useReviews } from '@/hooks/useSocial';
 import { paths } from '@/routes/paths';
 import { Page } from '@/components/layout/Page';
-import { Avatar, Badge, Button, ButtonLink, Sheet, useToast } from '@/components/ui';
-import { GoalSheet } from '@/components/stats/GoalSheet';
+import { Avatar, Badge, Button, ButtonLink, EmptyState, Sheet, Tabs } from '@/components/ui';
+import { ReviewCard } from '@/components/social/ReviewCard';
+import { ListCard } from '@/components/social/ListCard';
+import { ClubCard } from '@/components/social/ClubCard';
+import { CreateListSheet } from '@/components/social/ListSheets';
 import styles from './MyPage.module.scss';
 
-type Confirm = 'clear' | 'sample' | 'upload' | 'download' | null;
+type Tab = 'reviews' | 'lists' | 'clubs';
+type People = 'followers' | 'following' | null;
 
+/** 마이 — 프로필 · 팔로워/팔로잉 · 내 후기 · 내 리스트 · 참여 중인 모임 · 설정 */
 export function MyPage() {
-  const shelf = useShelf();
-  const counts = countByStatus(shelf);
   const profile = useProfile();
-  const goal = useLibraryStore((s) => s.goal);
-  const dataSource = useLibraryStore((s) => s.dataSource);
-  const notesCount = useLibraryStore((s) => s.notes.length);
-  const loadSample = useLibraryStore((s) => s.loadSample);
-  const clearAll = useLibraryStore((s) => s.clearAll);
-  const replaceAll = useLibraryStore((s) => s.replaceAll);
-  const authStatus = useAuthStore((s) => s.status);
-  const user = useAuthStore((s) => s.user);
-  const showToast = useToast((s) => s.show);
+  const following = useSocialStore((s) => s.following);
+  const [tab, setTab] = useState<Tab>('reviews');
+  const [people, setPeople] = useState<People>(null);
 
-  const [goalOpen, setGoalOpen] = useState(false);
-  const [confirm, setConfirm] = useState<Confirm>(null);
-  const [busy, setBusy] = useState(false);
-  const [syncError, setSyncError] = useState<string>();
-  const [lastSync, setLastSync] = useState(readLastSync);
-
-  const runConfirmed = async () => {
-    if (confirm === 'clear') {
-      clearAll();
-      showToast('서재를 비웠어요');
-    } else if (confirm === 'sample') {
-      loadSample();
-      showToast('샘플 데이터를 불러왔어요');
-    } else if ((confirm === 'upload' || confirm === 'download') && user) {
-      setBusy(true);
-      setSyncError(undefined);
-      try {
-        if (confirm === 'upload') {
-          const { books, notes } = await uploadLibrary(user.id, useLibraryStore.getState());
-          writeLastSync('up');
-          showToast(`책 ${books}권과 기록 ${notes}개를 계정에 저장했어요`);
-        } else {
-          const snapshot = await downloadLibrary(user.id);
-          replaceAll(snapshot);
-          writeLastSync('down');
-          showToast(`계정에서 책 ${Object.keys(snapshot.entries).length}권을 불러왔어요`);
-        }
-        setLastSync(readLastSync());
-      } catch (err) {
-        setSyncError(err instanceof Error && err.message ? `동기화에 실패했어요: ${err.message}` : authErrorMessage(err));
-      } finally {
-        setBusy(false);
-      }
-    }
-    setConfirm(null);
-  };
-
-  const signOut = async () => {
-    try {
-      await authService.signOut();
-      showToast('로그아웃했어요');
-    } catch (err) {
-      showToast(authErrorMessage(err));
-    }
-  };
-
-  const CONFIRM_COPY: Record<Exclude<Confirm, null>, { title: string; desc: string; cta: string; danger?: boolean }> = {
-    clear: { title: '모든 데이터를 비울까요?', desc: '이 브라우저에 저장된 서재·진도·기록이 삭제되며 되돌릴 수 없어요.', cta: '비우기', danger: true },
-    sample: { title: '샘플 데이터를 불러올까요?', desc: '이 브라우저에 저장된 서재·진도·기록이 샘플로 대체되며 되돌릴 수 없어요.', cta: '불러오기' },
-    upload: { title: '이 기기의 기록을 계정에 올릴까요?', desc: '계정에 저장된 서재가 이 기기의 서재 기준으로 바뀌어요. 이 기기에 없는 책과 메모는 계정에서 삭제돼요.', cta: '올리기' },
-    download: { title: '계정의 기록을 불러올까요?', desc: '이 기기에 저장된 서재가 계정의 서재로 대체돼요. 올리지 않은 이 기기의 기록은 사라져요.', cta: '불러오기', danger: true },
-  };
-  const copy = confirm ? CONFIRM_COPY[confirm] : null;
+  const reviews = useReviews().filter((r) => r.isMine);
+  const lists = useLists().filter((l) => l.isMine);
+  const clubs = useClubs().filter((c) => c.joined);
 
   return (
     <Page narrow>
-      <section className={styles.profile}>
-        <Avatar name={profile.nickname} size="lg" />
-        <div>
-          <h1 className={styles.name}>{profile.nickname}</h1>
-          {profile.handle && <p className={styles.handle}>{profile.handle}</p>}
-          {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
+      <section className={styles.profile} aria-label="프로필">
+        <div className={styles.profileTop}>
+          <Avatar name={profile.nickname} size="lg" />
+          <Link to={paths.settings} className={styles.settings} aria-label="설정">
+            <Settings aria-hidden />
+          </Link>
         </div>
-        {profile.source !== 'account' && (
-          <Badge tone="outline" className={styles.guest}>
-            {profile.source === 'sample' ? '샘플 사용자' : '게스트'}
-          </Badge>
-        )}
+        <h1 className={styles.name}>{profile.nickname}</h1>
+        <p className={styles.handle}>
+          {profile.handle ?? '로그인하지 않은 게스트'}
+          {profile.source !== 'account' && <Badge tone="outline">{profile.source === 'sample' ? '샘플 사용자' : '게스트'}</Badge>}
+        </p>
+        {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
+        <div className={styles.follow}>
+          <button type="button" onClick={() => setPeople('followers')}>
+            <strong>{SAMPLE_FOLLOWERS.length}</strong> 팔로워
+          </button>
+          <button type="button" onClick={() => setPeople('following')}>
+            <strong>{following.length}</strong> 팔로잉
+          </button>
+        </div>
       </section>
 
-      <dl className={styles.summary}>
-        <div>
-          <dt>서재</dt>
-          <dd>{counts.all}</dd>
+      <section className={styles.activity} aria-label="내 활동">
+        <Tabs<Tab>
+          label="내 활동"
+          value={tab}
+          onChange={setTab}
+          controls="my-panel"
+          items={[
+            { value: 'reviews', label: '내 후기', count: reviews.length },
+            { value: 'lists', label: '내 리스트', count: lists.length },
+            { value: 'clubs', label: '참여 모임', count: clubs.length },
+          ]}
+        />
+        <div id="my-panel" role="tabpanel" className={styles.panel}>
+          {tab === 'reviews' &&
+            (reviews.length === 0 ? (
+              <EmptyState compact title="아직 쓴 후기가 없어요" description="다 읽은 책에 한 줄 평을 남기면 여기에 모여요." action={<ButtonLink to={paths.library}>서재로</ButtonLink>} />
+            ) : (
+              <div className={styles.reviews}>
+                {reviews.map((r) => (
+                  <ReviewCard key={r.id} review={r} variant="row" />
+                ))}
+              </div>
+            ))}
+          {tab === 'lists' && <MyLists lists={lists} />}
+          {tab === 'clubs' &&
+            (clubs.length === 0 ? (
+              <EmptyState compact title="참여 중인 모임이 없어요" action={<ButtonLink to={paths.clubs}>모임 둘러보기</ButtonLink>} />
+            ) : (
+              <div className={styles.clubs}>
+                {clubs.map((c) => (
+                  <ClubCard key={c.id} club={c} />
+                ))}
+              </div>
+            ))}
         </div>
-        <div>
-          <dt>완독</dt>
-          <dd>{counts.done}</dd>
-        </div>
-        <div>
-          <dt>기록</dt>
-          <dd>{notesCount}</dd>
-        </div>
-      </dl>
+      </section>
 
-      <nav aria-label="마이페이지 메뉴" className={styles.menu}>
-        <button type="button" className={styles.row} onClick={() => setGoalOpen(true)}>
-          <Target aria-hidden />
-          <span>{goal.year}년 독서 목표</span>
-          <em>{goal.targetBooks}권</em>
-          <ChevronRight aria-hidden className={styles.chev} />
-        </button>
-        <Link to={paths.stats} className={styles.row}>
-          <BarChart3 aria-hidden />
-          <span>독서 통계</span>
-          <ChevronRight aria-hidden className={styles.chev} />
-        </Link>
-        <Link to={paths.notes} className={styles.row}>
-          <NotebookPen aria-hidden />
-          <span>나의 기록</span>
-          <em>{notesCount}개</em>
-          <ChevronRight aria-hidden className={styles.chev} />
-        </Link>
-        <Link to={paths.clubs} className={styles.row}>
-          <UsersRound aria-hidden />
-          <span>독서 모임</span>
-          <Badge>준비 중</Badge>
-          <ChevronRight aria-hidden className={styles.chev} />
+      <nav className={styles.menu} aria-label="계정 메뉴">
+        <Link to={paths.settings} className={styles.menuItem}>
+          <Settings aria-hidden />
+          <span>설정</span>
+          <small>계정 · 동기화 · 데이터 관리</small>
+          <ChevronRight aria-hidden />
         </Link>
       </nav>
 
-      {/* ---------- 계정 ---------- */}
-      <section className={styles.panel} aria-labelledby="account-title">
-        <div className={styles.panelHead}>
-          <KeyRound aria-hidden />
-          <h2 id="account-title">계정</h2>
-        </div>
-        {authStatus === 'unconfigured' && (
-          <p className={styles.panelDesc}>
-            계정 서버(Supabase)가 아직 연결되지 않았어요. <code>.env.local</code>을 설정하면 로그인과 기기 간 동기화를 사용할 수 있어요.
-          </p>
-        )}
-        {authStatus === 'loading' && <p className={styles.panelDesc}>로그인 상태를 확인하는 중…</p>}
-        {authStatus === 'signedOut' && (
-          <>
-            <p className={styles.panelDesc}>로그인하면 이 기기의 기록을 계정에 저장하고 다른 기기에서도 이어볼 수 있어요.</p>
-            <div className={styles.actions}>
-              <ButtonLink to={paths.login} size="sm" leadingIcon={<LogIn aria-hidden />}>
-                로그인
-              </ButtonLink>
-              <ButtonLink to={paths.signup} size="sm" variant="outline">
-                회원가입
-              </ButtonLink>
-            </div>
-          </>
-        )}
-        {authStatus === 'signedIn' && user && (
-          <>
-            <p className={styles.panelDesc}>
-              <strong>{user.email}</strong> 으로 로그인했어요.
-            </p>
-            <div className={styles.actions}>
-              <ButtonLink to={paths.updatePassword} size="sm" variant="outline">
-                비밀번호 변경
-              </ButtonLink>
-              <Button size="sm" variant="ghost" leadingIcon={<LogOut aria-hidden />} onClick={signOut}>
-                로그아웃
-              </Button>
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* ---------- 동기화 ---------- */}
-      {authStatus === 'signedIn' && user && (
-        <section className={styles.panel} aria-labelledby="sync-title">
-          <div className={styles.panelHead}>
-            <CloudUpload aria-hidden />
-            <h2 id="sync-title">기록 옮기기</h2>
-          </div>
-          <p className={styles.panelDesc}>
-            {dataSource === 'sample'
-              ? '지금은 샘플 데이터가 표시되고 있어 계정에 올릴 수 없어요. 아래 데이터 관리에서 비운 뒤 직접 기록하거나, 계정의 기록을 불러오세요.'
-              : '이 브라우저에 쌓인 기록을 계정에 올리거나, 계정의 기록을 이 기기로 불러올 수 있어요. 자동 동기화는 다음 업데이트에서 제공돼요.'}
-          </p>
-          {lastSync && (
-            <p className={styles.syncMeta}>
-              마지막 {lastSync.direction === 'up' ? '올리기' : '불러오기'}: {formatRelative(lastSync.at)}
-            </p>
-          )}
-          <div className={styles.actions}>
-            <Button size="sm" leadingIcon={<CloudUpload aria-hidden />} disabled={dataSource === 'sample' || busy} loading={busy && confirm === 'upload'} onClick={() => setConfirm('upload')}>
-              이 기기 → 계정
-            </Button>
-            <Button size="sm" variant="outline" leadingIcon={<CloudDownload aria-hidden />} disabled={busy} onClick={() => setConfirm('download')}>
-              계정 → 이 기기
-            </Button>
-          </div>
-          {syncError && (
-            <p className={styles.error} role="alert">
-              {syncError}
-            </p>
-          )}
-        </section>
-      )}
-
-      {/* ---------- 로컬 데이터 ---------- */}
-      <section id="data" className={styles.panel} aria-labelledby="data-title">
-        <div className={styles.panelHead}>
-          <Settings aria-hidden />
-          <h2 id="data-title">데이터 관리</h2>
-        </div>
-        <p className={styles.panelDesc}>
-          {dataSource === 'sample'
-            ? '지금 보이는 서재와 기록은 화면 확인용 샘플 데이터예요. 비우고 직접 책을 담아볼 수 있어요.'
-            : '서재 데이터는 이 브라우저에 저장돼요.'}
-        </p>
-        <div className={styles.actions}>
-          <Button variant="outline" size="sm" onClick={() => setConfirm('sample')}>
-            샘플 데이터 불러오기
-          </Button>
-          <Button variant="danger" size="sm" onClick={() => setConfirm('clear')}>
-            모든 데이터 비우기
-          </Button>
-        </div>
-      </section>
-
-      <GoalSheet open={goalOpen} onClose={() => setGoalOpen(false)} />
-      <Sheet
-        open={copy !== null}
-        onClose={() => !busy && setConfirm(null)}
-        title={copy?.title ?? ''}
-        description={copy?.desc}
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setConfirm(null)} disabled={busy}>
-              취소
-            </Button>
-            <Button variant={copy?.danger ? 'danger' : 'primary'} onClick={runConfirmed} loading={busy}>
-              {copy?.cta}
-            </Button>
-          </>
-        }
-      >
-        {null}
-      </Sheet>
+      <PeopleSheet kind={people} onClose={() => setPeople(null)} />
     </Page>
+  );
+}
+
+function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
+  const following = useSocialStore((s) => s.following);
+  const toggleFollow = useSocialStore((s) => s.toggleFollow);
+  // 열려 있는 동안 목록이 바뀌어 사라지지 않도록, 연 순간의 목록을 기준으로 표시
+  const ids = useMemo(() => (kind === 'followers' ? SAMPLE_FOLLOWERS : kind === 'following' ? following : []), [kind]); // eslint-disable-line react-hooks/exhaustive-deps
+  const members = SAMPLE_MEMBERS.filter((m) => ids.includes(m.id));
+
+  return (
+    <Sheet open={kind !== null} onClose={onClose} title={kind === 'followers' ? '팔로워' : '팔로잉'} description="샘플 사용자예요. 팔로우는 이 기기에만 저장돼요.">
+      {members.length === 0 ? (
+        <p className={styles.muted}>아직 아무도 없어요.</p>
+      ) : (
+        <ul role="list" className={styles.people}>
+          {members.map((m) => {
+            const on = following.includes(m.id);
+            return (
+              <li key={m.id}>
+                <Avatar name={m.nickname} tone={m.tone} size="md" />
+                <span className={styles.personText}>
+                  <strong>{m.nickname}</strong>
+                  <span>{m.bio ?? `@${m.handle}`}</span>
+                </span>
+                <Button size="sm" variant={on ? 'outline' : 'primary'} aria-pressed={on} onClick={() => toggleFollow(m.id)}>
+                  {on ? '팔로잉' : '팔로우'}
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Sheet>
+  );
+}
+
+function MyLists({ lists }: { lists: ReturnType<typeof useLists> }) {
+  const [creating, setCreating] = useState(false);
+  return (
+    <>
+      <div className={styles.listGrid}>
+        {lists.map((l) => (
+          <ListCard key={l.id} list={l} />
+        ))}
+        <button type="button" className={styles.newList} onClick={() => setCreating(true)}>
+          <Plus aria-hidden />새 리스트
+        </button>
+      </div>
+      <CreateListSheet open={creating} onClose={() => setCreating(false)} />
+    </>
   );
 }

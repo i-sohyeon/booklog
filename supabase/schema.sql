@@ -1,8 +1,7 @@
 -- =====================================================================
--- BookLog — Supabase 스키마 (2차)
+-- BookLog — Supabase 스키마 (리디자인: 별점·한 줄 평 중심)
 -- Supabase 대시보드 › SQL Editor 에 붙여넣어 한 번 실행하세요.
 -- 모든 사용자 데이터는 RLS로 "본인만" 읽고 쓸 수 있습니다.
--- 공개 범위(visibility) 컬럼은 3차 소셜 기능에서 읽기 정책을 확장할 때 사용합니다.
 -- =====================================================================
 
 -- ---------- 프로필 ----------
@@ -60,59 +59,39 @@ create policy "books: upsert" on public.books for insert to authenticated with c
 drop policy if exists "books: update" on public.books;
 create policy "books: update" on public.books for update to authenticated using (true);
 
--- ---------- 내 서재 ----------
+-- ---------- 내 서재 (진도 기록 없음: 상태 + 다 읽은 책의 별점·한 줄 평) ----------
 create table if not exists public.library_entries (
   user_id uuid not null references auth.users (id) on delete cascade,
   book_id text not null references public.books (id),
-  status text not null check (status in ('want', 'reading', 'done', 'paused')),
+  status text not null check (status in ('want', 'reading', 'done')),
   added_at timestamptz not null,
   updated_at timestamptz not null,
-  started_at date,
   finished_at date,
-  current_page integer not null default 0 check (current_page >= 0),
   rating numeric(2, 1) check (rating between 0.5 and 5 and rating * 2 = floor(rating * 2)),
+  one_liner text check (char_length(one_liner) <= 80),
   review text,
-  review_visibility text check (review_visibility in ('public', 'friends', 'private')),
-  primary key (user_id, book_id)
+  spoiler boolean not null default false,
+  -- 기억하고 싶은 문장: [{id, text, createdAt}] (사진은 아직 기기에만 저장)
+  quotes jsonb not null default '[]'::jsonb,
+  place text,
+  occasion text,
+  tags text[] not null default '{}',
+  read_count smallint not null default 1 check (read_count >= 1),
+  -- 항목별 공개 여부 {rating, oneLiner, review, quotes, context, tags} — 기본 비공개
+  visibility jsonb not null default '{}'::jsonb,
+  primary key (user_id, book_id),
+  -- 다 읽은 책은 별점·완독일 필수 (나머지는 선택)
+  check (status <> 'done' or (rating is not null and finished_at is not null))
 );
 
--- ---------- 메모 · 문장 ----------
-create table if not exists public.reading_notes (
-  id text not null,
-  user_id uuid not null references auth.users (id) on delete cascade,
-  book_id text not null references public.books (id),
-  kind text not null check (kind in ('memo', 'quote')),
-  content text not null check (char_length(content) between 1 and 2000),
-  page integer check (page > 0),
-  visibility text not null default 'private' check (visibility in ('public', 'friends', 'private')),
-  created_at timestamptz not null,
-  updated_at timestamptz,
-  primary key (user_id, id)
-);
-create index if not exists reading_notes_user_created on public.reading_notes (user_id, created_at desc);
-
--- ---------- 하루 독서 기록 ----------
-create table if not exists public.reading_sessions (
-  user_id uuid not null references auth.users (id) on delete cascade,
-  date date not null,
-  book_id text not null references public.books (id),
-  pages integer not null check (pages > 0),
-  primary key (user_id, date, book_id)
-);
-
--- ---------- 연간 목표 ----------
-create table if not exists public.reading_goals (
-  user_id uuid not null references auth.users (id) on delete cascade,
-  year integer not null,
-  target_books integer not null check (target_books between 1 and 365),
-  primary key (user_id, year)
-);
+-- 커뮤니티(posts, comments, likes)·독서모임(clubs, club_members, club_sessions)·
+-- 큐레이션 리스트 테이블은 소셜 서버 연동 단계에서 추가합니다.
 
 -- ---------- RLS: 본인 데이터만 ----------
 do $$
 declare t text;
 begin
-  foreach t in array array['library_entries', 'reading_notes', 'reading_sessions', 'reading_goals'] loop
+  foreach t in array array['library_entries'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "%s: owner" on public.%I', t, t);
     execute format(
