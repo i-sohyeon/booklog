@@ -54,7 +54,7 @@ function PickStep({ onPick }: { onPick: (b: Book) => void }) {
               <BookCover book={b} size="xs" />
               <span className={styles.resultText}>
                 <strong>{b.title}</strong>
-                <span>{b.authors.join(', ')}</span>
+                <span>{b.authors.join(', ')} · {b.genre}</span>
               </span>
               <ChevronRight aria-hidden />
             </button>

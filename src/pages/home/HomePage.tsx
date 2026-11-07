@@ -84,7 +84,7 @@ function TodayPick() {
         <h2 id="pick-title" className={styles.pickTitle}>
           <Link to={paths.book(book.id)}>{book.title}</Link>
         </h2>
-        <p className={styles.pickAuthor}>{book.authors.join(', ')}</p>
+        <p className={styles.pickAuthor}>{book.authors.join(', ')} · {book.genre}</p>
         <p className={styles.pickLine}>{pick.line}</p>
         <RatingValue value={summary.average} count={summary.count} size="md" />
       </div>

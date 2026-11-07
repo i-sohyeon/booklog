@@ -388,6 +388,7 @@ function RecordRows({ items }: { items: ShelfItem[] }) {
               </span>
               <span className={styles.rowBody}>
                 <strong className={styles.rowTitle}>{book.title}</strong>
+                <span className={styles.rowAuthor}>{book.authors[0]} · {book.genre}</span>
                 <StarRating value={entry.rating} size="sm" />
                 {entry.oneLiner && <span className={styles.rowLine}>{entry.oneLiner}</span>}
                 <span className={styles.rowMeta}>
@@ -431,7 +432,7 @@ function CoverShelf({ items, status }: { items: ShelfItem[]; status: ReadingStat
           <Link to={paths.book(book.id)} className={styles.coverItem}>
             <BookCover book={book} size="fluid" />
             <span className={styles.coverTitle}>{book.title}</span>
-            <span className={styles.coverAuthor}>{book.authors[0]}</span>
+            <span className={styles.coverAuthor}>{book.authors[0]} · {book.genre}</span>
           </Link>
           {status === 'reading' && (
             <button type="button" className={styles.finishBtn} onClick={() => start({ book, step: 'finish' })}>

@@ -14,7 +14,7 @@ interface BookRowProps {
   aside?: ReactNode;
 }
 
-/** 차트·검색·리스트용 한 줄: (순위) 표지 · 제목 · 저자 · 평균 별점 */
+/** 차트·검색·리스트용 한 줄: (순위) 표지 · 제목 · 저자 · 장르 · 평균 별점 */
 export function BookRow({ book, rank, change, aside }: BookRowProps) {
   const summary = ratingSummary(book.id);
   return (
@@ -29,7 +29,7 @@ export function BookRow({ book, rank, change, aside }: BookRowProps) {
         <BookCover book={book} size="sm" />
         <span className={styles.text}>
           <strong>{book.title}</strong>
-          <span className={styles.author}>{book.authors.join(', ')}</span>
+          <span className={styles.author}>{book.authors.join(', ')} · {book.genre}</span>
           {summary.count > 0 && <RatingValue value={summary.average} count={summary.count} />}
         </span>
       </Link>

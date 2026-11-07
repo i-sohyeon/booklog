@@ -338,6 +338,11 @@
   font-size: var(--text-body);
   line-height: var(--leading-snug);
 }
+.rowAuthor {
+  margin-top: -2px;
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+}
 .rowLine {
   font-size: var(--text-label);
   line-height: var(--leading-snug);
@@ -404,6 +409,9 @@
   margin-top: -6px;
   font-size: var(--text-micro);
   color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .finishBtn {
   align-self: flex-start;

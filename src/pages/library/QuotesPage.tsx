@@ -60,7 +60,7 @@ export function QuotesPage() {
                     <BookCover book={book} size="xs" />
                     <span>
                       <strong>{book.title}</strong>
-                      <span>{book.authors.join(', ')}</span>
+                      <span>{book.authors.join(', ')} · {book.genre}</span>
                     </span>
                   </Link>
                   <Link to={paths.recordEdit(book.id)} className={styles.edit} aria-label={`「${book.title}」 기록 고치기`}>

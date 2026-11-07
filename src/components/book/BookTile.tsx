@@ -25,7 +25,7 @@ export function BookTile({ book, rank, rating, caption, className }: BookTilePro
         {rank !== undefined && <span className={styles.rank}>{rank}</span>}
       </div>
       <p className={styles.title}>{book.title}</p>
-      <p className={styles.author}>{caption ?? book.authors.join(', ')}</p>
+      <p className={styles.author}>{caption ?? `${book.authors.join(', ')} · ${book.genre}`}</p>
       {value ? <RatingValue value={value} className={styles.rating} /> : null}
     </Link>
   );
