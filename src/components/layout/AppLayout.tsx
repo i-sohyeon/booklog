@@ -1,19 +1,21 @@
 import { useEffect } from 'react';
-import { NavLink, Outlet, useLocation, useMatches } from 'react-router';
+import { Link, NavLink, Outlet, useLocation, useMatches } from 'react-router';
+import { Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { bottomNav, primaryNav, socialNav, type NavItem } from '@/routes/navigation';
+import { fabFor, isNavActive, mainNav } from '@/routes/navigation';
+import { useHideOnScroll } from '@/hooks/useScrollDirection';
 import { paths } from '@/routes/paths';
-import { useLibraryStore } from '@/store/libraryStore';
 import { useProfile } from '@/hooks/useProfile';
-import { Avatar, ToastViewport } from '@/components/ui';
+import { Avatar, Button, ToastViewport } from '@/components/ui';
+import { FloatingAction, RecordSheet, useRecord } from '@/components/record';
 import { Logo } from './Logo';
 import { SampleDataBadge } from './SampleDataBadge';
 import styles from './AppLayout.module.scss';
 
 export interface RouteHandle {
-  /** 모바일 상단 앱 헤더 숨김 (자체 뒤로가기 헤더를 쓰는 화면) */
+  /** 모바일 상단 앱 헤더 숨김 (자체 헤더를 쓰는 화면) */
   hideMobileHeader?: boolean;
-  /** 전체 화면 작성 모드 — 하단 탭 숨김 */
+  /** 하단 탭·기록 버튼 숨김 (작성 화면) */
   hideBottomNav?: boolean;
 }
 
@@ -23,9 +25,8 @@ export function AppLayout() {
   const hideMobileHeader = handles.some((h) => h?.hideMobileHeader);
   const hideBottomNav = handles.some((h) => h?.hideBottomNav);
   const { pathname } = useLocation();
-  const profile = useProfile();
+  const fabHidden = useHideOnScroll(pathname);
 
-  // 화면 전환 시 스크롤 최상단
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -43,8 +44,8 @@ export function AppLayout() {
           <Logo />
           <div className={styles.headerActions}>
             <SampleDataBadge />
-            <NavLink to={paths.me} aria-label="마이페이지" className={styles.headerAvatar}>
-              <Avatar name={profile.nickname} size="sm" />
+            <NavLink to={paths.discover} aria-label="책 검색" className={styles.headerIcon}>
+              <Search aria-hidden />
             </NavLink>
           </div>
         </header>
@@ -54,48 +55,48 @@ export function AppLayout() {
         <Outlet />
       </main>
 
-      {!hideBottomNav && <BottomNav />}
+      {!hideBottomNav && (
+        <>
+          <BottomNav />
+          <FloatingAction kind={fabFor(pathname)} hidden={fabHidden} />
+        </>
+      )}
+      <RecordSheet />
       <ToastViewport />
     </div>
   );
 }
 
-function SideLink({ item }: { item: NavItem }) {
-  const Icon = item.icon;
-  return (
-    <NavLink to={item.to} end={item.to === paths.home} className={({ isActive }) => cn(styles.sideLink, isActive && styles.active)}>
-      <Icon aria-hidden />
-      <span>{item.label}</span>
-      {item.upcoming && <span className={styles.soon}>준비 중</span>}
-    </NavLink>
-  );
-}
-
 function Sidebar() {
-  const goal = useLibraryStore((s) => s.goal);
   const profile = useProfile();
+  const { pathname } = useLocation();
+  const start = useRecord((s) => s.start);
   return (
     <aside className={styles.sidebar} aria-label="주 메뉴">
       <div className={styles.sideTop}>
         <Logo />
       </div>
       <nav className={styles.sideNav}>
-        <p className={styles.sideGroup}>나의 독서</p>
-        {primaryNav.map((item) => (
-          <SideLink key={item.to} item={item} />
-        ))}
-        <p className={styles.sideGroup}>함께 읽기</p>
-        {socialNav.map((item) => (
-          <SideLink key={item.to} item={item} />
-        ))}
+        {mainNav.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.to} to={item.to} className={cn(styles.sideLink, isNavActive(item, pathname) && styles.active)} aria-current={isNavActive(item, pathname) ? 'page' : undefined}>
+              <Icon aria-hidden />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
+      <Button className={styles.sideRecord} leadingIcon={<Plus aria-hidden />} onClick={() => start()}>
+        책 기록하기
+      </Button>
       <div className={styles.sideBottom}>
         <SampleDataBadge />
         <NavLink to={paths.me} className={({ isActive }) => cn(styles.profile, isActive && styles.active)}>
           <Avatar name={profile.nickname} size="sm" />
           <span className={styles.profileText}>
             <strong>{profile.nickname}</strong>
-            <span>{goal.year} 목표 {goal.targetBooks}권</span>
+            <span>{profile.source === 'account' ? profile.handle : profile.source === 'sample' ? '샘플 사용자' : '게스트'}</span>
           </span>
         </NavLink>
       </div>
@@ -104,20 +105,16 @@ function Sidebar() {
 }
 
 function BottomNav() {
+  const { pathname } = useLocation();
   return (
     <nav className={styles.bottomNav} aria-label="주 메뉴">
-      {bottomNav.map((item) => {
+      {mainNav.map((item) => {
         const Icon = item.icon;
         return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === paths.home}
-            className={({ isActive }) => cn(styles.tab, isActive && styles.active)}
-          >
+          <Link key={item.to} to={item.to} className={cn(styles.tab, isNavActive(item, pathname) && styles.active)} aria-current={isNavActive(item, pathname) ? 'page' : undefined}>
             <Icon aria-hidden />
             <span>{item.label}</span>
-          </NavLink>
+          </Link>
         );
       })}
     </nav>

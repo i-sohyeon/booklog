@@ -32,15 +32,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgb(0 0 0 / 0.22) 0%,
-    rgb(255 255 255 / 0.14) 3%,
-    rgb(0 0 0 / 0.06) 6%,
-    transparent 12%,
-    transparent 92%,
-    rgb(0 0 0 / 0.06) 100%
-  );
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.14) 0%, rgb(255 255 255 / 0.08) 3%, transparent 8%);
   z-index: 2;
 }
 
@@ -55,8 +47,7 @@
 .title {
   position: relative;
   z-index: 1;
-  font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: var(--font-bold);
   font-size: 11.5cqw;
   line-height: 1.28;
   letter-spacing: -0.02em;
@@ -69,43 +60,18 @@
   z-index: 1;
   margin-top: auto;
   font-size: 7.5cqw;
-  font-weight: 500;
+  font-weight: var(--font-medium);
   opacity: 0.82;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ornament {
-  position: absolute;
-  z-index: 0;
-}
 
-// ---- layouts ----
-.cover[data-layout='classic'] {
-  .title {
-    padding-top: 6cqw;
-    border-top: 1.5cqw solid var(--cover-accent);
-  }
-}
-.cover[data-layout='band'] {
-  .ornament {
-    left: 0;
-    right: 0;
-    top: 58%;
-    height: 14%;
-    background: var(--cover-accent);
-  }
-}
-.cover[data-layout='orb'] {
-  .ornament {
-    width: 72cqw;
-    height: 72cqw;
-    right: -18cqw;
-    bottom: 14cqw;
-    border-radius: 50%;
-    background: var(--cover-accent);
-  }
+// 단일 레이아웃: 제목 위 얇은 선 하나
+.title {
+  padding-top: 5cqw;
+  border-top: 1px solid var(--cover-accent);
 }
 
 // 작은 표지에서는 제목만 남기고 단순화
@@ -114,12 +80,13 @@
   display: none;
 }
 
-// ---- tones ----
-.cover[data-tone='plum'] { --cover-bg: #4a1f73; --cover-fg: #f3e9fb; --cover-accent: rgb(227 169 75 / 0.55); }
-.cover[data-tone='forest'] { --cover-bg: #26473b; --cover-fg: #eaf2ea; --cover-accent: rgb(234 242 234 / 0.16); }
-.cover[data-tone='navy'] { --cover-bg: #1e2a47; --cover-fg: #e8ecf5; --cover-accent: rgb(232 236 245 / 0.14); }
-.cover[data-tone='clay'] { --cover-bg: #a5492d; --cover-fg: #fbede6; --cover-accent: rgb(251 237 230 / 0.2); }
-.cover[data-tone='mustard'] { --cover-bg: #d9a441; --cover-fg: #2a2112; --cover-accent: rgb(42 33 18 / 0.14); }
-.cover[data-tone='charcoal'] { --cover-bg: #2c2926; --cover-fg: #f1ece4; --cover-accent: rgb(227 169 75 / 0.4); }
-.cover[data-tone='rose'] { --cover-bg: #e2b4ad; --cover-fg: #3a1f1c; --cover-accent: rgb(58 31 28 / 0.12); }
-.cover[data-tone='sea'] { --cover-bg: #3f7a84; --cover-fg: #eaf5f6; --cover-accent: rgb(234 245 246 / 0.18); }
+// ---- tones (채도를 낮춘 차분한 톤) ----
+.cover[data-tone='plum'] { --cover-bg: #4b2a6b; --cover-fg: #f1eaf6; --cover-accent: rgb(241 234 246 / 0.35); }
+.cover[data-tone='forest'] { --cover-bg: #2f4a40; --cover-fg: #e9efe9; --cover-accent: rgb(233 239 233 / 0.3); }
+.cover[data-tone='navy'] { --cover-bg: #26304a; --cover-fg: #e8ebf2; --cover-accent: rgb(232 235 242 / 0.3); }
+.cover[data-tone='clay'] { --cover-bg: #9c5a43; --cover-fg: #f8ece6; --cover-accent: rgb(248 236 230 / 0.35); }
+/* 'mustard' 키는 데이터 호환용으로 유지, 색은 누런 기를 뺀 더스티 라벤더 */
+.cover[data-tone='mustard'] { --cover-bg: #8b84a6; --cover-fg: #f4f2f8; --cover-accent: rgb(244 242 248 / 0.35); }
+.cover[data-tone='charcoal'] { --cover-bg: #2c2c30; --cover-fg: #ececee; --cover-accent: rgb(236 236 238 / 0.3); }
+.cover[data-tone='rose'] { --cover-bg: #dcbab4; --cover-fg: #3a2421; --cover-accent: rgb(58 36 33 / 0.25); }
+.cover[data-tone='sea'] { --cover-bg: #46767d; --cover-fg: #eaf3f4; --cover-accent: rgb(234 243 244 / 0.3); }

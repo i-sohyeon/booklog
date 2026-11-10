@@ -1,0 +1,53 @@
+.fab {
+  position: fixed;
+  right: var(--page-gutter);
+  // 하단 탭 바 위 16px
+  bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + var(--space-4));
+  z-index: var(--z-nav);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--text-body);
+  font-weight: var(--font-bold);
+  box-shadow: 0 6px 20px rgb(91 37 144 / 0.32);
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    opacity var(--duration-base) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+  svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  &:hover {
+    background: var(--color-primary-hover);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+  @include up('lg') {
+    display: none;
+  }
+}
+
+.extended {
+  width: auto;
+  padding-inline: var(--space-5) var(--space-6);
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// 아래로 스크롤하면 탭 바 뒤로 숨김
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(100% + var(--space-6)));
+}

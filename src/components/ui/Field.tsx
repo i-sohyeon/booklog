@@ -45,16 +45,17 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id
   error?: string;
   optional?: boolean;
   suffix?: ReactNode;
+  hideLabel?: boolean;
   fieldClassName?: string;
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, hint, error, optional, suffix, fieldClassName, className, ...rest },
+  { label, hint, error, optional, suffix, hideLabel, fieldClassName, className, ...rest },
   ref,
 ) {
   const id = useId();
   return (
-    <FieldShell id={id} label={label} hint={hint} error={error} optional={optional} className={fieldClassName}>
+    <FieldShell id={id} label={label} hint={hint} error={error} optional={optional} hideLabel={hideLabel} className={fieldClassName}>
       <div className={cn(styles.control, error && styles.invalid)}>
         <input
           ref={ref}
@@ -76,14 +77,12 @@ interface TextAreaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>
   error?: string;
   optional?: boolean;
   hideLabel?: boolean;
-  /** 서체 — 인용문은 세리프 */
-  tone?: 'sans' | 'serif';
   fieldClassName?: string;
 }
 
 /** 내용에 맞게 높이가 늘어나는 텍스트 영역 */
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
-  { label, hint, error, optional, hideLabel, tone = 'sans', maxLength, value, fieldClassName, className, ...rest },
+  { label, hint, error, optional, hideLabel, maxLength, value, fieldClassName, className, ...rest },
   forwardedRef,
 ) {
   const id = useId();
@@ -118,7 +117,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
           id={id}
           value={value}
           maxLength={maxLength}
-          className={cn(styles.textarea, tone === 'serif' && styles.serif, className)}
+          className={cn(styles.textarea, className)}
           aria-invalid={error ? true : undefined}
           aria-describedby={error || hint ? `${id}-msg` : undefined}
           {...rest}

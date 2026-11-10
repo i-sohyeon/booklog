@@ -14,7 +14,6 @@ interface BookCoverProps {
 }
 
 const TONES: CoverTone[] = ['plum', 'forest', 'navy', 'clay', 'mustard', 'charcoal', 'rose', 'sea'];
-const LAYOUTS = ['classic', 'band', 'orb'] as const;
 
 function hash(s: string): number {
   let h = 0;
@@ -30,14 +29,12 @@ export function BookCover({ book, size = 'md', className, decorative = true }: B
   const [failed, setFailed] = useState(false);
   const h = hash(book.id);
   const tone = book.coverTone ?? TONES[h % TONES.length];
-  const layout = LAYOUTS[h % LAYOUTS.length];
   const showImage = book.coverUrl && !failed;
 
   return (
     <div
       className={cn(styles.cover, styles[size], className)}
       data-tone={tone}
-      data-layout={layout}
       role={decorative ? undefined : 'img'}
       aria-label={decorative ? undefined : `${book.title} 표지`}
       aria-hidden={decorative || undefined}
@@ -46,7 +43,6 @@ export function BookCover({ book, size = 'md', className, decorative = true }: B
         <img src={book.coverUrl} alt="" loading="lazy" onError={() => setFailed(true)} />
       ) : (
         <div className={styles.generated}>
-          <span className={styles.ornament} />
           <span className={styles.title}>{book.title}</span>
           <span className={styles.author}>{book.authors[0]}</span>
         </div>

@@ -1,6 +1,5 @@
 export * from './Button';
 export * from './BookCover';
-export * from './Progress';
 export * from './StarRating';
 export * from './StatusBadge';
 export * from './Skeleton';
@@ -12,3 +11,6 @@ export * from './SectionHeader';
 export * from './Avatar';
 export * from './Toast';
 export * from './Field';
+export * from './RatingValue';
+export * from './LikeButton';
+export * from './Spoiler';

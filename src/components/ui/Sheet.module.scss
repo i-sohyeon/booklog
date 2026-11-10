@@ -9,7 +9,7 @@
   margin: auto auto 0;
 
   &::backdrop {
-    background: rgb(31 27 23 / 0.42);
+    background: rgb(24 24 27 / 0.42);
     backdrop-filter: blur(2px);
     animation: fade var(--duration-base) var(--ease-out);
   }
@@ -64,9 +64,8 @@
   }
 }
 .title {
-  font-family: var(--font-serif);
   font-size: var(--text-title-2);
-  font-weight: 700;
+  font-weight: var(--font-bold);
   line-height: var(--leading-tight);
 }
 .desc {

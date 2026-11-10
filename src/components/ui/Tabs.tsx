@@ -15,12 +15,14 @@ interface TabsProps<T extends string> {
   label: string;
   /** 탭이 제어하는 패널 id */
   controls?: string;
-  variant?: 'underline' | 'pill';
+  variant?: 'underline' | 'pill' | 'segment';
+  /** 가로 스크롤 칩이 화면 끝까지 닿도록 좌우 여백만큼 확장 */
+  bleed?: boolean;
   className?: string;
 }
 
 /** WAI-ARIA Tabs 패턴 (좌우 화살표/Home/End 이동) */
-export function Tabs<T extends string>({ items, value, onChange, label, controls, variant = 'underline', className }: TabsProps<T>) {
+export function Tabs<T extends string>({ items, value, onChange, label, controls, variant = 'underline', bleed, className }: TabsProps<T>) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -39,7 +41,7 @@ export function Tabs<T extends string>({ items, value, onChange, label, controls
   };
 
   return (
-    <div role="tablist" aria-label={label} className={cn(styles.list, styles[variant], className)} onKeyDown={onKeyDown}>
+    <div role="tablist" aria-label={label} className={cn(styles.list, styles[variant], bleed && styles.bleed, className)} onKeyDown={onKeyDown}>
       {items.map((item, i) => {
         const selected = item.value === value;
         return (

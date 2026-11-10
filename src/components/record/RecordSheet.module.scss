@@ -1,0 +1,155 @@
+.back {
+  position: absolute;
+  top: 18px;
+  right: 64px;
+  @include up('md') {
+    top: 26px;
+  }
+}
+.pick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 320px;
+}
+.hint {
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.results {
+  display: flex;
+  flex-direction: column;
+}
+.result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) 0;
+  text-align: left;
+  > svg {
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-tertiary);
+  }
+  &:hover strong {
+    color: var(--color-text-brand);
+  }
+}
+.resultText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  strong {
+    font-size: var(--text-body);
+    font-weight: var(--font-bold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  span {
+    font-size: var(--text-micro);
+    color: var(--color-text-tertiary);
+  }
+}
+.statusGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.bookHero {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--space-2) var(--space-5);
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-out);
+  > svg {
+    width: 22px;
+    height: 22px;
+    color: var(--color-text-tertiary);
+  }
+  > span:first-of-type {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  strong {
+    font-size: var(--text-body);
+    font-weight: var(--font-bold);
+  }
+  em {
+    font-style: normal;
+    font-size: var(--text-micro);
+    color: var(--color-text-tertiary);
+  }
+  &:hover {
+    background: var(--color-surface-hover);
+  }
+  &[aria-pressed='true'] {
+    box-shadow: inset 0 0 0 1.5px var(--color-primary);
+    > svg {
+      color: var(--color-primary);
+    }
+  }
+}
+.current {
+  font-size: 11px;
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+}
+.finish {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.ratingHint {
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.error {
+  font-size: var(--text-caption);
+  color: var(--color-danger);
+}
+.more {
+  align-self: flex-start;
+  min-height: 36px;
+  font-size: var(--text-label);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+  }
+}
+
+.saveRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

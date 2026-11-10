@@ -31,6 +31,15 @@ function wait(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
+/** [SAMPLE] 즉시 결과가 필요한 곳(기록 시트·책 태그)용 동기 검색 */
+export function searchCatalogSync(query: string, limit = 20): Book[] {
+  const q = normalize(query);
+  if (!q) return [];
+  return SAMPLE_CATALOG.filter((b) =>
+    [b.title, b.publisher, ...b.authors].map(normalize).some((f) => f.includes(q)),
+  ).slice(0, limit);
+}
+
 /** [SAMPLE] 네트워크 지연을 흉내내는 로컬 샘플 검색 */
 class SampleBookSearchService implements BookSearchService {
   async search(query: string, options?: { signal?: AbortSignal }): Promise<BookSearchResult> {

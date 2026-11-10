@@ -1,0 +1,208 @@
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.book {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  > span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--text-caption);
+    color: var(--color-text-tertiary);
+  }
+  em {
+    font-style: normal;
+    font-size: var(--text-micro);
+    font-weight: var(--font-bold);
+    color: var(--color-text-brand);
+  }
+  strong {
+    font-size: var(--text-title-2);
+    color: var(--color-text);
+  }
+}
+.desc {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--color-text-secondary);
+}
+.host {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+  strong {
+    color: var(--color-text);
+  }
+}
+.next {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  button {
+    margin-top: var(--space-3);
+  }
+}
+.live {
+  box-shadow: inset 0 0 0 1.5px var(--clay-600);
+  .nextLabel {
+    color: var(--clay-600);
+  }
+}
+.nextLabel {
+  font-size: var(--text-caption);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+}
+.nextTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-title-3);
+  font-weight: var(--font-bold);
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+.nextRange {
+  font-size: var(--text-label);
+  color: var(--color-text-secondary);
+}
+.enterHint {
+  text-align: center;
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+}
+.section {
+  margin-top: var(--space-10);
+}
+.h2 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-title-2);
+  font-weight: var(--font-bold);
+}
+.schedule {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.week {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.weekNo {
+  width: 44px;
+  flex-shrink: 0;
+  font-size: var(--text-caption);
+  font-weight: var(--font-bold);
+  color: var(--color-text-tertiary);
+}
+.weekBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+  strong {
+    font-size: var(--text-body);
+    font-weight: var(--font-bold);
+    color: var(--color-text);
+  }
+}
+.weekState {
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+}
+.done {
+  opacity: 0.55;
+}
+.current .weekNo {
+  color: var(--color-text-brand);
+}
+.members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 56px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    span {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+.muted {
+  font-size: var(--text-label);
+  color: var(--color-text-tertiary);
+}
+.thread {
+  display: flex;
+  flex-direction: column;
+  li {
+    display: flex;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+  }
+}
+.who {
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+  strong {
+    margin-right: 4px;
+    font-size: var(--text-caption);
+    color: var(--color-text);
+  }
+}
+.body {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+.form {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  &:focus-within {
+    box-shadow: inset 0 0 0 1.5px var(--color-primary);
+  }
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font-size: 16px;
+    outline: none;
+  }
+}
+.leave {
+  margin-top: var(--space-6);
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+  text-decoration: underline;
+}

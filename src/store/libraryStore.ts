@@ -1,52 +1,40 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Book, LibraryEntry, NoteKind, ReadingGoal, ReadingNote, ReadingSession, ReadingStatus, Visibility } from '@/types/book';
+import type { Book, LibraryEntry, ReadingStatus } from '@/types/book';
+
+export type RecordInput = Omit<LibraryEntry, 'bookId' | 'addedAt' | 'updatedAt'>;
 import { createSampleLibrary } from '@/mocks/library';
 import { toDateKey } from '@/lib/date';
 
 /**
- * 내 서재 상태 (클라이언트 로컬 저장).
- * Supabase 연결 시 이 스토어의 액션 내부에서 원격 저장을 호출하거나,
- * 서버 상태 라이브러리로 이관할 수 있도록 액션 단위를 작게 유지합니다.
+ * 내 서재 (브라우저 로컬 저장).
+ * 진도·쪽수는 기록하지 않습니다. 다 읽은 책은 별점(필수)과 선택 기록을 남깁니다.
  */
 export type DataSource = 'sample' | 'local';
-
-export interface NoteInput {
-  kind: NoteKind;
-  content: string;
-  page?: number;
-  visibility: Visibility;
-}
-
-export interface ReviewInput {
-  rating?: number;
-  review?: string;
-  visibility: Visibility;
-}
 
 export interface LibraryState {
   dataSource: DataSource;
   books: Record<string, Book>;
   entries: Record<string, LibraryEntry>;
-  notes: ReadingNote[];
-  sessions: ReadingSession[];
-  goal: ReadingGoal;
+}
+
+export interface FinishInput {
+  rating: number;
+  oneLiner?: string;
+  /** YYYY-MM-DD */
+  finishedAt: string;
+  review?: string;
+  spoiler?: boolean;
 }
 
 interface LibraryActions {
-  addBook: (book: Book, status: ReadingStatus) => void;
+  /** 상태만 바꾸기 (서재에 없으면 추가). 'done'은 saveFinished로 기록합니다 */
+  setStatus: (book: Book, status: Exclude<ReadingStatus, 'done'>) => void;
+  /** 다 읽은 책 빠른 기록 (기록 시트) — 다른 상세 기록은 유지 */
+  saveFinished: (book: Book, input: FinishInput) => void;
+  /** 기록 편집 화면에서 전체 저장 */
+  saveRecord: (book: Book, record: RecordInput) => void;
   removeBook: (bookId: string) => void;
-  setStatus: (bookId: string, status: ReadingStatus) => void;
-  updateProgress: (bookId: string, page: number) => void;
-  setRating: (bookId: string, rating: number | undefined) => void;
-  setGoal: (targetBooks: number) => void;
-  /** 메모/문장 추가 → 생성된 id 반환 */
-  addNote: (bookId: string, input: NoteInput) => string;
-  updateNote: (noteId: string, input: NoteInput) => void;
-  deleteNote: (noteId: string) => void;
-  saveReview: (bookId: string, input: ReviewInput) => void;
-  setDates: (bookId: string, dates: { startedAt?: string; finishedAt?: string }) => void;
-  /** 클라우드에서 내려받은 상태로 교체 */
   replaceAll: (state: Omit<LibraryState, 'dataSource'>) => void;
   loadSample: () => void;
   clearAll: () => void;
@@ -54,183 +42,115 @@ interface LibraryActions {
 
 export type LibraryStore = LibraryState & LibraryActions;
 
-const today = () => toDateKey(new Date());
-const newId = () =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `nt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-function cleanNote(input: NoteInput): NoteInput {
-  const page = input.page !== undefined && Number.isFinite(input.page) && input.page > 0 ? Math.round(input.page) : undefined;
-  return { kind: input.kind, content: input.content.trim(), page, visibility: input.visibility };
-}
 const nowIso = () => new Date().toISOString();
+const clampRating = (r: number) => Math.max(0.5, Math.min(5, Math.round(r * 2) / 2));
 
-function emptyState(): LibraryState {
-  return {
-    dataSource: 'local',
-    books: {},
-    entries: {},
-    notes: [],
-    sessions: [],
-    goal: { year: new Date().getFullYear(), targetBooks: 12 },
-  };
-}
-
-function sampleState(): LibraryState {
-  return { dataSource: 'sample', ...createSampleLibrary() };
-}
-
-function applyStatus(entry: LibraryEntry, book: Book, status: ReadingStatus): LibraryEntry {
-  const next: LibraryEntry = { ...entry, status, updatedAt: nowIso() };
-  if (status === 'reading' && !next.startedAt) next.startedAt = today();
-  if (status === 'done') {
-    next.startedAt ??= today();
-    next.finishedAt = today();
-    next.currentPage = book.pageCount;
-  } else {
-    next.finishedAt = undefined;
-  }
-  return next;
-}
+const emptyState = (): LibraryState => ({ dataSource: 'local', books: {}, entries: {} });
+const sampleState = (): LibraryState => ({ dataSource: 'sample', ...createSampleLibrary() });
 
 export const useLibraryStore = create<LibraryStore>()(
   persist(
     (set) => ({
       ...sampleState(),
 
-      addBook: (book, status) =>
+      setStatus: (book, status) =>
         set((s) => {
-          if (s.entries[book.id]) return s;
-          const base: LibraryEntry = {
+          const prev = s.entries[book.id];
+          const entry: LibraryEntry = prev
+            ? { ...prev, status, updatedAt: nowIso() }
+            : { bookId: book.id, status, addedAt: nowIso(), updatedAt: nowIso() };
+          // 다 읽은 책을 다른 상태로 되돌리면 기록은 유지하되 완독 정보만 내림
+          if (prev?.status === 'done') entry.finishedAt = undefined;
+          return { books: { ...s.books, [book.id]: book }, entries: { ...s.entries, [book.id]: entry } };
+        }),
+
+      saveFinished: (book, input) =>
+        set((s) => {
+          const prev = s.entries[book.id];
+          const entry: LibraryEntry = {
+            ...prev,
             bookId: book.id,
-            status: 'want',
-            addedAt: nowIso(),
+            addedAt: prev?.addedAt ?? nowIso(),
             updatedAt: nowIso(),
-            currentPage: 0,
+            status: 'done',
+            rating: clampRating(input.rating),
+            oneLiner: input.oneLiner?.trim() || undefined,
+            finishedAt: input.finishedAt || toDateKey(new Date()),
+            review: input.review !== undefined ? input.review.trim() || undefined : prev?.review,
+            spoiler: input.spoiler || undefined,
           };
-          return {
-            books: { ...s.books, [book.id]: book },
-            entries: { ...s.entries, [book.id]: applyStatus(base, book, status) },
+          return { books: { ...s.books, [book.id]: book }, entries: { ...s.entries, [book.id]: entry } };
+        }),
+
+      saveRecord: (book, r) =>
+        set((s) => {
+          const prev = s.entries[book.id];
+          const done = r.status === 'done';
+          const clean = (v?: string) => v?.trim() || undefined;
+          const entry: LibraryEntry = {
+            bookId: book.id,
+            addedAt: prev?.addedAt ?? nowIso(),
+            updatedAt: nowIso(),
+            status: r.status,
+            rating: done && r.rating ? clampRating(r.rating) : undefined,
+            finishedAt: done ? r.finishedAt || toDateKey(new Date()) : undefined,
+            oneLiner: clean(r.oneLiner),
+            review: clean(r.review),
+            spoiler: r.spoiler || undefined,
+            quotes: r.quotes?.filter((q) => q.text?.trim() || q.image).map((q) => ({ ...q, text: clean(q.text) })),
+            place: clean(r.place),
+            occasion: clean(r.occasion),
+            tags: r.tags?.length ? [...new Set(r.tags.map((t) => t.trim().replace(/^#/, '')).filter(Boolean))] : undefined,
+            readCount: r.readCount && r.readCount > 1 ? r.readCount : undefined,
+            visibility: r.visibility,
           };
+          if (entry.quotes?.length === 0) entry.quotes = undefined;
+          return { books: { ...s.books, [book.id]: book }, entries: { ...s.entries, [book.id]: entry } };
         }),
 
       removeBook: (bookId) =>
         set((s) => {
           const entries = { ...s.entries };
           delete entries[bookId];
-          return { entries, notes: s.notes.filter((n) => n.bookId !== bookId) };
-        }),
-
-      setStatus: (bookId, status) =>
-        set((s) => {
-          const entry = s.entries[bookId];
-          const book = s.books[bookId];
-          if (!entry || !book) return s;
-          return { entries: { ...s.entries, [bookId]: applyStatus(entry, book, status) } };
-        }),
-
-      updateProgress: (bookId, page) =>
-        set((s) => {
-          const entry = s.entries[bookId];
-          const book = s.books[bookId];
-          if (!entry || !book) return s;
-          const nextPage = Math.max(0, Math.min(book.pageCount, Math.round(page)));
-          const delta = nextPage - entry.currentPage;
-          let sessions = s.sessions;
-          if (delta > 0) {
-            const key = today();
-            const idx = sessions.findIndex((x) => x.date === key && x.bookId === bookId);
-            sessions =
-              idx >= 0
-                ? sessions.map((x, i) => (i === idx ? { ...x, pages: x.pages + delta } : x))
-                : [{ date: key, bookId, pages: delta }, ...sessions];
-          }
-          return {
-            sessions,
-            entries: {
-              ...s.entries,
-              [bookId]: {
-                ...entry,
-                currentPage: nextPage,
-                status: entry.status === 'want' || entry.status === 'paused' ? 'reading' : entry.status,
-                startedAt: entry.startedAt ?? today(),
-                updatedAt: nowIso(),
-              },
-            },
-          };
-        }),
-
-      setRating: (bookId, rating) =>
-        set((s) => {
-          const entry = s.entries[bookId];
-          if (!entry) return s;
-          return { entries: { ...s.entries, [bookId]: { ...entry, rating, updatedAt: nowIso() } } };
-        }),
-
-      setGoal: (targetBooks) =>
-        set((s) => ({ goal: { ...s.goal, targetBooks: Math.max(1, Math.min(365, Math.round(targetBooks))) } })),
-
-      addNote: (bookId, input) => {
-        const id = newId();
-        const at = nowIso();
-        set((s) => ({
-          notes: [{ id, bookId, ...cleanNote(input), createdAt: at, updatedAt: at }, ...s.notes],
-          entries: s.entries[bookId] ? { ...s.entries, [bookId]: { ...s.entries[bookId], updatedAt: at } } : s.entries,
-        }));
-        return id;
-      },
-
-      updateNote: (noteId, input) =>
-        set((s) => ({
-          notes: s.notes.map((n) => (n.id === noteId ? { ...n, ...cleanNote(input), updatedAt: nowIso() } : n)),
-        })),
-
-      deleteNote: (noteId) => set((s) => ({ notes: s.notes.filter((n) => n.id !== noteId) })),
-
-      saveReview: (bookId, { rating, review, visibility }) =>
-        set((s) => {
-          const entry = s.entries[bookId];
-          if (!entry) return s;
-          const text = review?.trim();
-          return {
-            entries: {
-              ...s.entries,
-              [bookId]: { ...entry, rating, review: text || undefined, reviewVisibility: visibility, updatedAt: nowIso() },
-            },
-          };
-        }),
-
-      setDates: (bookId, dates) =>
-        set((s) => {
-          const entry = s.entries[bookId];
-          if (!entry) return s;
-          return { entries: { ...s.entries, [bookId]: { ...entry, ...dates, updatedAt: nowIso() } } };
+          return { entries };
         }),
 
       replaceAll: (state) => set({ ...state, dataSource: 'local' }),
-
       loadSample: () => set(sampleState()),
       clearAll: () => set(emptyState()),
     }),
     {
       name: 'booklog:library',
-      version: 2,
-      // v1 → v2: 메모에 공개 범위 필드 추가
-      migrate: (persisted, version) => {
-        const state = persisted as LibraryState;
-        if (version < 2 && Array.isArray(state.notes)) {
-          state.notes = state.notes.map((n) => ({ ...n, visibility: n.visibility ?? 'private' }));
-        }
-        return state;
-      },
+      version: 4,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ dataSource, books, entries, notes, sessions, goal }) => ({
-        dataSource,
-        books,
-        entries,
-        notes,
-        sessions,
-        goal,
-      }),
+      partialize: ({ dataSource, books, entries }) => ({ dataSource, books, entries }),
+      /**
+       * v1·v2 → v3: 진도 기록 제거
+       * - '중단' → '읽고 싶어요', 쪽수·세션·메모·목표 폐기
+       * - 기존 리뷰는 80자 이하면 한 줄 평, 길면 긴 리뷰로 이동
+       * v3 → v4: 기록 항목 확장(문장·태그 등, 모두 선택) — 샘플 서재는 새 샘플로 교체
+       */
+      migrate: (persisted, version) => {
+        const old = persisted as { dataSource?: DataSource; books?: Record<string, Book>; entries?: Record<string, Record<string, unknown>> };
+        if (version >= 3) return old.dataSource === 'sample' ? sampleState() : (persisted as LibraryState);
+        const entries: Record<string, LibraryEntry> = {};
+        for (const [id, e] of Object.entries(old.entries ?? {})) {
+          const status = e.status === 'done' ? 'done' : e.status === 'reading' ? 'reading' : 'want';
+          const review = typeof e.review === 'string' ? e.review : undefined;
+          const short = review && review.length <= 80;
+          entries[id] = {
+            bookId: id,
+            status,
+            addedAt: String(e.addedAt ?? nowIso()),
+            updatedAt: String(e.updatedAt ?? nowIso()),
+            finishedAt: status === 'done' && typeof e.finishedAt === 'string' ? e.finishedAt : undefined,
+            rating: status === 'done' && typeof e.rating === 'number' ? e.rating : undefined,
+            oneLiner: short ? review : undefined,
+            review: short ? undefined : review,
+          };
+        }
+        return { dataSource: old.dataSource ?? 'local', books: old.books ?? {}, entries } satisfies LibraryState;
+      },
     },
   ),
 );

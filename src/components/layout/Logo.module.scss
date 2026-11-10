@@ -5,9 +5,8 @@
   min-height: 44px;
 }
 .word {
-  font-family: var(--font-serif);
   font-size: 1.1875rem;
-  font-weight: 700;
+  font-weight: var(--font-bold);
   letter-spacing: -0.03em;
   em {
     font-style: normal;

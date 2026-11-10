@@ -5,16 +5,16 @@
   height: 26px;
   padding-inline: var(--space-2) var(--space-3);
   border-radius: var(--radius-full);
-  background: var(--ochre-100);
-  color: #7a4f0f;
+  background: var(--paper-200);
+  color: var(--color-text-secondary);
   font-size: var(--text-micro);
-  font-weight: 600;
+  font-weight: var(--font-bold);
   white-space: nowrap;
   svg {
     width: 13px;
     height: 13px;
   }
   &:hover {
-    background: #f5e3bf;
+    background: var(--paper-300);
   }
 }

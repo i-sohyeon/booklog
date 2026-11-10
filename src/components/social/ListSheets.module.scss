@@ -1,0 +1,37 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.lists {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-4);
+}
+.listBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 56px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  span {
+    display: flex;
+    flex-direction: column;
+  }
+  strong {
+    font-size: var(--text-body);
+    font-weight: var(--font-bold);
+  }
+  em {
+    font-style: normal;
+    font-size: var(--text-micro);
+    color: var(--color-text-tertiary);
+  }
+  svg {
+    width: 20px;
+    height: 20px;
+    color: var(--color-primary);
+  }
+}

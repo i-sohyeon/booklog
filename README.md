@@ -1,6 +1,8 @@
 # BookLog · 북로그
 
-나의 독서 생활을 기록하고, 함께 나누는 공간.
+책을 위한 시네필 감성 기록·커뮤니티 앱. 다 읽은 책에 별점과 한 줄 평을 남기고, 다른 사람들의 취향을 구경하고, 함께 읽어요.
+
+화면 구조와 기록 방식은 [docs/IA.md](docs/IA.md), 디자인 원칙은 [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)를 보세요.
 
 ## 실행
 
@@ -26,26 +28,30 @@ React 19 · TypeScript · Vite 6 · SCSS Modules · React Router 7 · Zustand 5 
 ```
 src/
   components/
-    ui/        공통 UI (Button, BookCover, Sheet, Tabs …)
+    ui/        공통 UI (Button, BookCover, Sheet, Tabs, StarRating, LikeButton, Spoiler …)
     layout/    AppLayout(사이드바·하단 탭·앱바), Page, Logo
-    book/      도서 도메인 컴포넌트 (목록/격자 아이템, 서재 담기, 진도 기록)
-    stats/     목표 설정, 월간 캘린더
-  pages/       화면 단위 (home, library, search, book, me, misc)
-  routes/      경로 상수, 내비게이션 설정, 라우터
-  store/       Zustand 서재 스토어 + 파생 셀렉터
-  services/    도서 검색 서비스 인터페이스 (현재 샘플 구현)
+    book/      BookTile(표지 카드), BookRow(차트·검색 행), RatingDistribution
+    social/    ReviewCard, PostCard, ClubCard, ListCard, 리스트 시트
+    record/    어디서든 여는 "+" 기록 시트 (책 고르기 → 상태 → 별점·한 줄 평)
+    common/    SampleNotice, BookPicker
+  pages/       home, discover, book, list, community, clubs, me, auth, misc
+  routes/      경로 상수, 내비게이션(5탭), 라우터
+  store/       libraryStore(내 서재), socialStore(내 소셜 활동), authStore, selectors
+  services/    도서 검색(샘플), 인증, 기기↔계정 동기화
   mocks/       ⚠️ 샘플 데이터 (실제 데이터 아님)
   styles/      디자인 토큰, 전역 스타일, SCSS 믹스인
   types/ hooks/ lib/
 docs/          IA.md, DESIGN_SYSTEM.md
+supabase/      schema.sql
 ```
 
 ## 샘플 데이터
 - 첫 실행 시 `src/mocks`의 샘플 서재가 로드되며, 화면 상단 **"샘플 데이터"** 배지로 표시됩니다.
-- 마이페이지 › 데이터 관리에서 비우기 / 다시 불러오기가 가능합니다 (빈 상태 확인용).
+- 마이 › 설정 › 데이터 관리에서 비우기 / 샘플로 되돌리기가 가능합니다 (빈 상태 확인용).
 - 서재 데이터는 현재 브라우저 localStorage(`booklog:library`)에 저장됩니다.
 
 ## 외부 연동 지점
 - 도서 검색 API: `src/services/bookSearch.ts`의 `BookSearchService` 구현 교체
 - 인증: `src/services/auth.ts`, 세션 상태: `src/store/authStore.ts`
-- 기기 ↔ 계정 데이터 이관: `src/services/cloudSync.ts` (마이페이지 › 기록 옮기기, 수동 실행)
+- 기기 ↔ 계정 데이터 이관: `src/services/cloudSync.ts` (마이 › 설정 › 기록 옮기기, 수동 실행 — 서재만)
+- 커뮤니티·독서모임·리스트는 아직 서버 테이블이 없어 `src/store/socialStore.ts`에 로컬 저장됩니다.

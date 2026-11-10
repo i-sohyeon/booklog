@@ -21,6 +21,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
+  font-weight: var(--font-medium);
   font-size: var(--text-body);
   line-height: var(--leading-body);
   letter-spacing: var(--tracking-snug);
@@ -33,6 +34,19 @@ body {
 
 h1, h2, h3, h4, p, figure, blockquote, ul, ol, dl, dd {
   margin: 0;
+}
+h1, h2, h3, h4, strong, b, th {
+  font-weight: var(--font-bold);
+}
+em {
+  font-style: normal;
+}
+/* 단일 서체·두 가지 굵기 원칙: 브라우저 기본 스타일도 맞춤 */
+code, kbd, pre, samp {
+  font-family: inherit;
+}
+option, optgroup {
+  font-weight: var(--font-medium);
 }
 
 /* :where — 컴포넌트 클래스가 항상 이기도록 특이도 0 */
@@ -79,28 +93,26 @@ a {
 
 /* 타이포 유틸리티 (컴포넌트 외 페이지 단위 헤드라인용) */
 .t-display {
-  font-family: var(--font-serif);
   font-size: var(--text-display);
-  font-weight: 700;
+  font-weight: var(--font-bold);
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-tight);
 }
 .t-title-1 {
-  font-family: var(--font-serif);
   font-size: var(--text-title-1);
-  font-weight: 700;
+  font-weight: var(--font-bold);
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-tight);
 }
 .t-eyebrow {
   font-size: var(--text-micro);
-  font-weight: 600;
+  font-weight: var(--font-bold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
 
-/* 쪽수 같은 짧은 입력은 모바일에서도 좁게 */
+/* 날짜 같은 짧은 입력은 모바일에서도 좁게 */
 .field-narrow {
   max-width: 200px;
 }

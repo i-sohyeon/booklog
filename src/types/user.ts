@@ -3,5 +3,4 @@ export interface UserProfile {
   nickname: string;
   handle: string;
   bio?: string;
-  avatarUrl?: string;
 }

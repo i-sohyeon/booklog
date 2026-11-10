@@ -1,0 +1,25 @@
+.wrap {
+  position: relative;
+}
+.blur {
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+}
+.reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: rgb(247 247 248 / 0.6);
+  font-size: var(--text-caption);
+  font-weight: var(--font-bold);
+  color: var(--color-text-secondary);
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}

@@ -1,0 +1,71 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+.main {
+  display: flex;
+  gap: var(--space-4);
+  &:hover .name {
+    color: var(--color-text-brand);
+  }
+}
+.cover {
+  width: 76px;
+}
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.state {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: var(--font-bold);
+  color: var(--color-text-tertiary);
+}
+.open {
+  color: var(--color-text-brand);
+}
+.live {
+  color: var(--clay-600);
+}
+.name {
+  font-size: var(--text-title-3);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-snug);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.book {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+}
+.count {
+  font-weight: var(--font-bold);
+  color: var(--color-text-secondary);
+}
+.action {
+  display: flex;
+  > * {
+    flex: 1;
+  }
+}
