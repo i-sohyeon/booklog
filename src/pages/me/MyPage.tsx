@@ -16,6 +16,7 @@ import { CreateListSheet } from '@/components/social/ListSheets';
 import { useAuthGate } from '@/store/loginGate';
 import { GuestScreen } from '@/components/auth/LoginPrompt';
 import { UserRound as UserRoundIcon } from 'lucide-react';
+import { MemberLink } from '@/components/social/MemberLink';
 import styles from './MyPage.module.scss';
 
 type Tab = 'reviews' | 'lists' | 'clubs';
@@ -26,7 +27,8 @@ function MyPageInner() {
   const profile = useProfile();
   const following = useFollowing();
   const cloudFollowers = useCloudFollowers();
-  const signedIn = useMyCloudId() !== null;
+  const myCloudId = useMyCloudId();
+  const signedIn = myCloudId !== null;
   const [tab, setTab] = useState<Tab>('reviews');
   const [params, setParams] = useSearchParams();
   // 홈의 '친구 찾기' 버튼: /me?people=find 로 들어오면 바로 열기
@@ -68,6 +70,11 @@ function MyPageInner() {
             </button>
           )}
         </div>
+        {myCloudId && (
+          <Link to={paths.user(myCloudId)} className={styles.previewLink}>
+            친구에게 보이는 내 서재 보기
+          </Link>
+        )}
       </section>
 
       <section className={styles.activity} aria-label="내 활동">
@@ -186,11 +193,13 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
             const on = following.includes(m.id);
             return (
               <li key={m.id}>
-                <Avatar name={m.nickname} tone={m.tone} size="md" />
-                <span className={styles.personText}>
-                  <strong>{m.nickname}</strong>
-                  <span>{m.bio ?? (isFriend(m.id) ? 'BookLog 사용자' : `@${m.handle}`)}</span>
-                </span>
+                <MemberLink id={m.id} className={styles.personLink} label={`${m.nickname}님의 서재`}>
+                  <Avatar name={m.nickname} tone={m.tone} size="md" />
+                  <span className={styles.personText}>
+                    <strong>{m.nickname}</strong>
+                    <span>{m.bio ?? (isFriend(m.id) ? 'BookLog 사용자' : `@${m.handle}`)}</span>
+                  </span>
+                </MemberLink>
                 <Button size="sm" variant={on ? 'outline' : 'primary'} aria-pressed={on} onClick={() => toggleFollow(m.id)}>
                   {on ? '팔로잉' : '팔로우'}
                 </Button>

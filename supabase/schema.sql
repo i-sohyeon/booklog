@@ -14,8 +14,11 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   nickname text not null check (char_length(nickname) between 1 and 24),
   bio text,
+  -- "내 서재를 친구에게 보여 주기" (읽는 중·읽고 싶어요 포함 책장 목록)
+  library_public boolean not null default false,
   created_at timestamptz not null default now()
 );
+alter table public.profiles add column if not exists library_public boolean not null default false;
 
 alter table public.profiles enable row level security;
 drop policy if exists "profiles: self read" on public.profiles;
@@ -110,6 +113,32 @@ from public.library_entries e
 where e.status = 'done'
   and coalesce((e.visibility ->> 'rating')::boolean, false);
 
+-- ---------- 공개 책장 (친구 서재) ----------
+-- 책장 공개를 켰거나 별점을 공개한 완독 기록만, 항목은 '공개'로 켠 것만 값이 채워짐
+create or replace view public.public_shelf as
+select
+  e.user_id,
+  e.book_id,
+  e.status,
+  e.added_at,
+  e.updated_at,
+  e.finished_at,
+  e.read_count,
+  case when coalesce((e.visibility ->> 'rating')::boolean, false) then e.rating end as rating,
+  case when coalesce((e.visibility ->> 'oneLiner')::boolean, false) then e.one_liner end as one_liner,
+  case when coalesce((e.visibility ->> 'review')::boolean, false) then e.review end as review,
+  case when coalesce((e.visibility ->> 'oneLiner')::boolean, false) or coalesce((e.visibility ->> 'review')::boolean, false)
+    then e.spoiler else false end as spoiler,
+  case when coalesce((e.visibility ->> 'quotes')::boolean, false) then e.quotes else '[]'::jsonb end as quotes,
+  case when coalesce((e.visibility ->> 'context')::boolean, false) then e.place end as place,
+  case when coalesce((e.visibility ->> 'context')::boolean, false) then e.occasion end as occasion,
+  case when coalesce((e.visibility ->> 'tags')::boolean, false) then e.tags else '{}'::text[] end as tags
+from public.library_entries e
+join public.profiles p on p.id = e.user_id
+where p.library_public
+   or (e.status = 'done' and coalesce((e.visibility ->> 'rating')::boolean, false));
+
+
 -- ---------- 팔로우 ----------
 create table if not exists public.follows (
   follower_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
@@ -178,13 +207,14 @@ create index if not exists comments_post_idx on public.comments (post_id, create
 
 -- ---------- 권한 (Data API) ----------
 revoke all on public.profiles, public.books, public.library_entries, public.follows,
-  public.posts, public.comments, public.likes, public.public_reviews from anon;
+  public.posts, public.comments, public.likes, public.public_reviews, public.public_shelf from anon;
 
 grant usage on schema public to authenticated;
 grant select, update on public.profiles to authenticated;
 grant select, insert, update on public.books to authenticated;
 grant select, insert, update, delete on public.library_entries to authenticated;
 grant select on public.public_reviews to authenticated;
+grant select on public.public_shelf to authenticated;
 grant select, insert, delete on public.follows to authenticated;
 grant select, insert, delete on public.posts to authenticated;
 grant select, insert, delete on public.comments to authenticated;

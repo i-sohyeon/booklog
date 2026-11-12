@@ -6,6 +6,7 @@ import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { Avatar, BookCover, LikeButton, Spoiler, StarRating } from '@/components/ui';
 import { cn } from '@/lib/cn';
+import { MemberLink } from '@/components/social/MemberLink';
 import styles from './ReviewCard.module.scss';
 
 interface ReviewCardProps {
@@ -24,11 +25,13 @@ export function ReviewCard({ review, showBook = true, variant = 'card' }: Review
   return (
     <article className={cn(styles.card, styles[variant])}>
       <header className={styles.head}>
-        <Avatar name={member.nickname} tone={member.tone} size="sm" />
-        <div className={styles.who}>
-          <strong>{member.nickname}</strong>
-          <span>{formatRelative(review.createdAt)}</span>
-        </div>
+        <MemberLink id={review.memberId} className={styles.whoLink} label={`${member.nickname}님의 서재`}>
+          <Avatar name={member.nickname} tone={member.tone} size="sm" />
+          <span className={styles.who}>
+            <strong>{member.nickname}</strong>
+            <span>{formatRelative(review.createdAt)}</span>
+          </span>
+        </MemberLink>
         <StarRating value={review.rating} size="sm" />
       </header>
 

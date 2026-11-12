@@ -46,7 +46,8 @@ const entryRow = (userId: string, e: LibraryEntry) =>
 // ---- A: 샘플 서재 전체, 다 읽은 책은 별점·한 줄 평 공개 ----
 const libA = createSampleLibrary();
 const entriesA = Object.values(libA.entries).map((e) =>
-  e.status === 'done' ? { ...e, visibility: { ...e.visibility, rating: true, oneLiner: true } } : e,
+  // 친구 서재 체험용: 다 읽은 책은 감상·문장·태그·장소까지 공개
+  e.status === 'done' ? { ...e, visibility: { ...e.visibility, rating: true, oneLiner: true, review: true, quotes: true, tags: true, context: true } } : e,
 );
 
 // ---- B: 샘플 사용자 몇 명의 후기를 B의 완독 기록으로 + 읽는 중·읽고 싶어요 ----
@@ -121,13 +122,13 @@ insert into auth.identities (provider_id, user_id, identity_data, provider, last
 values (${q(a.id)}, ${q(a.id)}, ${json({ sub: a.id, email: a.email, email_verified: true })}, 'email', now(), now(), now())
 on conflict (provider_id, provider) do nothing;
 
-insert into public.profiles (id, nickname, bio) values (${q(a.id)}, ${q(a.nickname)}, ${q('BookLog 테스트 계정이에요')})
-on conflict (id) do update set nickname = excluded.nickname, bio = excluded.bio;
+insert into public.profiles (id, nickname, bio, library_public) values (${q(a.id)}, ${q(a.nickname)}, ${q('BookLog 테스트 계정이에요')}, true)
+on conflict (id) do update set nickname = excluded.nickname, bio = excluded.bio, library_public = true;
 `;
 
 const sql = `-- =====================================================================
 -- BookLog — 테스트 계정 2개 + 샘플 데이터 (자동 생성: npm run demo:seed)
--- schema.sql 을 먼저 실행한 뒤, 이 파일 전체를 SQL Editor 에서 Run 하세요.
+-- schema.sql(또는 migrations/002_friend_library.sql 까지) 실행한 뒤, 이 파일 전체를 SQL Editor 에서 Run 하세요.
 -- 다시 실행하면 두 테스트 계정의 데이터가 처음 상태로 되돌아갑니다.
 -- 로그인 정보는 앱 코드 src/config/demoAccounts.ts 에 있습니다(공개 체험용).
 -- =====================================================================

@@ -7,6 +7,7 @@ import { POST_KIND_LABEL } from '@/types/social';
 import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { Avatar, BookCover, LikeButton, Spoiler } from '@/components/ui';
+import { MemberLink } from '@/components/social/MemberLink';
 import styles from './PostCard.module.scss';
 
 export function PostCard({ post, linked = true }: { post: PostView; linked?: boolean }) {
@@ -18,13 +19,28 @@ export function PostCard({ post, linked = true }: { post: PostView; linked?: boo
   const content = (
     <>
       <header className={styles.head}>
-        <Avatar name={member.nickname} tone={member.tone} size="sm" />
-        <div className={styles.who}>
-          <strong>{member.nickname}</strong>
-          <span>
-            {POST_KIND_LABEL[post.kind]} · {formatRelative(post.createdAt)}
-          </span>
-        </div>
+        {linked ? (
+          <>
+            <Avatar name={member.nickname} tone={member.tone} size="sm" />
+            <div className={styles.who}>
+              <strong>{member.nickname}</strong>
+              <span>
+                {POST_KIND_LABEL[post.kind]} · {formatRelative(post.createdAt)}
+              </span>
+            </div>
+          </>
+        ) : (
+          // 글 상세에서는 작성자를 눌러 친구 서재로 (목록에서는 카드 전체가 글 링크)
+          <MemberLink id={post.memberId} className={styles.whoLink} label={`${member.nickname}님의 서재`}>
+            <Avatar name={member.nickname} tone={member.tone} size="sm" />
+            <span className={styles.who}>
+              <strong>{member.nickname}</strong>
+              <span>
+                {POST_KIND_LABEL[post.kind]} · {formatRelative(post.createdAt)}
+              </span>
+            </span>
+          </MemberLink>
+        )}
       </header>
       <Spoiler active={post.spoiler}>
         {post.quote && (
