@@ -1,5 +1,6 @@
 import type { AuthError, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { flushLibrarySync } from './librarySync';
 
 export interface AuthUser {
   id: string;
@@ -64,6 +65,8 @@ export const authService = {
   },
 
   async signOut(): Promise<void> {
+    // 0.8초 모아 두던 서재 변경이 있으면 먼저 저장
+    await flushLibrarySync().catch(() => undefined);
     const { error } = await client().auth.signOut();
     if (error) throw error;
   },

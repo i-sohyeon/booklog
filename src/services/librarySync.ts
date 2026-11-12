@@ -78,6 +78,7 @@ function mergeEntry(local: LibraryEntry | undefined, server: LibraryEntry | unde
 }
 
 let stop: (() => void) | null = null;
+let flushNow: (() => Promise<void>) | null = null;
 let activeUser: string | null = null;
 
 export async function startLibrarySync(userId: string) {
@@ -122,6 +123,7 @@ export async function startLibrarySync(userId: string) {
   let running: Promise<void> = Promise.resolve();
 
   const flush = () => {
+    clearTimeout(timer);
     running = running.then(async () => {
       const state = useLibraryStore.getState();
       if (state.dataSource === 'sample' || activeUser !== userId) return;
@@ -138,7 +140,9 @@ export async function startLibrarySync(userId: string) {
         setStatus('error', e instanceof Error ? e.message : String(e));
       }
     });
+    return running;
   };
+  flushNow = flush;
 
   const unsub = useLibraryStore.subscribe((s, prev) => {
     if (s.entries === prev.entries) return;
@@ -155,9 +159,15 @@ export async function startLibrarySync(userId: string) {
   };
 }
 
+/** 로그아웃 직전: 아직 올리지 않은 변경을 바로 저장 */
+export async function flushLibrarySync() {
+  await flushNow?.();
+}
+
 export function stopLibrarySync() {
   stop?.();
   stop = null;
+  flushNow = null;
   activeUser = null;
   setStatus('off');
 }
@@ -175,5 +185,21 @@ async function push(userId: string, changed: LibraryEntry[], removed: string[]) 
   if (removed.length) {
     const r3 = await db.from('library_entries').delete().eq('user_id', userId).in('book_id', removed);
     if (r3.error) throw new Error(r3.error.message);
+  }
+}
+
+/**
+ * 로그아웃 상태가 되면(직접 로그아웃 · 탭을 닫았다 다시 연 경우 모두)
+ * 이 기기에 남아 있던 계정 기록을 화면에서 내리고 샘플 데이터로 되돌립니다.
+ * 계정 기록은 서버에 저장돼 있어 다시 로그인하면 그대로 불러옵니다.
+ */
+export function resetAfterSignOut() {
+  if (!readOwner()) return;
+  useLibraryStore.getState().loadSample();
+  useSocialStore.getState().reset();
+  try {
+    localStorage.removeItem(OWNER_KEY);
+  } catch {
+    /* ignore */
   }
 }

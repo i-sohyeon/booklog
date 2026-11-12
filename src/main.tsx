@@ -4,7 +4,7 @@ import { RouterProvider } from 'react-router/dom';
 import { router } from '@/routes/router';
 import { useAuthStore } from '@/store/authStore';
 import { useCloudStore } from '@/store/cloudStore';
-import { onSyncStatus, startLibrarySync, stopLibrarySync } from '@/services/librarySync';
+import { onSyncStatus, resetAfterSignOut, startLibrarySync, stopLibrarySync } from '@/services/librarySync';
 import { useToast } from '@/components/ui';
 import '@/styles/global.scss';
 
@@ -25,6 +25,7 @@ useAuthStore.subscribe((s, prev) => {
   } else if (s.status === 'signedOut') {
     stopLibrarySync();
     useCloudStore.getState().clear();
+    resetAfterSignOut();
   }
 });
 
