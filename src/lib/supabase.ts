@@ -23,7 +23,12 @@ function safe(get: () => Storage): KV {
 }
 
 const local = safe(() => window.localStorage);
-const tab = safe(() => window.sessionStorage);
+/** 자동 로그인을 안 켰을 때: 메모리에만 — 새로고침하거나 다시 열면 로그아웃 상태로 시작 */
+const memory: KV = (() => {
+  const mem = new Map<string, string>();
+  return { getItem: (key) => mem.get(key) ?? null, setItem: (key, value) => void mem.set(key, value), removeItem: (key) => void mem.delete(key) };
+})();
+const tab = memory;
 const REMEMBER_KEY = 'booklog:remember-login';
 
 /** 자동 로그인을 켰는지 */
@@ -37,7 +42,7 @@ export function setRememberLogin(on: boolean) {
 
 /**
  * 로그인 정보 저장소.
- * - 기본(자동 로그인 끔): sessionStorage — 탭을 닫았다 다시 열면 로그아웃 상태로 시작 (새로고침은 유지)
+ * - 기본(자동 로그인 끔): 메모리 — 새로고침하거나 앱·탭을 다시 열면 로그아웃 상태로 시작
  * - 자동 로그인 켬: localStorage — 다시 열어도 로그인 유지
  */
 const authStorage: KV = {
@@ -53,12 +58,15 @@ const authStorage: KV = {
   },
 };
 
-// 자동 로그인을 켜지 않았는데 localStorage에 남은 로그인 정보(예전 버전 등)는 정리
-if (typeof window !== 'undefined' && !isRememberLogin()) {
-  try {
-    for (const key of Object.keys(window.localStorage)) if (/^sb-.*-auth-token/.test(key)) window.localStorage.removeItem(key);
-  } catch {
-    /* ignore */
+// 자동 로그인을 켜지 않았는데 남아 있는 로그인 정보(예전 버전이 저장한 것)는 정리
+if (typeof window !== 'undefined') {
+  for (const get of [() => window.sessionStorage, ...(isRememberLogin() ? [] : [() => window.localStorage])]) {
+    try {
+      const st = get();
+      for (const key of Object.keys(st)) if (/^sb-.*-auth-token/.test(key)) st.removeItem(key);
+    } catch {
+      /* ignore */
+    }
   }
 }
 

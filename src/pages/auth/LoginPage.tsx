@@ -92,13 +92,22 @@ export function LoginPage() {
         />
         <div className={styles.row}>
           <label className={styles.check}>
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={!isSupabaseConfigured} />
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              disabled={!isSupabaseConfigured}
+              aria-describedby="remember-hint"
+            />
             <span>자동 로그인</span>
           </label>
           <Link to={paths.resetPassword} className={styles.link}>
             비밀번호를 잊었어요
           </Link>
         </div>
+        <p id="remember-hint" className={styles.rememberHint}>
+          {remember ? '앱을 닫았다 다시 열어도 로그인이 유지돼요. 공용 기기에서는 켜지 마세요.' : '체크하지 않으면 새로고침하거나 다시 열 때 로그아웃돼요.'}
+        </p>
         {serverError && (
           <p className={styles.serverError} role="alert">
             {serverError}

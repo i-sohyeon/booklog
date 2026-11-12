@@ -55,7 +55,7 @@ export const authService = {
 
   /** needsConfirmation: 이메일 인증이 켜져 있으면 세션 없이 가입만 완료됨 */
   async signUp(email: string, password: string, nickname: string): Promise<{ needsConfirmation: boolean }> {
-    // 가입 직후 로그인도 기본값(이 탭에서만 유지)
+    // 가입 직후 로그인도 기본값(자동 로그인 끔 — 새로고침하면 로그아웃)
     setRememberLogin(false);
     const { data, error } = await client().auth.signUp({
       email,
