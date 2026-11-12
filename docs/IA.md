@@ -47,7 +47,15 @@
 ## 데이터
 | 구분 | 위치 | 비고 |
 |------|------|------|
-| 내 서재·기록 | `store/libraryStore.ts` (localStorage `booklog:library`, v4) | Supabase `library_entries`로 수동 동기화 가능 (문장 사진은 기기에만) |
-| 내 소셜 활동 | `store/socialStore.ts` (localStorage `booklog:social`, v2) | 좋아요·글·댓글·모임 참여·리스트·팔로우 — 이 기기 전용 |
-| 다른 사람 후기·글·모임·리스트·베스트셀러·평점 분포·팔로워 | `mocks/social.ts` | **샘플 데이터** — 화면에 "샘플" 표시 |
-| 도서 정보 | `mocks/catalog.ts` + `services/bookSearch.ts` | 도서 검색 API 연결 전 샘플 33권 |
+| 내 서재·기록 | `store/libraryStore.ts` (localStorage `booklog:library`, v4) | 로그인하면 `services/librarySync.ts`가 Supabase `library_entries`에 자동 저장 (문장 사진은 기기에만) |
+| 가입한 사람끼리 공유 | `store/cloudStore.ts` ↔ Supabase `profiles`·`follows`·`public_reviews`·`posts`·`comments`·`likes` | 로그인 중에만. 다른 사람에겐 별점을 '공개'한 완독 기록만 보이고, 한 줄 평은 따로 공개해야 보임 |
+| 이 기기 전용 소셜 | `store/socialStore.ts` (localStorage `booklog:social`, v2) | 샘플 글·후기에 남긴 좋아요·댓글, 샘플 사용자 팔로우, 독서모임, 리스트 |
+| 샘플 사용자의 후기·글·모임·리스트·베스트셀러·평점 분포 | `mocks/social.ts` | **샘플 데이터** — 화면에 "샘플" 표시 |
+| 도서 정보 | 카카오 책 검색 ← `api/books.ts`(Vercel 서버 함수, 키 `KAKAO_REST_KEY`) ← `services/bookSearch.ts` | 검색·책 상세, 실제 표지. 카카오는 장르·순위를 주지 않아 장르는 '기타'(기록 편집에서 선택), 베스트셀러는 샘플 차트. 키가 없으면 샘플 33권(`mocks/catalog.ts`)으로 대체. 본 책은 `store/bookCache.ts`에 저장. '도서 정보 제공: 카카오' 표기 |
+
+서버 설정: `supabase/schema.sql`을 SQL Editor에서 실행, `.env.local`(로컬)·Vercel 환경변수에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`(publishable key).
+
+### 테스트(체험) 계정
+- 로그인 화면 하단 "가입 없이 테스트 계정으로 둘러보기" → 테스트독자A / 테스트독자B (서로 팔로우, 샘플 서재·공개 후기·게시글 포함)
+- 계정·데이터: `supabase/demo_seed.sql` (schema.sql 다음에 실행, 다시 실행하면 초기화) — `npm run demo:seed`로 재생성
+- 로그인 정보는 `src/config/demoAccounts.ts`에 있으며 앱 코드에 공개되는 체험용 값

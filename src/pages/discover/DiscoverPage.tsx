@@ -3,11 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Plus } from 'lucide-react';
 import type { BestsellerCategory } from '@/types/social';
-import { SAMPLE_BESTSELLERS, SAMPLE_CATEGORIES } from '@/mocks/social';
+import { SAMPLE_CATEGORIES } from '@/mocks/social';
 import { useAsync } from '@/hooks/useAsync';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useBookLookup, useLists, useReviews } from '@/hooks/useSocial';
-import { bookSearchService } from '@/services/bookSearch';
+import { useLists, useReviews } from '@/hooks/useSocial';
+import { bookSearchService, fetchBestsellers } from '@/services/bookSearch';
+import { SourceCredit } from '@/components/book/SourceCredit';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Badge, Button, EmptyState, ErrorState, LoadingRegion, SearchField, SectionHeader, Skeleton, Tabs } from '@/components/ui';
 import { BookRow } from '@/components/book/BookRow';
@@ -71,32 +72,43 @@ function SearchResults({ query }: { query: string }) {
     );
   if (result.status === 'error') return <ErrorState onRetry={result.retry} />;
   if (result.data.items.length === 0)
-    return <EmptyState title={`‘${query}’ 검색 결과가 없어요`} description={`지금은 샘플 도서 ${SAMPLE_CATALOG.length}권 안에서 검색돼요. 도서 검색 API는 다음 단계에서 연결돼요.`} />;
+    return (
+      <EmptyState
+        title={`‘${query}’ 검색 결과가 없어요`}
+        description={result.data.isSample ? `도서 검색 서버에 연결되지 않아 샘플 도서 ${SAMPLE_CATALOG.length}권 안에서 찾았어요.` : '제목이나 저자 이름을 다르게 입력해 보세요.'}
+      />
+    );
   return (
     <section aria-label="검색 결과">
       <p className={styles.count} aria-live="polite">
-        검색 결과 <strong>{result.data.total}</strong>권
+        검색 결과 <strong>{result.data.total.toLocaleString()}</strong>권{result.data.total > result.data.items.length && ` 중 ${result.data.items.length}권`}
+        {result.data.isSample && <Badge tone="outline">샘플</Badge>}
       </p>
       {result.data.items.map((b) => (
         <BookRow key={b.id} book={b} />
       ))}
+      {!result.data.isSample && <SourceCredit />}
     </section>
   );
 }
 
 function Browse() {
   const [cat, setCat] = useState<BestsellerCategory>('종합');
-  const findBook = useBookLookup();
   const lists = useLists();
   const [creating, setCreating] = useState(false);
-  const chart = useMemo(() => SAMPLE_BESTSELLERS[cat], [cat]);
+  const chart = useAsync(() => fetchBestsellers(cat), [cat]);
   const reviews = useReviews();
   const hot = useMemo(() => reviews.filter((r) => !r.isMine).sort((a, b) => b.likeCount - a.likeCount).slice(0, 8), [reviews]);
 
   return (
     <>
       <section className={styles.section} aria-labelledby="chart-title">
-        <SectionHeader id="chart-title" title="베스트셀러" description="이번 주 기준" aside={<Badge tone="outline">샘플</Badge>} />
+        <SectionHeader
+          id="chart-title"
+          title="베스트셀러"
+          description="이번 주 기준"
+          aside={chart.status === 'success' && chart.data.isSample ? <Badge tone="outline">샘플</Badge> : undefined}
+        />
         <Tabs<BestsellerCategory>
           label="카테고리"
           variant="pill"
@@ -107,10 +119,23 @@ function Browse() {
           items={SAMPLE_CATEGORIES.map((c) => ({ value: c, label: c }))}
         />
         <div id="chart-panel" role="tabpanel" className={styles.chart}>
-          {chart.map((it) => {
-            const book = findBook(it.bookId);
-            return book ? <BookRow key={it.bookId} book={book} rank={it.rank} change={it.change} /> : null;
-          })}
+          {chart.status === 'success' ? (
+            chart.data.rows.map((r) => <BookRow key={r.book.id} book={r.book} rank={r.rank} change={r.change} />)
+          ) : chart.status === 'error' ? (
+            <ErrorState onRetry={chart.retry} />
+          ) : (
+            <LoadingRegion label="베스트셀러 불러오는 중">
+              {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} className={styles.skelRow}>
+                  <Skeleton variant="cover" width={56} />
+                  <div>
+                    <Skeleton variant="text" width="60%" />
+                    <Skeleton variant="text" width="30%" />
+                  </div>
+                </div>
+              ))}
+            </LoadingRegion>
+          )}
         </div>
       </section>
 

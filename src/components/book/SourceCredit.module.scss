@@ -1,0 +1,13 @@
+.credit {
+  margin-top: var(--space-3);
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    &:hover {
+      color: var(--color-text-secondary);
+    }
+  }
+}

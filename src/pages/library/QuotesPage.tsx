@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { BookCover, ButtonLink, EmptyState, Tabs } from '@/components/ui';
+import { byline } from '@/lib/byline';
 import styles from './QuotesPage.module.scss';
 
 interface QuoteItem {
@@ -60,7 +61,7 @@ export function QuotesPage() {
                     <BookCover book={book} size="xs" />
                     <span>
                       <strong>{book.title}</strong>
-                      <span>{book.authors.join(', ')} · {book.genre}</span>
+                      <span>{byline(book)}</span>
                     </span>
                   </Link>
                   <Link to={paths.recordEdit(book.id)} className={styles.edit} aria-label={`「${book.title}」 기록 고치기`}>

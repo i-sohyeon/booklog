@@ -5,6 +5,7 @@ import type { Book } from '@/types/book';
 import { ratingSummary } from '@/store/selectors';
 import { paths } from '@/routes/paths';
 import { BookCover, RatingValue } from '@/components/ui';
+import { byline } from '@/lib/byline';
 import styles from './BookRow.module.scss';
 
 interface BookRowProps {
@@ -29,7 +30,7 @@ export function BookRow({ book, rank, change, aside }: BookRowProps) {
         <BookCover book={book} size="sm" />
         <span className={styles.text}>
           <strong>{book.title}</strong>
-          <span className={styles.author}>{book.authors.join(', ')} · {book.genre}</span>
+          <span className={styles.author}>{byline(book)}</span>
           {summary.count > 0 && <RatingValue value={summary.average} count={summary.count} />}
         </span>
       </Link>

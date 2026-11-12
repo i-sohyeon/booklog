@@ -7,7 +7,12 @@ export type Genre =
   | '역사'
   | '경제경영'
   | '자기계발'
-  | '예술';
+  | '예술'
+  /** 장르를 모를 때 (도서 API 책) — 화면에서는 숨기고 기록할 때 고를 수 있음 */
+  | '기타';
+
+/** 장르 선택 목록 */
+export const GENRES: Genre[] = ['소설', '에세이', '시', '인문', '과학', '역사', '경제경영', '자기계발', '예술', '기타'];
 
 /** 표지 이미지가 없을 때 생성형 표지에 쓰이는 톤 */
 export type CoverTone = 'plum' | 'forest' | 'navy' | 'clay' | 'mustard' | 'charcoal' | 'rose' | 'sea';
@@ -25,8 +30,10 @@ export interface Book {
   pageCount: number;
   genre: Genre;
   description: string;
-  /** 외부 도서 API 연결 후 채워질 표지 URL */
+  /** 표지 이미지 URL (카카오 책 검색 등 도서 API) */
   coverUrl?: string;
+  /** 도서 API의 상품 페이지 (출처 링크) — 서버에 저장하지 않음 */
+  sourceUrl?: string;
   coverTone?: CoverTone;
 }
 

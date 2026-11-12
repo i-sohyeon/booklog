@@ -1,17 +1,19 @@
 import { SAMPLE_CATALOG } from '@/mocks/catalog';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, BookCheck, BookMarked, BookOpen, ChevronRight } from 'lucide-react';
 import type { Book, ReadingStatus } from '@/types/book';
 import { ONE_LINER_MAX, READING_STATUS_LABEL } from '@/types/book';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useShelf } from '@/hooks/useShelf';
-import { searchCatalogSync } from '@/services/bookSearch';
+import { useMyCloudId } from '@/hooks/useSocial';
+import { useBookSearch } from '@/services/bookSearch';
 import { toDateKey } from '@/lib/date';
 import { josa } from '@/lib/josa';
 import { paths } from '@/routes/paths';
 import { BookCover, Button, IconButton, SearchField, Sheet, StarRating, TextField, useToast } from '@/components/ui';
 import { useRecord } from './recordStore';
+import { byline } from '@/lib/byline';
 import styles from './RecordSheet.module.scss';
 
 /** 화면 어디서든 열리는 기록 시트: 책 검색 → 상태 → (다 읽었으면) 별점·한 줄 평·완독일 → 서재에 저장 */
@@ -37,7 +39,7 @@ export function RecordSheet() {
 function PickStep({ onPick }: { onPick: (b: Book) => void }) {
   const [q, setQ] = useState('');
   const shelf = useShelf();
-  const results = useMemo(() => searchCatalogSync(q), [q]);
+  const { items: results, loading, isSample } = useBookSearch(q);
   const reading = shelf.filter((i) => i.entry.status === 'reading').map((i) => i.book);
   const list = q.trim() ? results : reading;
 
@@ -45,7 +47,10 @@ function PickStep({ onPick }: { onPick: (b: Book) => void }) {
     <div className={styles.pick}>
       <SearchField label="책 검색" placeholder="제목, 저자로 찾기" value={q} onValueChange={setQ} autoFocus />
       {!q.trim() && reading.length > 0 && <p className={styles.hint}>읽는 중인 책</p>}
-      {q.trim() && results.length === 0 && <p className={styles.hint}>‘{q}’에 맞는 책이 없어요. (샘플 도서 {SAMPLE_CATALOG.length}권 안에서 검색돼요)</p>}
+      {q.trim() && loading && results.length === 0 && <p className={styles.hint}>찾는 중…</p>}
+      {q.trim() && !loading && results.length === 0 && (
+        <p className={styles.hint}>‘{q}’에 맞는 책이 없어요.{isSample && ` (지금은 샘플 도서 ${SAMPLE_CATALOG.length}권 안에서 검색돼요)`}</p>
+      )}
       {!q.trim() && reading.length === 0 && <p className={styles.hint}>읽은 책이나 읽고 싶은 책을 검색해 보세요.</p>}
       <ul role="list" className={styles.results}>
         {list.map((b) => (
@@ -54,7 +59,7 @@ function PickStep({ onPick }: { onPick: (b: Book) => void }) {
               <BookCover book={b} size="xs" />
               <span className={styles.resultText}>
                 <strong>{b.title}</strong>
-                <span>{b.authors.join(', ')} · {b.genre}</span>
+                <span>{byline(b)}</span>
               </span>
               <ChevronRight aria-hidden />
             </button>
@@ -115,6 +120,9 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
   const [rating, setRating] = useState<number | undefined>(entry?.rating);
   const [oneLiner, setOneLiner] = useState(entry?.oneLiner ?? '');
   const [finishedAt, setFinishedAt] = useState(entry?.finishedAt ?? today);
+  // 로그인 중일 때만: 별점·한 줄 평을 다른 사용자에게 공개 (기본 비공개)
+  const signedIn = useMyCloudId() !== null;
+  const [share, setShare] = useState(Boolean(entry?.visibility?.rating));
   const [submitted, setSubmitted] = useState(false);
 
   const errors = {
@@ -126,7 +134,13 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
   const save = (more = false) => {
     setSubmitted(true);
     if (!valid || !rating) return;
-    saveFinished(book, { rating, oneLiner, finishedAt, spoiler: entry?.spoiler });
+    saveFinished(book, {
+      rating,
+      oneLiner,
+      finishedAt,
+      spoiler: entry?.spoiler,
+      visibility: signedIn ? { ...entry?.visibility, rating: share, oneLiner: share } : undefined,
+    });
     showToast(entry?.status === 'done' ? '기록을 고쳤어요' : `「${book.title}」${josa(book.title, '을/를')} 서재에 기록했어요`);
     onClose();
     if (more) navigate(paths.recordEdit(book.id));
@@ -159,6 +173,16 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
       />
 
       <TextField label="완독일" type="date" max={today} value={finishedAt} onChange={(e) => setFinishedAt(e.target.value)} error={errors.date} fieldClassName="field-narrow" />
+
+      {signedIn && (
+        <label className={styles.share}>
+          <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
+          <span>
+            <strong>별점·한 줄 평 공개</strong>
+            <span>가입한 친구에게 보여요 (팔로워의 홈 · 책 상세)</span>
+          </span>
+        </label>
+      )}
 
       <div className={styles.saveRow}>
         <Button type="submit" size="lg" block>

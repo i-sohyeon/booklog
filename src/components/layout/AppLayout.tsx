@@ -10,6 +10,7 @@ import { Avatar, Button, ToastViewport } from '@/components/ui';
 import { FloatingAction, RecordSheet, useRecord } from '@/components/record';
 import { Logo } from './Logo';
 import { SampleDataBadge } from './SampleDataBadge';
+import { useCloudStore } from '@/store/cloudStore';
 import styles from './AppLayout.module.scss';
 
 export interface RouteHandle {
@@ -29,7 +30,15 @@ export function AppLayout() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    // 친구의 새 글·후기 반영 (로그인 중일 때만, 15초에 한 번까지)
+    useCloudStore.getState().refreshSoon();
   }, [pathname]);
+
+  useEffect(() => {
+    const onVisible = () => document.visibilityState === 'visible' && useCloudStore.getState().refreshSoon();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
 
   return (
     <div className={styles.shell}>

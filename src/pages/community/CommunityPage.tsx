@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router';
 import { PenLine, Plus } from 'lucide-react';
 import type { PostKind } from '@/types/social';
 import { POST_KIND_LABEL } from '@/types/social';
-import { usePosts } from '@/hooks/useSocial';
+import { useMyCloudId, usePosts } from '@/hooks/useSocial';
 import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { ButtonLink, EmptyState, Tabs } from '@/components/ui';
@@ -61,12 +61,17 @@ type Filter = PostKind | 'all';
 
 function Board() {
   const posts = usePosts();
+  const signedIn = useMyCloudId() !== null;
   const [filter, setFilter] = useState<Filter>('all');
   const items = useMemo(() => (filter === 'all' ? posts : posts.filter((p) => p.kind === filter)), [posts, filter]);
 
   return (
     <>
-      <SampleNotice>샘플 게시판이에요. 내가 쓴 글·댓글·좋아요는 이 기기에만 저장되고 다른 사람에게 보이지 않아요.</SampleNotice>
+      <SampleNotice>
+        {signedIn
+          ? '가입한 사람들의 글과 샘플 글이 함께 보여요. 내가 쓴 글·댓글·좋아요는 계정에 저장돼 친구에게도 보여요.'
+          : '샘플 게시판이에요. 로그인하지 않으면 내가 쓴 글·댓글·좋아요는 이 기기에만 저장되고 다른 사람에게 보이지 않아요.'}
+      </SampleNotice>
       <div className={styles.filters}>
         <Tabs<Filter>
           label="글 카테고리"
