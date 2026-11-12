@@ -13,6 +13,7 @@ import { josa } from '@/lib/josa';
 import { paths } from '@/routes/paths';
 import { BookCover, Button, IconButton, SearchField, Sheet, StarRating, TextField, useToast } from '@/components/ui';
 import { useRecord } from './recordStore';
+import { byline } from '@/lib/byline';
 import styles from './RecordSheet.module.scss';
 
 /** 화면 어디서든 열리는 기록 시트: 책 검색 → 상태 → (다 읽었으면) 별점·한 줄 평·완독일 → 서재에 저장 */
@@ -58,7 +59,7 @@ function PickStep({ onPick }: { onPick: (b: Book) => void }) {
               <BookCover book={b} size="xs" />
               <span className={styles.resultText}>
                 <strong>{b.title}</strong>
-                <span>{b.authors.join(', ')} · {b.genre}</span>
+                <span>{byline(b)}</span>
               </span>
               <ChevronRight aria-hidden />
             </button>

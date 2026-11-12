@@ -44,7 +44,7 @@ export function readingProfile(done: ShelfItem[]): ReadingProfile {
   const genreMap = new Map<Genre, number>();
   const authorMap = new Map<string, number>();
   for (const { book } of done) {
-    genreMap.set(book.genre, (genreMap.get(book.genre) ?? 0) + 1);
+    if (book.genre !== '기타') genreMap.set(book.genre, (genreMap.get(book.genre) ?? 0) + 1);
     for (const a of book.authors) authorMap.set(a, (authorMap.get(a) ?? 0) + 1);
   }
   const sorted = <T,>(m: Map<T, number>) => [...m.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);

@@ -8,7 +8,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useLists, useReviews } from '@/hooks/useSocial';
 import { bookSearchService, fetchBestsellers } from '@/services/bookSearch';
-import { AladinCredit } from '@/components/book/AladinCredit';
+import { SourceCredit } from '@/components/book/SourceCredit';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Badge, Button, EmptyState, ErrorState, LoadingRegion, SearchField, SectionHeader, Skeleton, Tabs } from '@/components/ui';
 import { BookRow } from '@/components/book/BookRow';
@@ -87,7 +87,7 @@ function SearchResults({ query }: { query: string }) {
       {result.data.items.map((b) => (
         <BookRow key={b.id} book={b} />
       ))}
-      {!result.data.isSample && <AladinCredit />}
+      {!result.data.isSample && <SourceCredit />}
     </section>
   );
 }
@@ -96,7 +96,7 @@ function Browse() {
   const [cat, setCat] = useState<BestsellerCategory>('종합');
   const lists = useLists();
   const [creating, setCreating] = useState(false);
-  const chart = useAsync((signal) => fetchBestsellers(cat, signal), [cat]);
+  const chart = useAsync(() => fetchBestsellers(cat), [cat]);
   const reviews = useReviews();
   const hot = useMemo(() => reviews.filter((r) => !r.isMine).sort((a, b) => b.likeCount - a.likeCount).slice(0, 8), [reviews]);
 
@@ -106,7 +106,7 @@ function Browse() {
         <SectionHeader
           id="chart-title"
           title="베스트셀러"
-          description={chart.status === 'success' && !chart.data.isSample ? '알라딘 주간 베스트셀러' : '이번 주 기준'}
+          description="이번 주 기준"
           aside={chart.status === 'success' && chart.data.isSample ? <Badge tone="outline">샘플</Badge> : undefined}
         />
         <Tabs<BestsellerCategory>
@@ -137,7 +137,6 @@ function Browse() {
             </LoadingRegion>
           )}
         </div>
-        {chart.status === 'success' && !chart.data.isSample && <AladinCredit />}
       </section>
 
       <section className={styles.section} aria-labelledby="hot-title">

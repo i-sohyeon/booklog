@@ -16,6 +16,7 @@ import { paths } from '@/routes/paths';
 import { Page } from '@/components/layout/Page';
 import { Avatar, BookCover, Button, ButtonLink, RatingValue, SectionHeader, Spoiler, StarRating, useToast } from '@/components/ui';
 import { nextSession } from '@/components/social/ClubCard';
+import { byline } from '@/lib/byline';
 import styles from './HomePage.module.scss';
 
 function dayIndex(d = new Date()) {
@@ -84,7 +85,7 @@ function TodayPick() {
         <h2 id="pick-title" className={styles.pickTitle}>
           <Link to={paths.book(book.id)}>{book.title}</Link>
         </h2>
-        <p className={styles.pickAuthor}>{book.authors.join(', ')} · {book.genre}</p>
+        <p className={styles.pickAuthor}>{byline(book)}</p>
         <p className={styles.pickLine}>{pick.line}</p>
         <RatingValue value={summary.average} count={summary.count} size="md" />
       </div>

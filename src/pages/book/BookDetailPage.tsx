@@ -30,7 +30,8 @@ import { ReviewCard } from '@/components/social/ReviewCard';
 import { AddToListSheet } from '@/components/social/ListSheets';
 import { useRecord } from '@/components/record';
 import { useBookCache } from '@/store/bookCache';
-import { AladinCredit } from '@/components/book/AladinCredit';
+import { SourceCredit } from '@/components/book/SourceCredit';
+import { knownGenre } from '@/lib/byline';
 import styles from './BookDetailPage.module.scss';
 
 export function BookDetailPage() {
@@ -118,7 +119,7 @@ function BookDetail({ book }: { book: Book }) {
 
       <div className={styles.body}>
         <header className={styles.head}>
-          <Badge tone="outline">{book.genre}</Badge>
+          {knownGenre(book.genre) && <Badge tone="outline">{book.genre}</Badge>}
           <h1 className={styles.title}>{book.title}</h1>
           <p className={styles.byline}>
             {book.authors.join(', ')}
@@ -184,10 +185,10 @@ function BookDetail({ book }: { book: Book }) {
             책 소개
           </h2>
           {book.description ? <p className={styles.desc}>{book.description}</p> : <p className={styles.muted}>등록된 소개가 없어요.</p>}
-          {book.id.startsWith('al-') && (
-            <AladinCredit
-              href={book.sourceUrl ?? `https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=${encodeURIComponent(book.isbn ?? book.title)}`}
-              label="도서 정보 제공: 알라딘 인터넷서점 · 알라딘에서 보기"
+          {book.id.startsWith('isbn-') && (
+            <SourceCredit
+              href={book.sourceUrl ?? `https://search.daum.net/search?w=book&q=${encodeURIComponent(book.isbn ?? book.title)}`}
+              label="도서 정보 제공: 카카오(Daum 책) · 자세히 보기"
             />
           )}
         </section>

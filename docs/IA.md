@@ -51,7 +51,7 @@
 | 가입한 사람끼리 공유 | `store/cloudStore.ts` ↔ Supabase `profiles`·`follows`·`public_reviews`·`posts`·`comments`·`likes` | 로그인 중에만. 다른 사람에겐 별점을 '공개'한 완독 기록만 보이고, 한 줄 평은 따로 공개해야 보임 |
 | 이 기기 전용 소셜 | `store/socialStore.ts` (localStorage `booklog:social`, v2) | 샘플 글·후기에 남긴 좋아요·댓글, 샘플 사용자 팔로우, 독서모임, 리스트 |
 | 샘플 사용자의 후기·글·모임·리스트·베스트셀러·평점 분포 | `mocks/social.ts` | **샘플 데이터** — 화면에 "샘플" 표시 |
-| 도서 정보 | 알라딘 Open API ← `api/books.ts`(Vercel 서버 함수, 키 `ALADIN_TTB_KEY`) ← `services/bookSearch.ts` | 검색·책 상세·주간 베스트셀러, 실제 표지. 키가 없으면 샘플 33권(`mocks/catalog.ts`)으로 대체. 본 책은 `store/bookCache.ts`에 저장. 화면에 '도서 DB 제공: 알라딘' 표기 |
+| 도서 정보 | 카카오 책 검색 ← `api/books.ts`(Vercel 서버 함수, 키 `KAKAO_REST_KEY`) ← `services/bookSearch.ts` | 검색·책 상세, 실제 표지. 카카오는 장르·순위를 주지 않아 장르는 '기타'(기록 편집에서 선택), 베스트셀러는 샘플 차트. 키가 없으면 샘플 33권(`mocks/catalog.ts`)으로 대체. 본 책은 `store/bookCache.ts`에 저장. '도서 정보 제공: 카카오' 표기 |
 
 서버 설정: `supabase/schema.sql`을 SQL Editor에서 실행, `.env.local`(로컬)·Vercel 환경변수에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`(publishable key).
 

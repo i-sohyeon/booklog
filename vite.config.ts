@@ -26,7 +26,7 @@ function apiRoutes(): Plugin {
 export default defineConfig(({ mode }) => {
   // 서버 전용 키(VITE_ 접두사 없음)를 로컬 서버 함수에서만 쓰도록 process.env 로
   const env = loadEnv(mode, process.cwd(), '');
-  if (env.ALADIN_TTB_KEY) process.env.ALADIN_TTB_KEY = env.ALADIN_TTB_KEY;
+  if (env.KAKAO_REST_KEY) process.env.KAKAO_REST_KEY = env.KAKAO_REST_KEY;
   return {
   plugins: [react(), apiRoutes()],
   resolve: {

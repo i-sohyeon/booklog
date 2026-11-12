@@ -8,7 +8,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 /**
  * 도서 검색.
- * 실제 책은 알라딘 Open API(/api/books 서버 함수)에서 가져오고,
+ * 실제 책은 카카오 책 검색(/api/books 서버 함수)에서 가져오고,
  * 키가 설정되지 않았거나 연결이 안 되면 샘플 도서(33권)로 대신 보여줍니다(isSample: true).
  */
 export interface BookSearchResult {
@@ -50,9 +50,9 @@ async function api<T>(params: Record<string, string>, signal?: AbortSignal): Pro
   }
 }
 
-const isbnOf = (id: string) => (id.startsWith('al-') ? id.slice(3) : null);
+const isbnOf = (id: string) => (id.startsWith('isbn-') && /^isbn-[0-9Xx]{10,13}$/.test(id) ? id.slice(5) : null);
 
-class AladinBookSearchService implements BookSearchService {
+class ApiBookSearchService implements BookSearchService {
   async search(query: string, options?: { signal?: AbortSignal }): Promise<BookSearchResult> {
     const q = query.trim();
     if (!q) return { items: [], total: 0, isSample: false };
@@ -86,7 +86,7 @@ class AladinBookSearchService implements BookSearchService {
   }
 }
 
-export const bookSearchService: BookSearchService = new AladinBookSearchService();
+export const bookSearchService: BookSearchService = new ApiBookSearchService();
 
 /** 입력하면서 찾기 (0.3초 디바운스) — 기록 시트·책 태그·리스트 담기 */
 export function useBookSearch(query: string, limit = 20) {
@@ -117,13 +117,8 @@ export interface ChartRow {
   change?: number | null;
 }
 
-/** 주간 베스트셀러: 알라딘 → 실패하면 샘플 차트 */
-export async function fetchBestsellers(cat: BestsellerCategory, signal?: AbortSignal): Promise<{ rows: ChartRow[]; isSample: boolean }> {
-  const data = await api<{ items: Book[] }>({ list: 'bestseller', category: cat }, signal);
-  if (data?.items.length) {
-    cacheBooks(data.items);
-    return { rows: data.items.map((book, i) => ({ rank: i + 1, book })), isSample: false };
-  }
+/** 베스트셀러: 카카오는 순위를 주지 않아 샘플 차트 (isSample: true) */
+export async function fetchBestsellers(cat: BestsellerCategory): Promise<{ rows: ChartRow[]; isSample: boolean }> {
   const rows: ChartRow[] = [];
   for (const it of SAMPLE_BESTSELLERS[cat]) {
     const book = catalogById.get(it.bookId);

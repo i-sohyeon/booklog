@@ -4,6 +4,7 @@ import { ratingSummary } from '@/store/selectors';
 import { paths } from '@/routes/paths';
 import { BookCover, RatingValue } from '@/components/ui';
 import { cn } from '@/lib/cn';
+import { byline } from '@/lib/byline';
 import styles from './BookTile.module.scss';
 
 interface BookTileProps {
@@ -25,7 +26,7 @@ export function BookTile({ book, rank, rating, caption, className }: BookTilePro
         {rank !== undefined && <span className={styles.rank}>{rank}</span>}
       </div>
       <p className={styles.title}>{book.title}</p>
-      <p className={styles.author}>{caption ?? `${book.authors.join(', ')} · ${book.genre}`}</p>
+      <p className={styles.author}>{caption ?? byline(book)}</p>
       {value ? <RatingValue value={value} className={styles.rating} /> : null}
     </Link>
   );

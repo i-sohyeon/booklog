@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Camera, Minus, Plus, Quote as QuoteIcon, Trash2, X } from 'lucide-react';
-import type { Book, Quote, ReadingStatus, RecordField, RecordVisibility } from '@/types/book';
-import { ONE_LINER_MAX, READING_STATUS_LABEL, RECORD_FIELD_LABEL, TAG_MAX } from '@/types/book';
+import type { Book, Genre, Quote, ReadingStatus, RecordField, RecordVisibility } from '@/types/book';
+import { GENRES, ONE_LINER_MAX, READING_STATUS_LABEL, RECORD_FIELD_LABEL, TAG_MAX } from '@/types/book';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useBookLookup } from '@/hooks/useSocial';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
@@ -51,6 +51,8 @@ function RecordForm({ book }: { book: Book }) {
       occasion: entry?.occasion ?? '',
       tags: entry?.tags ?? [],
       visibility: entry?.visibility ?? {},
+      // 책 정보의 장르 (도서 API 책은 '기타'로 들어와 직접 고를 수 있음)
+      genre: (book?.genre ?? '기타') as Genre,
     }),
     // 처음 열었을 때 값만 기준으로 사용
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,7 +90,8 @@ function RecordForm({ book }: { book: Book }) {
       showToast('저장공간이 부족해요. 사진 수를 줄여 주세요.');
       return;
     }
-    saveRecord(book, { ...form, rating: done ? form.rating : undefined });
+    const { genre, ...record } = form;
+    saveRecord(genre !== book.genre ? { ...book, genre } : book, { ...record, rating: done ? record.rating : undefined });
     allow();
     showToast('기록을 저장했어요');
     leave();
@@ -127,7 +130,7 @@ function RecordForm({ book }: { book: Book }) {
         </div>
       </div>
 
-      <p className={styles.privacyNote}>모든 항목은 기본으로 나만 볼 수 있어요. 공개하고 싶은 항목만 켜 주세요. (공개 기록도 아직은 이 기기에만 저장돼요)</p>
+      <p className={styles.privacyNote}>모든 항목은 기본으로 나만 볼 수 있어요. 로그인한 상태에서 별점·한 줄 평을 공개하면 가입한 친구에게 보여요. (다른 항목은 공개로 켜도 아직 나에게만 보여요)</p>
 
       <div className={styles.body}>
         <SegmentedControl<ReadingStatus>
@@ -136,6 +139,18 @@ function RecordForm({ book }: { book: Book }) {
           onChange={(v) => set('status', v)}
           options={(['done', 'reading', 'want'] as ReadingStatus[]).map((s) => ({ value: s, label: READING_STATUS_LABEL[s] }))}
         />
+
+        <label className={styles.genreField}>
+          <span className={styles.sectionTitle}>장르</span>
+          <select value={form.genre} onChange={(e) => set('genre', e.target.value as Genre)}>
+            {GENRES.map((g) => (
+              <option key={g} value={g}>
+                {g === '기타' ? '기타 · 모름' : g}
+              </option>
+            ))}
+          </select>
+          <span className={styles.genreHint}>서재 결산의 ‘많이 읽은 장르’에 반영돼요.</span>
+        </label>
 
         {done && (
           <>
