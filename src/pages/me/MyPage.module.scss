@@ -212,3 +212,44 @@
   color: var(--color-text-brand);
   font-weight: var(--font-bold);
 }
+
+.personLink {
+  flex: 1;
+  gap: var(--space-3);
+}
+
+.previewLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-top: var(--space-1);
+  font-size: var(--text-label);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.editNote {
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.editError {
+  font-size: var(--text-caption);
+  color: var(--color-danger);
+}
+.editActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2);
+}

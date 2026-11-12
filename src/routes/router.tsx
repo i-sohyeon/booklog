@@ -34,6 +34,7 @@ export const router = createBrowserRouter([
       { path: 'library', element: <LibraryPage /> },
       { path: 'library/quotes', lazy: lazy(() => import('@/pages/library/QuotesPage'), 'QuotesPage') },
       { path: 'library/:bookId/edit', lazy: lazy(() => import('@/pages/library/RecordEditPage'), 'RecordEditPage'), handle: editorHandle },
+      { path: 'u/:userId', lazy: lazy(() => import('@/pages/user/FriendLibraryPage'), 'FriendLibraryPage') },
       { path: 'me', element: <MyPage /> },
       { path: 'me/settings', lazy: lazy(() => import('@/pages/me/SettingsPage'), 'SettingsPage') },
       // 이전 주소 호환

@@ -14,3 +14,4 @@ export * from './Field';
 export * from './RatingValue';
 export * from './LikeButton';
 export * from './Spoiler';
+export * from './Switch';

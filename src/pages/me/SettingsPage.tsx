@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CloudDownload, CloudUpload, KeyRound, LogIn, LogOut, Settings } from 'lucide-react';
+import { CloudDownload, CloudUpload, KeyRound, LogIn, LogOut, Settings, Users } from 'lucide-react';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSocialStore } from '@/store/socialStore';
 import { useAuthStore } from '@/store/authStore';
@@ -9,8 +9,9 @@ import { useSyncStatus } from '@/services/librarySync';
 import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
-import { Button, ButtonLink, Sheet, useToast } from '@/components/ui';
+import { Button, ButtonLink, Sheet, Switch, useToast } from '@/components/ui';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { useCloudStore } from '@/store/cloudStore';
 import styles from './SettingsPage.module.scss';
 
 type Confirm = 'clear' | 'sample' | 'upload' | 'download' | null;
@@ -128,6 +129,8 @@ export function SettingsPage() {
         )}
       </section>
 
+      {authStatus === 'signedIn' && user && <SharingPanel />}
+
       {authStatus === 'signedIn' && user && (
         <section className={styles.panel} aria-labelledby="sync-title">
           <div className={styles.head}>
@@ -218,5 +221,34 @@ function SyncStatusLine() {
       상태: {SYNC_LABEL[status]}
       {status === 'error' && error ? ` (${error}) — 인터넷 연결을 확인하거나 아래 버튼으로 다시 올려 주세요.` : ''}
     </p>
+  );
+}
+
+/** 친구에게 보이는 범위 */
+function SharingPanel() {
+  const me = useCloudStore((s) => s.me);
+  const mine = useCloudStore((s) => (s.me ? s.profiles[s.me] : undefined));
+  const setLibraryPublic = useCloudStore((s) => s.setLibraryPublic);
+  const error = useCloudStore((s) => s.error);
+  return (
+    <section className={styles.panel} aria-labelledby="share-title">
+      <div className={styles.head}>
+        <Users aria-hidden />
+        <h2 id="share-title">공개 설정</h2>
+      </div>
+      <Switch
+        label="내 서재를 친구에게 보여 주기"
+        description="켜면 읽는 중·읽고 싶어요·다 읽은 책 목록이 친구 서재에 보여요. 별점·감상 같은 내용은 기록마다 '공개'로 켠 것만 보여요."
+        checked={Boolean(mine?.libraryPublic)}
+        disabled={!me || !mine}
+        onChange={(on) => void setLibraryPublic(on)}
+      />
+      {!mine && <p className={styles.meta}>프로필을 불러오는 중이에요…</p>}
+      {mine && error?.includes('library_public') && (
+        <p className={styles.error} role="alert">
+          서버에 공개 설정이 아직 없어요. Supabase에서 002_friend_library.sql 을 실행해 주세요.
+        </p>
+      )}
+    </section>
   );
 }

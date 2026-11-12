@@ -15,6 +15,8 @@ export interface CloudProfile {
   id: string;
   nickname: string;
   bio?: string;
+  /** 책장(읽는 중·읽고 싶어요 포함) 공개 */
+  libraryPublic: boolean;
 }
 
 export interface CloudReview {
@@ -63,6 +65,8 @@ interface CloudActions {
   isCloudReview: (id: string) => boolean;
   isCloudMember: (id: string) => boolean;
   toggleFollow: (userId: string) => Promise<void>;
+  /** 내 책장 공개 켜기/끄기 */
+  setLibraryPublic: (on: boolean) => Promise<void>;
   toggleLike: (kind: 'post' | 'review', id: string) => Promise<void>;
   addPost: (input: { kind: PostKind; body: string; quote?: string; bookId?: string; spoiler: boolean }) => string;
   deletePost: (id: string) => Promise<void>;
@@ -70,6 +74,16 @@ interface CloudActions {
 }
 
 let lastRefresh = 0;
+
+/** 이 기기가 모르는 책(도서 API 책)은 서버 books 테이블에서 가져와 캐시 */
+export async function ensureBooks(ids: string[]) {
+  if (!supabase) return;
+  const known = new Set([...SAMPLE_CATALOG.map((b) => b.id), ...Object.keys(useLibraryStore.getState().books), ...Object.keys(useBookCache.getState().books)]);
+  const missing = [...new Set(ids)].filter((id) => !known.has(id));
+  if (!missing.length) return;
+  const { data } = await supabase.from('books').select('*').in('id', missing.slice(0, 200));
+  if (data) cacheBooks((data as Parameters<typeof fromBookRow>[0][]).map(fromBookRow));
+}
 
 export const reviewKey = (userId: string, bookId: string) => `u:${userId}:${bookId}`;
 
@@ -113,7 +127,11 @@ export const useCloudStore = create<CloudState & CloudActions>()((set, get) => {
       set({ status: get().status === 'ready' ? 'ready' : 'loading' });
       try {
         const [profiles, follows, reviews, posts, comments, likes] = await Promise.all([
-          db.from('profiles').select('id, nickname, bio'),
+          // 002_friend_library.sql 실행 전이면 library_public 컬럼이 없어 기본 필드로 다시 요청
+          db
+            .from('profiles')
+            .select('id, nickname, bio, library_public')
+            .then((r) => (r.error ? db.from('profiles').select('id, nickname, bio') : r)),
           db.from('follows').select('follower_id, followee_id'),
           db.from('public_reviews').select('*').order('updated_at', { ascending: false }).limit(500),
           db.from('posts').select('*').order('created_at', { ascending: false }).limit(200),
@@ -132,7 +150,10 @@ export const useCloudStore = create<CloudState & CloudActions>()((set, get) => {
           status: 'ready',
           error: undefined,
           profiles: Object.fromEntries(
-            (check(profiles) as { id: string; nickname: string; bio: string | null }[]).map((p) => [p.id, { id: p.id, nickname: p.nickname, bio: p.bio ?? undefined }]),
+            (check(profiles) as { id: string; nickname: string; bio: string | null; library_public?: boolean }[]).map((p) => [
+              p.id,
+              { id: p.id, nickname: p.nickname, bio: p.bio ?? undefined, libraryPublic: Boolean(p.library_public) },
+            ]),
           ),
           follows: (check(follows) as { follower_id: string; followee_id: string }[]).map((f) => ({ follower: f.follower_id, followee: f.followee_id })),
           reviews: (
@@ -165,12 +186,7 @@ export const useCloudStore = create<CloudState & CloudActions>()((set, get) => {
         });
         // 친구 기록·글에 나온 책 중 이 기기가 모르는 책(도서 API 책)은 서버 books 테이블에서 가져옴
         const st = get();
-        const known = new Set([...SAMPLE_CATALOG.map((b) => b.id), ...Object.keys(useLibraryStore.getState().books), ...Object.keys(useBookCache.getState().books)]);
-        const missing = [...new Set([...st.reviews.map((r) => r.bookId), ...st.posts.map((p) => p.bookId).filter((x): x is string => Boolean(x))])].filter((id) => !known.has(id));
-        if (missing.length) {
-          const { data } = await db.from('books').select('*').in('id', missing.slice(0, 200));
-          if (data) cacheBooks((data as Parameters<typeof fromBookRow>[0][]).map(fromBookRow));
-        }
+        await ensureBooks([...st.reviews.map((r) => r.bookId), ...st.posts.map((p) => p.bookId).filter((x): x is string => Boolean(x))]);
       } catch (e) {
         set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
       }
@@ -194,6 +210,15 @@ export const useCloudStore = create<CloudState & CloudActions>()((set, get) => {
       const next = on ? follows.filter((f) => !(f.follower === me && f.followee === userId)) : [...follows, { follower: me, followee: userId }];
       await mutate({ follows: next }, { follows }, () =>
         on ? supabase!.from('follows').delete().eq('follower_id', me).eq('followee_id', userId) : supabase!.from('follows').insert({ follower_id: me, followee_id: userId }),
+      );
+    },
+
+    setLibraryPublic: async (on) => {
+      const { me, profiles } = get();
+      const mine = me ? profiles[me] : undefined;
+      if (!supabase || !me || !mine) return;
+      await mutate({ profiles: { ...profiles, [me]: { ...mine, libraryPublic: on } } }, { profiles }, () =>
+        supabase!.from('profiles').update({ library_public: on }).eq('id', me),
       );
     },
 

@@ -84,6 +84,16 @@ export const authService = {
     if (error) throw error;
   },
 
+  /** 닉네임 바꾸기: 계정 정보(로그인 표시용)와 프로필(친구에게 보이는 이름)을 함께 */
+  async updateNickname(nickname: string): Promise<void> {
+    const n = nickname.trim();
+    const db = client();
+    const { data, error } = await db.auth.updateUser({ data: { nickname: n } });
+    if (error) throw error;
+    const { error: profileError } = await db.from('profiles').update({ nickname: n }).eq('id', data.user.id);
+    if (profileError) throw profileError;
+  },
+
   async updatePassword(password: string): Promise<void> {
     const { error } = await client().auth.updateUser({ password });
     if (error) throw error;

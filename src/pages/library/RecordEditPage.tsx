@@ -133,7 +133,7 @@ function RecordForm({ book }: { book: Book }) {
         </div>
       </div>
 
-      <p className={styles.privacyNote}>모든 항목은 기본으로 나만 볼 수 있어요. 로그인한 상태에서 별점·한 줄 평을 공개하면 가입한 친구에게 보여요. (다른 항목은 공개로 켜도 아직 나에게만 보여요)</p>
+      <p className={styles.privacyNote}>모든 항목은 기본으로 나만 볼 수 있어요. ‘공개’로 켠 항목은 친구가 내 서재에 놀러 왔을 때 보이고, 별점·한 줄 평은 친구 홈 피드와 책 상세에도 보여요.</p>
 
       <div className={styles.body}>
         <SegmentedControl<ReadingStatus>
