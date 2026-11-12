@@ -221,7 +221,7 @@ function BookDetail({ book }: { book: Book }) {
               />
             )}
           </div>
-          <div id="review-list" role="tabpanel" aria-label="후기 목록">
+          <div id="review-list" role="tabpanel" aria-label="후기 목록" className={styles.reviewList}>
             {reviews.length === 0 ? (
               <p className={styles.muted}>아직 후기가 없어요. 다 읽었다면 첫 한 줄 평을 남겨주세요.</p>
             ) : (

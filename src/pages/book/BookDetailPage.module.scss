@@ -218,3 +218,9 @@
   font-size: var(--text-label);
   color: var(--color-text-tertiary);
 }
+
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
