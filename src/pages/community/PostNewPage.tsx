@@ -9,9 +9,13 @@ import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { paths } from '@/routes/paths';
 import { Button, IconButton, SegmentedControl, Sheet, TextArea, useToast } from '@/components/ui';
 import { BookPicker } from '@/components/common/BookPicker';
+import { useAuthGate } from '@/store/loginGate';
+import { GuestScreen } from '@/components/auth/LoginPrompt';
+import { PenLine as PenLineIcon } from 'lucide-react';
+import { Page } from '@/components/layout/Page';
 import styles from './PostNewPage.module.scss';
 
-export function PostNewPage() {
+function PostNewPageInner() {
   const navigate = useNavigate();
   const addPost = useSocialStore((s) => s.addPost);
   const showToast = useToast((s) => s.show);
@@ -123,4 +127,17 @@ export function PostNewPage() {
       </Sheet>
     </form>
   );
+}
+
+/** 로그인하지 않았으면 로그인 안내, 했으면 본 화면 */
+export function PostNewPage() {
+  const gate = useAuthGate();
+  if (gate === 'loading') return null;
+  if (gate === 'guest')
+    return (
+      <Page narrow>
+        <GuestScreen icon={<PenLineIcon aria-hidden />} title="글을 쓰려면 로그인해 주세요" description="게시판 글과 댓글은 가입한 사람들과 함께 보여요." />
+      </Page>
+    );
+  return <PostNewPageInner />;
 }

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation, useMatches } from 'react-router';
-import { Plus, Search } from 'lucide-react';
+import { LogIn, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { fabFor, isNavActive, mainNav } from '@/routes/navigation';
 import { useHideOnScroll } from '@/hooks/useScrollDirection';
@@ -11,6 +11,8 @@ import { FloatingAction, RecordSheet, useRecord } from '@/components/record';
 import { Logo } from './Logo';
 import { SampleDataBadge } from './SampleDataBadge';
 import { useCloudStore } from '@/store/cloudStore';
+import { useAuthGate } from '@/store/loginGate';
+import { LoginPromptSheet } from '@/components/auth/LoginPrompt';
 import styles from './AppLayout.module.scss';
 
 export interface RouteHandle {
@@ -27,6 +29,7 @@ export function AppLayout() {
   const hideBottomNav = handles.some((h) => h?.hideBottomNav);
   const { pathname } = useLocation();
   const fabHidden = useHideOnScroll(pathname);
+  const gate = useAuthGate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -56,6 +59,11 @@ export function AppLayout() {
             <NavLink to={paths.discover} aria-label="책 검색" className={styles.headerIcon}>
               <Search aria-hidden />
             </NavLink>
+            {gate === 'guest' && (
+              <Link to={paths.login} state={{ from: pathname }} className={styles.loginPill}>
+                로그인
+              </Link>
+            )}
           </div>
         </header>
       )}
@@ -71,6 +79,7 @@ export function AppLayout() {
         </>
       )}
       <RecordSheet />
+      <LoginPromptSheet />
       <ToastViewport />
     </div>
   );
@@ -80,6 +89,7 @@ function Sidebar() {
   const profile = useProfile();
   const { pathname } = useLocation();
   const start = useRecord((s) => s.start);
+  const gate = useAuthGate();
   return (
     <aside className={styles.sidebar} aria-label="주 메뉴">
       <div className={styles.sideTop}>
@@ -101,13 +111,26 @@ function Sidebar() {
       </Button>
       <div className={styles.sideBottom}>
         <SampleDataBadge />
-        <NavLink to={paths.me} className={({ isActive }) => cn(styles.profile, isActive && styles.active)}>
-          <Avatar name={profile.nickname} size="sm" />
-          <span className={styles.profileText}>
-            <strong>{profile.nickname}</strong>
-            <span>{profile.source === 'account' ? profile.handle : profile.source === 'sample' ? '샘플 사용자' : '게스트'}</span>
-          </span>
-        </NavLink>
+        {gate === 'guest' ? (
+          <div className={styles.sideGuest}>
+            <p>
+              <strong>로그인하지 않은 상태</strong>
+              <span>로그인하면 기록을 남길 수 있어요</span>
+            </p>
+            <Link to={paths.login} state={{ from: pathname }} className={styles.sideLogin}>
+              <LogIn aria-hidden />
+              로그인
+            </Link>
+          </div>
+        ) : gate === 'member' ? (
+          <NavLink to={paths.me} className={({ isActive }) => cn(styles.profile, isActive && styles.active)}>
+            <Avatar name={profile.nickname} size="sm" />
+            <span className={styles.profileText}>
+              <strong>{profile.nickname}</strong>
+              <span>{profile.source === 'account' ? profile.handle : profile.source === 'sample' ? '샘플 사용자' : '이 기기에 저장'}</span>
+            </span>
+          </NavLink>
+        ) : null}
       </div>
     </aside>
   );

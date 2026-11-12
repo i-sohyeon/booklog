@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router';
-import { BookMarked, BookOpen, CalendarDays, Check, Users, Video } from 'lucide-react';
+import { Link, useLocation } from 'react-router';
+import { BookMarked, BookOpen, CalendarDays, Check, LogIn, Users, Video } from 'lucide-react';
 import type { Genre } from '@/types/book';
 import { SAMPLE_DAILY_PICKS } from '@/mocks/social';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -9,6 +9,7 @@ import { useShelf } from '@/hooks/useShelf';
 import { useProfile } from '@/hooks/useProfile';
 import { useBookLookup, useClubs, useFollowing, useMemberLookup, useMyCloudId, useReviews } from '@/hooks/useSocial';
 import { useRecord } from '@/components/record/recordStore';
+import { requireLogin, useAuthGate } from '@/store/loginGate';
 import { formatRelative, formatToday, getGreeting } from '@/lib/date';
 import { formatSchedule, sessionPhase, untilLabel } from '@/lib/time';
 import { josa } from '@/lib/josa';
@@ -26,6 +27,7 @@ function dayIndex(d = new Date()) {
 /** 홈 — 나를 위한 화면 (개인화된 콘텐츠만) */
 export function HomePage() {
   const profile = useProfile();
+  const gate = useAuthGate();
   const now = new Date();
 
   return (
@@ -33,15 +35,49 @@ export function HomePage() {
       <header className={styles.greeting}>
         <p className={styles.date}>{formatToday(now)}</p>
         <h1 className={styles.hello}>
-          {getGreeting(now)}, {profile.nickname} 님
+          {gate === 'member' ? `${getGreeting(now)}, ${profile.nickname} 님` : gate === 'guest' ? '오늘은 어떤 책을 만나 볼까요?' : getGreeting(now)}
         </h1>
       </header>
 
+      {gate === 'guest' && <GuestWelcome />}
       <TodayPick />
-      <ReadingNow />
-      <FriendsFinished />
-      <MyClubSchedule />
+      {gate === 'member' && (
+        <>
+          <ReadingNow />
+          <FriendsFinished />
+          <MyClubSchedule />
+        </>
+      )}
     </Page>
+  );
+}
+
+/** 로그인하지 않은 상태임을 분명히 알리는 카드 */
+function GuestWelcome() {
+  const { pathname } = useLocation();
+  return (
+    <section className={styles.guestCard} aria-labelledby="guest-title">
+      <p className={styles.guestEyebrow}>로그인하지 않은 상태예요</p>
+      <h2 id="guest-title" className={styles.guestTitle}>
+        로그인하고 나만의 서재를 시작하세요
+      </h2>
+      <ul className={styles.guestList}>
+        <li>다 읽은 책에 별점과 한 줄 평 남기기</li>
+        <li>친구를 팔로우하고 서로의 완독 소식 보기</li>
+        <li>어느 기기에서든 내 기록 이어보기</li>
+      </ul>
+      <div className={styles.guestActions}>
+        <ButtonLink to={paths.login} state={{ from: pathname }} leadingIcon={<LogIn aria-hidden />}>
+          로그인
+        </ButtonLink>
+        <ButtonLink to={paths.signup} variant="outline">
+          회원가입
+        </ButtonLink>
+      </div>
+      <p className={styles.guestNote}>
+        지금은 둘러보기만 할 수 있어요. 가입 없이 써 보려면 로그인 화면의 <strong>테스트 계정</strong>을 이용해 보세요.
+      </p>
+    </section>
   );
 }
 
@@ -67,6 +103,7 @@ function useTastePick() {
 }
 
 function TodayPick() {
+  const gate = useAuthGate();
   const pick = useTastePick();
   const book = useBookLookup()(pick.bookId);
   const entry = useLibraryStore((s) => (book ? s.entries[book.id] : undefined));
@@ -77,7 +114,7 @@ function TodayPick() {
 
   return (
     <section className={styles.pick} data-tone={book.coverTone} aria-labelledby="pick-title">
-      <p className={styles.eyebrow}>{pick.reason ? `${pick.reason}${josa(pick.reason, "을/를")} 자주 읽는 당신에게` : '오늘의 추천'}</p>
+      <p className={styles.eyebrow}>{gate === 'member' && pick.reason ? `${pick.reason}${josa(pick.reason, "을/를")} 자주 읽는 당신에게` : '오늘의 추천'}</p>
       <Link to={paths.book(book.id)} className={styles.pickCover} aria-label={`${book.title} 자세히 보기`}>
         <BookCover book={book} size="fluid" />
       </Link>
@@ -100,6 +137,7 @@ function TodayPick() {
             variant="secondary"
             leadingIcon={<BookMarked aria-hidden />}
             onClick={() => {
+              if (!requireLogin('읽고 싶은 책을 담으려면 로그인해 주세요.')) return;
               setStatus(book, 'want');
               showToast('읽고 싶은 책에 담았어요');
             }}

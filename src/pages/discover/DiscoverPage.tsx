@@ -15,6 +15,7 @@ import { BookRow } from '@/components/book/BookRow';
 import { ListCard } from '@/components/social/ListCard';
 import { ReviewCard } from '@/components/social/ReviewCard';
 import { CreateListSheet } from '@/components/social/ListSheets';
+import { requireLogin } from '@/store/loginGate';
 import styles from './DiscoverPage.module.scss';
 
 export function DiscoverPage() {
@@ -156,7 +157,7 @@ function Browse() {
           title="취향 리스트"
           description="사람들이 직접 모은 책들"
           aside={
-            <Button size="sm" variant="ghost" leadingIcon={<Plus aria-hidden />} onClick={() => setCreating(true)}>
+            <Button size="sm" variant="ghost" leadingIcon={<Plus aria-hidden />} onClick={() => requireLogin('리스트를 만들려면 로그인해 주세요.') && setCreating(true)}>
               만들기
             </Button>
           }

@@ -11,6 +11,7 @@ import { Avatar, BookCover, Button, ButtonLink, EmptyState, Sheet, useToast } fr
 import { nextSession } from '@/components/social/ClubCard';
 import { cn } from '@/lib/cn';
 import { JoinButton } from './ClubsPanel';
+import { requireLogin } from '@/store/loginGate';
 import styles from './ClubDetailPage.module.scss';
 
 /** 1분마다 다시 그려 입장 가능 여부를 갱신 */
@@ -51,6 +52,7 @@ export function ClubDetailPage() {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!body.trim()) return;
+    if (!requireLogin('모임 글을 남기려면 로그인해 주세요. 쓰던 내용은 그대로 남아 있어요.')) return;
     addComment(club.id, body);
     setBody('');
   };

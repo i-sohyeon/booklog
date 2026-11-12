@@ -4,6 +4,7 @@ import { cn } from '@/lib/cn';
 import { paths } from '@/routes/paths';
 import type { FabKind } from '@/routes/navigation';
 import { useRecord } from './recordStore';
+import { requireLogin } from '@/store/loginGate';
 import styles from './RecordFab.module.scss';
 
 /**
@@ -19,7 +20,15 @@ export function FloatingAction({ kind, hidden }: { kind: FabKind; hidden: boolea
   if (kind === 'write') {
     const clubs = params.get('tab') === 'clubs';
     return (
-      <Link to={clubs ? paths.clubNew : paths.postNew} className={cn(cls, styles.extended)} tabIndex={hidden ? -1 : undefined} aria-hidden={hidden || undefined}>
+      <Link
+        to={clubs ? paths.clubNew : paths.postNew}
+        onClick={(e) => {
+          if (!requireLogin(clubs ? '모임을 만들려면 로그인해 주세요.' : '글을 쓰려면 로그인해 주세요.')) e.preventDefault();
+        }}
+        className={cn(cls, styles.extended)}
+        tabIndex={hidden ? -1 : undefined}
+        aria-hidden={hidden || undefined}
+      >
         {clubs ? <Plus aria-hidden /> : <PenLine aria-hidden />}
         <span>{clubs ? '모임 만들기' : '글쓰기'}</span>
       </Link>

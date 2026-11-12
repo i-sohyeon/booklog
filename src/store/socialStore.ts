@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useCloudStore } from './cloudStore';
 import type { Club, ClubSession, Comment, CurationList, Post, PostKind } from '@/types/social';
+import { requireLogin } from './loginGate';
 import { ME_ID, SAMPLE_FOLLOWING, SAMPLE_JOINED_CLUBS } from '@/mocks/social';
 
 /**
@@ -78,6 +79,7 @@ export const useSocialStore = create<SocialState & SocialActions>()(
       ...initial(),
 
       toggleLike: (kind, id) => {
+        if (!requireLogin('공감하려면 로그인해 주세요.')) return;
         // 가입한 사람의 글·후기는 서버에 저장 (친구와 공유)
         const cloud = useCloudStore.getState();
         if ((kind === 'post' && cloud.isCloudPost(id)) || (kind === 'review' && cloud.isCloudReview(id))) {
@@ -125,6 +127,7 @@ export const useSocialStore = create<SocialState & SocialActions>()(
       },
 
       addComment: (postId, body, spoiler) => {
+        if (!requireLogin('댓글을 남기려면 로그인해 주세요.')) return;
         const cloud = useCloudStore.getState();
         if (cloud.isCloudPost(postId)) {
           void cloud.addComment(postId, body, spoiler);
@@ -138,7 +141,10 @@ export const useSocialStore = create<SocialState & SocialActions>()(
         });
       },
 
-      joinClub: (id) => set((s) => (s.joinedClubs.includes(id) ? s : { joinedClubs: [...s.joinedClubs, id] })),
+      joinClub: (id) => {
+        if (!requireLogin('모임에 참여하려면 로그인해 주세요.')) return;
+        set((s) => (s.joinedClubs.includes(id) ? s : { joinedClubs: [...s.joinedClubs, id] }));
+      },
       leaveClub: (id) => set((s) => ({ joinedClubs: s.joinedClubs.filter((x) => x !== id) })),
 
       createClub: (input) => {
@@ -164,13 +170,15 @@ export const useSocialStore = create<SocialState & SocialActions>()(
         return id;
       },
 
-      addClubComment: (clubId, body) =>
+      addClubComment: (clubId, body) => {
+        if (!requireLogin('모임 글을 남기려면 로그인해 주세요.')) return;
         set((s) => ({
           clubThreads: {
             ...s.clubThreads,
             [clubId]: [...(s.clubThreads[clubId] ?? []), { id: uid('t'), memberId: ME_ID, body: body.trim(), createdAt: nowIso() }],
           },
-        })),
+        }));
+      },
 
       createList: (title, description, bookIds) => {
         const id = uid('list');
@@ -180,16 +188,19 @@ export const useSocialStore = create<SocialState & SocialActions>()(
         return id;
       },
 
-      toggleBookInList: (listId, bookId) =>
+      toggleBookInList: (listId, bookId) => {
+        if (!requireLogin('리스트에 담으려면 로그인해 주세요.')) return;
         set((s) => ({
           myLists: s.myLists.map((l) =>
             l.id === listId ? { ...l, bookIds: l.bookIds.includes(bookId) ? l.bookIds.filter((b) => b !== bookId) : [...l.bookIds, bookId] } : l,
           ),
-        })),
+        }));
+      },
 
       deleteList: (id) => set((s) => ({ myLists: s.myLists.filter((l) => l.id !== id) })),
 
       toggleFollow: (memberId) => {
+        if (!requireLogin('팔로우하려면 로그인해 주세요.')) return;
         const cloud = useCloudStore.getState();
         if (cloud.isCloudMember(memberId)) {
           void cloud.toggleFollow(memberId);

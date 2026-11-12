@@ -189,14 +189,16 @@ async function push(userId: string, changed: LibraryEntry[], removed: string[]) 
 }
 
 /**
- * 로그아웃 상태가 되면(직접 로그아웃 · 자동 로그인 없이 새로고침하거나 다시 연 경우 모두)
- * 이 기기에 남아 있던 계정 기록을 화면에서 내리고 샘플 데이터로 되돌립니다.
+ * 로그아웃 상태(게스트)가 되면 — 직접 로그아웃 · 자동 로그인 없이 새로고침하거나 다시 연 경우 모두 —
+ * 이 기기의 서재와 개인 활동을 비웁니다. 남의 기록이나 샘플이 '내 것'처럼 보이지 않게 하기 위함입니다.
  * 계정 기록은 서버에 저장돼 있어 다시 로그인하면 그대로 불러옵니다.
  */
 export function resetAfterSignOut() {
-  if (!readOwner()) return;
-  useLibraryStore.getState().loadSample();
-  useSocialStore.getState().reset();
+  const lib = useLibraryStore.getState();
+  if (lib.dataSource === 'sample' || Object.keys(lib.entries).length) lib.clearAll();
+  const social = useSocialStore.getState();
+  social.reset();
+  social.clearSampleRelations();
   try {
     localStorage.removeItem(OWNER_KEY);
   } catch {

@@ -8,6 +8,9 @@ import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { BookCover, ButtonLink, EmptyState, Tabs } from '@/components/ui';
 import { byline } from '@/lib/byline';
+import { useAuthGate } from '@/store/loginGate';
+import { GuestScreen } from '@/components/auth/LoginPrompt';
+import { Quote as QuoteIcon } from 'lucide-react';
 import styles from './QuotesPage.module.scss';
 
 interface QuoteItem {
@@ -16,7 +19,7 @@ interface QuoteItem {
 }
 
 /** 문장 모아보기 — 저장한 문장만 카드로 */
-export function QuotesPage() {
+function QuotesPageInner() {
   const shelf = useShelf();
   const [bookId, setBookId] = useState<string>('all');
   const all = useMemo<QuoteItem[]>(
@@ -76,4 +79,17 @@ export function QuotesPage() {
       )}
     </Page>
   );
+}
+
+/** 로그인하지 않았으면 로그인 안내, 했으면 본 화면 */
+export function QuotesPage() {
+  const gate = useAuthGate();
+  if (gate === 'loading') return null;
+  if (gate === 'guest')
+    return (
+      <Page narrow>
+        <GuestScreen icon={<QuoteIcon aria-hidden />} title="문장 모아보기는 로그인 후에 볼 수 있어요" description="책에서 기억하고 싶은 문장을 남기면 여기에 모여요." />
+      </Page>
+    );
+  return <QuotesPageInner />;
 }

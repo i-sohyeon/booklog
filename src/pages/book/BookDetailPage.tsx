@@ -32,6 +32,7 @@ import { useRecord } from '@/components/record';
 import { useBookCache } from '@/store/bookCache';
 import { SourceCredit } from '@/components/book/SourceCredit';
 import { knownGenre } from '@/lib/byline';
+import { requireLogin } from '@/store/loginGate';
 import styles from './BookDetailPage.module.scss';
 
 export function BookDetailPage() {
@@ -101,6 +102,7 @@ function BookDetail({ book }: { book: Book }) {
   }, [allReviews, book.id, sort]);
 
   const chooseStatus = (status: ReadingStatus) => {
+    if (!requireLogin('서재에 담으려면 로그인해 주세요.')) return;
     if (status === 'done') return start({ book, step: 'finish' });
     if (entry?.status === status) {
       removeBook(book.id);
@@ -176,7 +178,7 @@ function BookDetail({ book }: { book: Book }) {
           </section>
         )}
 
-        <button type="button" className={styles.textBtn} onClick={() => setListOpen(true)}>
+        <button type="button" className={styles.textBtn} onClick={() => requireLogin('리스트에 담으려면 로그인해 주세요.') && setListOpen(true)}>
           <ListPlus aria-hidden /> 내 리스트에 담기
         </button>
 
