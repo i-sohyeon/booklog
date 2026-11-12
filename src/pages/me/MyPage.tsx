@@ -13,13 +13,16 @@ import { ReviewCard } from '@/components/social/ReviewCard';
 import { ListCard } from '@/components/social/ListCard';
 import { ClubCard } from '@/components/social/ClubCard';
 import { CreateListSheet } from '@/components/social/ListSheets';
+import { useAuthGate } from '@/store/loginGate';
+import { GuestScreen } from '@/components/auth/LoginPrompt';
+import { UserRound as UserRoundIcon } from 'lucide-react';
 import styles from './MyPage.module.scss';
 
 type Tab = 'reviews' | 'lists' | 'clubs';
 type People = 'followers' | 'following' | 'find' | null;
 
 /** 마이 — 프로필 · 팔로워/팔로잉 · 내 후기 · 내 리스트 · 참여 중인 모임 · 설정 */
-export function MyPage() {
+function MyPageInner() {
   const profile = useProfile();
   const following = useFollowing();
   const cloudFollowers = useCloudFollowers();
@@ -156,9 +159,7 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
       description={
         kind === 'find'
           ? 'BookLog에 가입한 사람들이에요. 팔로우하면 공개한 후기가 홈에 보여요.'
-          : myId
-            ? '‘가입’ 표시가 없는 사람은 샘플 사용자예요. 샘플 팔로우는 이 기기에만 저장돼요.'
-            : '샘플 사용자예요. 로그인하면 가입한 친구를 찾아 팔로우할 수 있어요.'
+          : undefined
       }
     >
       {kind === 'find' && (
@@ -187,9 +188,7 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
               <li key={m.id}>
                 <Avatar name={m.nickname} tone={m.tone} size="md" />
                 <span className={styles.personText}>
-                  <strong>
-                    {m.nickname} {isFriend(m.id) && <Badge tone="outline">가입</Badge>}
-                  </strong>
+                  <strong>{m.nickname}</strong>
                   <span>{m.bio ?? (isFriend(m.id) ? 'BookLog 사용자' : `@${m.handle}`)}</span>
                 </span>
                 <Button size="sm" variant={on ? 'outline' : 'primary'} aria-pressed={on} onClick={() => toggleFollow(m.id)}>
@@ -219,4 +218,22 @@ function MyLists({ lists }: { lists: ReturnType<typeof useLists> }) {
       <CreateListSheet open={creating} onClose={() => setCreating(false)} />
     </>
   );
+}
+
+/** 로그인하지 않았으면 로그인 안내, 했으면 본 화면 */
+export function MyPage() {
+  const gate = useAuthGate();
+  if (gate === 'loading') return null;
+  if (gate === 'guest')
+    return (
+      <Page narrow>
+        <GuestScreen icon={<UserRoundIcon aria-hidden />} title="마이 페이지는 로그인 후에 볼 수 있어요" description="내 후기·리스트·참여 모임과 팔로워를 한곳에서 볼 수 있어요." />
+        <p style={{ marginTop: 'var(--space-6)', textAlign: 'center' }}>
+          <Link to={paths.settings} style={{ fontSize: 'var(--text-label)', color: 'var(--color-text-secondary)', textDecoration: 'underline' }}>
+            설정 열기
+          </Link>
+        </p>
+      </Page>
+    );
+  return <MyPageInner />;
 }

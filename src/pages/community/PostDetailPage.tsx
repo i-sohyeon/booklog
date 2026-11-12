@@ -8,6 +8,7 @@ import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Avatar, Button, ButtonLink, EmptyState, IconButton, Sheet, Spoiler, useToast } from '@/components/ui';
 import { PostCard } from '@/components/social/PostCard';
+import { requireLogin } from '@/store/loginGate';
 import styles from './PostDetailPage.module.scss';
 
 export function PostDetailPage() {
@@ -32,6 +33,7 @@ export function PostDetailPage() {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!body.trim()) return;
+    if (!requireLogin('댓글을 남기려면 로그인해 주세요. 쓰던 내용은 그대로 남아 있어요.')) return;
     addComment(post.id, body, spoiler);
     setBody('');
     setSpoiler(false);

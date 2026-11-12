@@ -5,7 +5,9 @@
 }
 .row {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
   margin-top: calc(var(--space-2) * -1);
 }
 .link {
@@ -109,5 +111,20 @@
 .demoSub {
   font-size: var(--text-caption);
   font-weight: var(--font-medium);
+  color: var(--color-text-tertiary);
+}
+
+.row .check {
+  align-items: center;
+  min-height: 32px;
+  color: var(--color-text);
+  input {
+    margin-top: 0;
+  }
+}
+
+.rememberHint {
+  margin-top: calc(var(--space-2) * -1);
+  font-size: var(--text-caption);
   color: var(--color-text-tertiary);
 }

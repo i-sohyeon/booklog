@@ -1,5 +1,6 @@
 import type { AuthError, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { setRememberLogin, supabase } from '@/lib/supabase';
+import { flushLibrarySync } from './librarySync';
 
 export interface AuthUser {
   id: string;
@@ -44,7 +45,9 @@ function client() {
 }
 
 export const authService = {
-  async signIn(email: string, password: string): Promise<AuthUser> {
+  /** remember: 자동 로그인 (브라우저를 닫아도 로그인 유지) */
+  async signIn(email: string, password: string, remember = false): Promise<AuthUser> {
+    setRememberLogin(remember);
     const { data, error } = await client().auth.signInWithPassword({ email, password });
     if (error) throw error;
     return toAuthUser(data.user);
@@ -52,6 +55,8 @@ export const authService = {
 
   /** needsConfirmation: 이메일 인증이 켜져 있으면 세션 없이 가입만 완료됨 */
   async signUp(email: string, password: string, nickname: string): Promise<{ needsConfirmation: boolean }> {
+    // 가입 직후 로그인도 기본값(자동 로그인 끔 — 새로고침하면 로그아웃)
+    setRememberLogin(false);
     const { data, error } = await client().auth.signUp({
       email,
       password,
@@ -64,7 +69,11 @@ export const authService = {
   },
 
   async signOut(): Promise<void> {
+    // 0.8초 모아 두던 서재 변경이 있으면 먼저 저장
+    await flushLibrarySync().catch(() => undefined);
     const { error } = await client().auth.signOut();
+    // 다음 로그인은 다시 기본값(자동 로그인 끔)으로
+    setRememberLogin(false);
     if (error) throw error;
   },
 

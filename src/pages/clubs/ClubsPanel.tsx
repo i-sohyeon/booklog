@@ -5,6 +5,7 @@ import { paths } from '@/routes/paths';
 import { Button, ButtonLink, EmptyState, Tabs, useToast } from '@/components/ui';
 import { ClubCard } from '@/components/social/ClubCard';
 import { SampleNotice } from '@/components/common/SampleNotice';
+import { requireLogin } from '@/store/loginGate';
 import styles from './ClubsPanel.module.scss';
 
 type Filter = 'open' | 'mine';
@@ -57,6 +58,7 @@ export function JoinButton({ club }: { club: ClubView }) {
     <Button
       size="sm"
       onClick={() => {
+        if (!requireLogin('모임에 참여하려면 로그인해 주세요.')) return;
         join(club.id);
         showToast(`「${club.name}」에 참여했어요`);
       }}

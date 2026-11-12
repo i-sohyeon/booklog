@@ -8,6 +8,10 @@ import { toDateKey } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { Button, IconButton, SegmentedControl, Sheet, TextArea, TextField, useToast } from '@/components/ui';
 import { BookPicker } from '@/components/common/BookPicker';
+import { useAuthGate } from '@/store/loginGate';
+import { GuestScreen } from '@/components/auth/LoginPrompt';
+import { Users as UsersIcon } from 'lucide-react';
+import { Page } from '@/components/layout/Page';
 import styles from './ClubNewPage.module.scss';
 
 interface SessionDraft {
@@ -22,7 +26,7 @@ const defaultDate = (offsetWeeks: number) => {
   return toDateKey(d);
 };
 
-export function ClubNewPage() {
+function ClubNewPageInner() {
   const navigate = useNavigate();
   const createClub = useSocialStore((s) => s.createClub);
   const showToast = useToast((s) => s.show);
@@ -173,4 +177,17 @@ export function ClubNewPage() {
       </Sheet>
     </form>
   );
+}
+
+/** 로그인하지 않았으면 로그인 안내, 했으면 본 화면 */
+export function ClubNewPage() {
+  const gate = useAuthGate();
+  if (gate === 'loading') return null;
+  if (gate === 'guest')
+    return (
+      <Page narrow>
+        <GuestScreen icon={<UsersIcon aria-hidden />} title="모임을 만들려면 로그인해 주세요" description="함께 읽을 책과 일정을 정해 독서모임을 열 수 있어요." />
+      </Page>
+    );
+  return <ClubNewPageInner />;
 }

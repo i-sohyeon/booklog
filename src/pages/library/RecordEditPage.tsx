@@ -12,10 +12,13 @@ import { cn } from '@/lib/cn';
 import { paths } from '@/routes/paths';
 import { Page } from '@/components/layout/Page';
 import { BookCover, Button, ButtonLink, EmptyState, IconButton, SegmentedControl, Sheet, StarRating, TextArea, TextField, useToast } from '@/components/ui';
+import { useAuthGate } from '@/store/loginGate';
+import { GuestScreen } from '@/components/auth/LoginPrompt';
+import { PenLine as PenLineIcon } from 'lucide-react';
 import styles from './RecordEditPage.module.scss';
 
 /** 기록 자세히 쓰기 — 별점 외 모든 항목은 선택, 항목별 공개 설정(기본 비공개) */
-export function RecordEditPage() {
+function RecordEditPageInner() {
   const { bookId = '' } = useParams();
   const book = useBookLookup()(bookId);
   if (!book)
@@ -391,4 +394,17 @@ function TagEditor({ tags, suggestions, onChange }: { tags: string[]; suggestion
       )}
     </div>
   );
+}
+
+/** 로그인하지 않았으면 로그인 안내, 했으면 본 화면 */
+export function RecordEditPage() {
+  const gate = useAuthGate();
+  if (gate === 'loading') return null;
+  if (gate === 'guest')
+    return (
+      <Page narrow>
+        <GuestScreen icon={<PenLineIcon aria-hidden />} title="기록하려면 로그인해 주세요" description="별점·한 줄 평·감상·문장을 남기면 계정에 저장돼요." />
+      </Page>
+    );
+  return <RecordEditPageInner />;
 }

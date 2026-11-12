@@ -78,6 +78,7 @@ function mergeEntry(local: LibraryEntry | undefined, server: LibraryEntry | unde
 }
 
 let stop: (() => void) | null = null;
+let flushNow: (() => Promise<void>) | null = null;
 let activeUser: string | null = null;
 
 export async function startLibrarySync(userId: string) {
@@ -122,6 +123,7 @@ export async function startLibrarySync(userId: string) {
   let running: Promise<void> = Promise.resolve();
 
   const flush = () => {
+    clearTimeout(timer);
     running = running.then(async () => {
       const state = useLibraryStore.getState();
       if (state.dataSource === 'sample' || activeUser !== userId) return;
@@ -138,7 +140,9 @@ export async function startLibrarySync(userId: string) {
         setStatus('error', e instanceof Error ? e.message : String(e));
       }
     });
+    return running;
   };
+  flushNow = flush;
 
   const unsub = useLibraryStore.subscribe((s, prev) => {
     if (s.entries === prev.entries) return;
@@ -155,9 +159,15 @@ export async function startLibrarySync(userId: string) {
   };
 }
 
+/** 로그아웃 직전: 아직 올리지 않은 변경을 바로 저장 */
+export async function flushLibrarySync() {
+  await flushNow?.();
+}
+
 export function stopLibrarySync() {
   stop?.();
   stop = null;
+  flushNow = null;
   activeUser = null;
   setStatus('off');
 }
@@ -175,5 +185,23 @@ async function push(userId: string, changed: LibraryEntry[], removed: string[]) 
   if (removed.length) {
     const r3 = await db.from('library_entries').delete().eq('user_id', userId).in('book_id', removed);
     if (r3.error) throw new Error(r3.error.message);
+  }
+}
+
+/**
+ * 로그아웃 상태(게스트)가 되면 — 직접 로그아웃 · 자동 로그인 없이 새로고침하거나 다시 연 경우 모두 —
+ * 이 기기의 서재와 개인 활동을 비웁니다. 남의 기록이나 샘플이 '내 것'처럼 보이지 않게 하기 위함입니다.
+ * 계정 기록은 서버에 저장돼 있어 다시 로그인하면 그대로 불러옵니다.
+ */
+export function resetAfterSignOut() {
+  const lib = useLibraryStore.getState();
+  if (lib.dataSource === 'sample' || Object.keys(lib.entries).length) lib.clearAll();
+  const social = useSocialStore.getState();
+  social.reset();
+  social.clearSampleRelations();
+  try {
+    localStorage.removeItem(OWNER_KEY);
+  } catch {
+    /* ignore */
   }
 }

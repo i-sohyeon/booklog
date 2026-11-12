@@ -17,6 +17,7 @@ export function LoginPage() {
   const showToast = useToast((s) => s.show);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
   const [serverError, setServerError] = useState<string>();
@@ -35,7 +36,7 @@ export function LoginPage() {
     if (validateEmail(email) || !password) return;
     setPending(true);
     try {
-      const user = await authService.signIn(email.trim(), password);
+      const user = await authService.signIn(email.trim(), password, remember);
       showToast(`${user.nickname}님, 다시 만나서 반가워요`);
       navigate(from, { replace: true });
     } catch (err) {
@@ -90,10 +91,23 @@ export function LoginPage() {
           disabled={!isSupabaseConfigured}
         />
         <div className={styles.row}>
+          <label className={styles.check}>
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              disabled={!isSupabaseConfigured}
+              aria-describedby="remember-hint"
+            />
+            <span>자동 로그인</span>
+          </label>
           <Link to={paths.resetPassword} className={styles.link}>
             비밀번호를 잊었어요
           </Link>
         </div>
+        <p id="remember-hint" className={styles.rememberHint}>
+          {remember ? '앱을 닫았다 다시 열어도 로그인이 유지돼요. 공용 기기에서는 켜지 마세요.' : '체크하지 않으면 새로고침하거나 다시 열 때 로그아웃돼요.'}
+        </p>
         {serverError && (
           <p className={styles.serverError} role="alert">
             {serverError}

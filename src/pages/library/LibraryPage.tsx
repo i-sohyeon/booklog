@@ -13,6 +13,9 @@ import { Page, PageHeader } from '@/components/layout/Page';
 import { BookCover, Button, ButtonLink, EmptyState, StarRating, Tabs } from '@/components/ui';
 import { useRecord } from '@/components/record';
 import { byline } from '@/lib/byline';
+import { useAuthGate } from '@/store/loginGate';
+import { GuestScreen } from '@/components/auth/LoginPrompt';
+import { Library as LibraryIcon } from 'lucide-react';
 import styles from './LibraryPage.module.scss';
 
 type View = 'calendar' | 'list';
@@ -29,7 +32,7 @@ const RATING_FILTERS: Array<{ value: RatingFilter; label: string }> = [
 const STATUS_ORDER: ReadingStatus[] = ['done', 'reading', 'want'];
 
 /** 서재 — 나만의 독서기록장 */
-export function LibraryPage() {
+function LibraryPageInner() {
   const shelf = useShelf();
   const [params, setParams] = useSearchParams();
   const status = (STATUS_ORDER.includes(params.get('status') as ReadingStatus) ? params.get('status') : 'done') as ReadingStatus;
@@ -444,4 +447,17 @@ function CoverShelf({ items, status }: { items: ShelfItem[]; status: ReadingStat
       ))}
     </ul>
   );
+}
+
+/** 로그인하지 않았으면 로그인 안내, 했으면 본 화면 */
+export function LibraryPage() {
+  const gate = useAuthGate();
+  if (gate === 'loading') return null;
+  if (gate === 'guest')
+    return (
+      <Page narrow>
+        <GuestScreen icon={<LibraryIcon aria-hidden />} title="내 서재는 로그인 후에 볼 수 있어요" description="다 읽은 책, 읽는 중인 책, 읽고 싶은 책을 기록하면 여기에 모여요. 기록은 계정에 저장돼요." />
+      </Page>
+    );
+  return <LibraryPageInner />;
 }

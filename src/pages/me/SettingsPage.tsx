@@ -10,6 +10,7 @@ import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Button, ButtonLink, Sheet, useToast } from '@/components/ui';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import styles from './SettingsPage.module.scss';
 
 type Confirm = 'clear' | 'sample' | 'upload' | 'download' | null;
@@ -160,23 +161,31 @@ export function SettingsPage() {
         </section>
       )}
 
+      {(!isSupabaseConfigured || authStatus === 'signedIn') && (
       <section className={styles.panel} aria-labelledby="data-title" id="data">
         <div className={styles.head}>
           <Settings aria-hidden />
           <h2 id="data-title">데이터 관리</h2>
         </div>
         <p className={styles.desc}>
-          {dataSource === 'sample' ? '지금 보이는 서재와 커뮤니티는 화면 확인용 샘플 데이터예요.' : '기록은 이 브라우저에 저장돼요.'}
+          {authStatus === 'signedIn'
+            ? '서재 기록은 계정에 저장돼요. 비우면 계정의 서재도 함께 비워져요.'
+            : dataSource === 'sample'
+              ? '지금 보이는 서재와 커뮤니티는 화면 확인용 샘플 데이터예요.'
+              : '기록은 이 브라우저에 저장돼요.'}
         </p>
         <div className={styles.actions}>
-          <Button variant="outline" size="sm" onClick={() => setConfirm('sample')}>
-            샘플 데이터로 되돌리기
-          </Button>
+          {!isSupabaseConfigured && (
+            <Button variant="outline" size="sm" onClick={() => setConfirm('sample')}>
+              샘플 데이터로 되돌리기
+            </Button>
+          )}
           <Button variant="danger" size="sm" onClick={() => setConfirm('clear')}>
             모든 기록 비우기
           </Button>
         </div>
       </section>
+      )}
 
       <Sheet
         open={copy !== null}
