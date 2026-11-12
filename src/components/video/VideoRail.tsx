@@ -2,14 +2,45 @@ import { useState } from 'react';
 import { ExternalLink, Play } from 'lucide-react';
 import { useVideos, youtubeSearchUrl, youtubeWatchUrl, type Video } from '@/services/videos';
 import { formatRelative } from '@/lib/date';
-import { Sheet, Skeleton } from '@/components/ui';
+import { Button, Sheet, Skeleton } from '@/components/ui';
 import styles from './VideoRail.module.scss';
 
 /**
  * 유튜브 영상 가로 목록. 누르면 앱 안에서 유튜브 플레이어로 재생.
  * 영상을 불러올 수 없으면(키 미설정 등) 유튜브 검색 링크 하나로 대신합니다.
  */
-export function VideoRail({ query, limit = 8, emptyText = '관련 영상을 찾지 못했어요.' }: { query: string; limit?: number; emptyText?: string }) {
+/** 영상 서비스 공개 여부 — false면 API를 부르지 않고, 누르면 '준비 중' 팝업 */
+export const VIDEOS_READY = false;
+
+export function VideoRail(props: { query: string; limit?: number; emptyText?: string }) {
+  return VIDEOS_READY ? <LiveVideoRail {...props} /> : <ComingSoon query={props.query} />;
+}
+
+/** 준비 중: 자리만 보여주고 누르면 안내 팝업 */
+function ComingSoon({ query }: { query: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" className={styles.searchLink} onClick={() => setOpen(true)}>
+        <span className={styles.ytBadge} aria-hidden>
+          <Play />
+        </span>
+        <span>
+          <strong>‘{query}’ 영상 보기</strong>
+          <span>준비 중인 서비스예요</span>
+        </span>
+        <span className={styles.soon}>준비 중</span>
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title="준비 중인 서비스입니다" description="책 이야기 영상은 곧 만나볼 수 있어요. 조금만 기다려 주세요.">
+        <Button size="lg" block onClick={() => setOpen(false)}>
+          확인
+        </Button>
+      </Sheet>
+    </>
+  );
+}
+
+function LiveVideoRail({ query, limit = 8, emptyText = '관련 영상을 찾지 못했어요.' }: { query: string; limit?: number; emptyText?: string }) {
   const state = useVideos(query, limit);
   const [playing, setPlaying] = useState<Video | null>(null);
 
