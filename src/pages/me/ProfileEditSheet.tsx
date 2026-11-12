@@ -4,16 +4,19 @@ import { useCloudStore } from '@/store/cloudStore';
 import { authErrorMessage, authService } from '@/services/auth';
 import { isDemoUser } from '@/config/demoAccounts';
 import { validateNickname } from '@/pages/auth/validation';
-import { Button, Sheet, TextField, useToast } from '@/components/ui';
+import { Button, Sheet, TextArea, TextField, useToast } from '@/components/ui';
 import styles from './MyPage.module.scss';
 
 const NICK_MAX = 12;
+export const BIO_MAX = 60;
 
-/** 프로필 편집 — 지금은 닉네임 */
+/** 프로필 편집 — 닉네임 · 소개 */
 export function ProfileEditSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const user = useAuthStore((s) => s.user);
+  const currentBio = useCloudStore((s) => (user ? s.profiles[user.id]?.bio : undefined)) ?? '';
   const showToast = useToast((s) => s.show);
   const [nickname, setNickname] = useState(user?.nickname ?? '');
+  const [bio, setBio] = useState(currentBio);
   const [submitted, setSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
   const [serverError, setServerError] = useState<string>();
@@ -22,13 +25,14 @@ export function ProfileEditSheet({ open, onClose }: { open: boolean; onClose: ()
   const close = () => {
     if (pending) return;
     setNickname(user?.nickname ?? '');
+    setBio(currentBio);
     setSubmitted(false);
     setServerError(undefined);
     onClose();
   };
 
-  const error = submitted ? validateNickname(nickname) : undefined;
-  const unchanged = nickname.trim() === (user?.nickname ?? '');
+  const nicknameError = submitted ? validateNickname(nickname) : undefined;
+  const unchanged = nickname.trim() === (user?.nickname ?? '') && bio.trim() === currentBio.trim();
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
@@ -37,13 +41,13 @@ export function ProfileEditSheet({ open, onClose }: { open: boolean; onClose: ()
     if (!user || demo || validateNickname(nickname) || unchanged) return;
     setPending(true);
     try {
-      await authService.updateNickname(nickname);
-      // 친구 목록·후기에 보이는 이름도 바로 반영
+      const next = await authService.updateProfile({ nickname, bio });
+      // 친구 목록·후기·친구 서재에 보이는 이름과 소개도 바로 반영
       useCloudStore.setState((s) => {
         const mine = s.profiles[user.id];
-        return mine ? { profiles: { ...s.profiles, [user.id]: { ...mine, nickname: nickname.trim() } } } : s;
+        return mine ? { profiles: { ...s.profiles, [user.id]: { ...mine, nickname: next.nickname, bio: next.bio } } } : s;
       });
-      showToast('닉네임을 바꿨어요');
+      showToast('프로필을 바꿨어요');
       setSubmitted(false);
       onClose();
     } catch (err) {
@@ -54,19 +58,29 @@ export function ProfileEditSheet({ open, onClose }: { open: boolean; onClose: ()
   };
 
   return (
-    <Sheet open={open} onClose={close} title="프로필 편집" description="닉네임은 친구 찾기, 후기, 게시판 글에 보여요.">
+    <Sheet open={open} onClose={close} title="프로필 편집" description="닉네임과 소개는 친구 찾기, 친구 서재, 후기와 게시판 글에 보여요.">
       <form className={styles.editForm} onSubmit={save} noValidate>
         <TextField
           label="닉네임"
           value={nickname}
           maxLength={NICK_MAX}
           onChange={(e) => setNickname(e.target.value)}
-          error={error}
+          error={nicknameError}
           hint={`${nickname.trim().length}/${NICK_MAX} · 2~12자`}
           disabled={demo || pending}
           autoComplete="nickname"
         />
-        {demo && <p className={styles.editNote}>테스트 계정은 여러 사람이 함께 쓰는 계정이라 닉네임을 바꿀 수 없어요.</p>}
+        <TextArea
+          label="소개"
+          optional
+          placeholder="예: 잠들기 전 소설 한 챕터씩 읽어요"
+          rows={2}
+          maxLength={BIO_MAX}
+          value={bio}
+          onChange={(e) => setBio(e.target.value.replace(/\n/g, ' '))}
+          disabled={demo || pending}
+        />
+        {demo && <p className={styles.editNote}>테스트 계정은 여러 사람이 함께 쓰는 계정이라 프로필을 바꿀 수 없어요.</p>}
         {serverError && (
           <p className={styles.editError} role="alert">
             {serverError}
