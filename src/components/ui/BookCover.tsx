@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Book, CoverTone } from '@/types/book';
 import { cn } from '@/lib/cn';
+import { useSampleCover } from '@/store/coverStore';
 import styles from './BookCover.module.scss';
 
 export type CoverSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'fluid';
@@ -27,9 +28,12 @@ function hash(s: string): number {
  */
 export function BookCover({ book, size = 'md', className, decorative = true }: BookCoverProps) {
   const [failed, setFailed] = useState(false);
+  // 샘플 도서는 제목·저자로 찾은 실제 표지를 사용 (못 찾으면 생성 표지)
+  const found = useSampleCover(book);
+  const src = book.coverUrl ?? found;
   const h = hash(book.id);
   const tone = book.coverTone ?? TONES[h % TONES.length];
-  const showImage = book.coverUrl && !failed;
+  const showImage = src && !failed;
 
   return (
     <div
@@ -40,7 +44,7 @@ export function BookCover({ book, size = 'md', className, decorative = true }: B
       aria-hidden={decorative || undefined}
     >
       {showImage ? (
-        <img src={book.coverUrl} alt="" loading="lazy" onError={() => setFailed(true)} />
+        <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} />
       ) : (
         <div className={styles.generated}>
           <span className={styles.title}>{book.title}</span>

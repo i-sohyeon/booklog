@@ -83,3 +83,16 @@ export async function lookupBook(isbn: string) {
   const d = data.documents[0];
   return d ? toBook(d) : null;
 }
+
+const norm = (s: string) => s.toLowerCase().replace(/[\s·:,.!?'"()\[\]-]/g, '');
+
+/** 제목·저자로 표지 하나 찾기 (샘플 도서용). 제목이 맞는 첫 결과의 표지 */
+export async function findCover(title: string, author: string) {
+  const data = await call({ query: `${title} ${author}`.trim(), size: 10 });
+  const t = norm(title);
+  const a = norm(author);
+  const hit =
+    data.documents.find((d) => norm(d.title).startsWith(t) && (!a || d.authors.some((x) => norm(x).includes(a) || a.includes(norm(x))))) ??
+    data.documents.find((d) => norm(d.title).startsWith(t));
+  return hit ? (largerCover(hit.thumbnail) ?? null) : null;
+}
