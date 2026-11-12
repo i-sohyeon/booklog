@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router';
-import { BookMarked, CalendarDays, Check, Video } from 'lucide-react';
+import { BookMarked, BookOpen, CalendarDays, Check, Users, Video } from 'lucide-react';
 import type { Genre } from '@/types/book';
 import { SAMPLE_DAILY_PICKS } from '@/mocks/social';
 import { useLibraryStore } from '@/store/libraryStore';
 import { finishedBooks, ratingSummary, readingProfile } from '@/store/selectors';
 import { useShelf } from '@/hooks/useShelf';
 import { useProfile } from '@/hooks/useProfile';
-import { useBookLookup, useClubs, useFollowing, useMemberLookup, useReviews } from '@/hooks/useSocial';
+import { useBookLookup, useClubs, useFollowing, useMemberLookup, useMyCloudId, useReviews } from '@/hooks/useSocial';
+import { useRecord } from '@/components/record/recordStore';
 import { formatRelative, formatToday, getGreeting } from '@/lib/date';
 import { formatSchedule, sessionPhase, untilLabel } from '@/lib/time';
 import { josa } from '@/lib/josa';
@@ -117,10 +118,20 @@ function ReadingNow() {
     () => shelf.filter((i) => i.entry.status === 'reading').sort((a, b) => b.entry.updatedAt.localeCompare(a.entry.updatedAt)),
     [shelf],
   );
-  if (reading.length === 0) return null;
+  const start = useRecord((s) => s.start);
   return (
     <section className={styles.section} aria-labelledby="reading-title">
-      <SectionHeader id="reading-title" title="읽는 중" more={{ to: paths.library, label: '서재' }} />
+      <SectionHeader id="reading-title" title="읽는 중" more={reading.length ? { to: paths.library, label: '서재' } : undefined} />
+      {reading.length === 0 ? (
+        <div className={styles.emptyCard}>
+          <BookOpen aria-hidden className={styles.emptyIcon} />
+          <p className={styles.emptyTitle}>지금 읽고 있는 책이 없어요</p>
+          <p className={styles.muted}>읽기 시작한 책을 담아두면 여기에서 바로 볼 수 있어요.</p>
+          <Button size="sm" variant="outline" onClick={() => start()}>
+            책 담기
+          </Button>
+        </div>
+      ) : (
       <ul role="list" className={styles.rail}>
         {reading.map(({ book }) => (
           <li key={book.id} className={styles.readingItem}>
@@ -131,6 +142,7 @@ function ReadingNow() {
           </li>
         ))}
       </ul>
+      )}
     </section>
   );
 }
@@ -138,6 +150,7 @@ function ReadingNow() {
 function FriendsFinished() {
   const reviews = useReviews();
   const following = useFollowing();
+  const signedIn = useMyCloudId() !== null;
   const findMember = useMemberLookup();
   const findBook = useBookLookup();
   const feed = useMemo(
@@ -149,7 +162,22 @@ function FriendsFinished() {
     <section className={styles.section} aria-labelledby="friends-title">
       <SectionHeader id="friends-title" title="친구들이 다 읽은 책" />
       {feed.length === 0 ? (
-        <p className={styles.muted}>팔로우한 친구의 완독 소식이 여기에 보여요.</p>
+        <div className={styles.emptyCard}>
+          <Users aria-hidden className={styles.emptyIcon} />
+          <p className={styles.emptyTitle}>{following.length ? '아직 친구의 완독 소식이 없어요' : '아직 팔로우한 친구가 없어요'}</p>
+          <p className={styles.muted}>
+            {following.length
+              ? '친구가 다 읽은 책에 별점을 공개하면 여기에 보여요.'
+              : signedIn
+                ? '친구를 팔로우하면, 친구가 공개한 별점과 한 줄 평이 여기에 보여요.'
+                : '로그인하고 친구를 팔로우하면 친구의 완독 소식이 여기에 보여요.'}
+          </p>
+          {!following.length && (
+            <ButtonLink to={signedIn ? `${paths.me}?people=find` : paths.login} size="sm" variant="outline">
+              {signedIn ? '친구 찾기' : '로그인'}
+            </ButtonLink>
+          )}
+        </div>
       ) : (
         <ul role="list" className={styles.feed}>
           {feed.map((r) => {
@@ -209,8 +237,10 @@ function MyClubSchedule() {
     <section className={styles.section} aria-labelledby="club-title">
       <SectionHeader id="club-title" title="내 독서모임 일정" more={{ to: paths.clubs, label: '모임' }} />
       {upcoming.length === 0 ? (
-        <div className={styles.clubEmpty}>
-          <p className={styles.muted}>참여 중인 모임이 없어요. 함께 읽을 모임을 찾아보세요.</p>
+        <div className={styles.emptyCard}>
+          <CalendarDays aria-hidden className={styles.emptyIcon} />
+          <p className={styles.emptyTitle}>참여 중인 모임이 없어요</p>
+          <p className={styles.muted}>모임에 참여하면 다음 일정이 여기에 보여요.</p>
           <ButtonLink to={paths.clubs} size="sm" variant="outline">
             모임 둘러보기
           </ButtonLink>

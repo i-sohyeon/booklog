@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import type { LibraryEntry } from '@/types/book';
 import { supabase } from '@/lib/supabase';
 import { useLibraryStore, type LibraryState } from '@/store/libraryStore';
+import { useSocialStore } from '@/store/socialStore';
 import { downloadLibrary, toBookRow, toEntryRow } from './cloudSync';
 
 /**
@@ -104,6 +105,8 @@ export async function startLibrarySync(userId: string) {
     } else {
       useLibraryStore.getState().replaceAll(server);
     }
+    // 이 기기에서 이 계정으로 처음 로그인: 샘플 친구·샘플 모임 참여가 내 것처럼 보이지 않게 비움
+    if (owner !== userId) useSocialStore.getState().clearSampleRelations();
     writeOwner(userId);
     baseline = useLibraryStore.getState().entries;
     setStatus('saved');

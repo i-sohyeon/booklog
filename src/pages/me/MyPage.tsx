@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { ChevronRight, Plus, Settings } from 'lucide-react';
 import { SAMPLE_FOLLOWERS } from '@/mocks/social';
 import { useSocialStore } from '@/store/socialStore';
@@ -25,7 +25,13 @@ export function MyPage() {
   const cloudFollowers = useCloudFollowers();
   const signedIn = useMyCloudId() !== null;
   const [tab, setTab] = useState<Tab>('reviews');
-  const [people, setPeople] = useState<People>(null);
+  const [params, setParams] = useSearchParams();
+  // 홈의 '친구 찾기' 버튼: /me?people=find 로 들어오면 바로 열기
+  const [people, setPeopleState] = useState<People>(() => (signedIn && params.get('people') === 'find' ? 'find' : null));
+  const setPeople = (p: People) => {
+    setPeopleState(p);
+    if (!p && params.has('people')) setParams({}, { replace: true });
+  };
 
   const reviews = useReviews().filter((r) => r.isMine);
   const lists = useLists().filter((l) => l.isMine);
@@ -48,7 +54,7 @@ export function MyPage() {
         {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
         <div className={styles.follow}>
           <button type="button" onClick={() => setPeople('followers')}>
-            <strong>{SAMPLE_FOLLOWERS.length + cloudFollowers.length}</strong> 팔로워
+            <strong>{(signedIn ? 0 : SAMPLE_FOLLOWERS.length) + cloudFollowers.length}</strong> 팔로워
           </button>
           <button type="button" onClick={() => setPeople('following')}>
             <strong>{following.length}</strong> 팔로잉
@@ -126,7 +132,7 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
   const ids = useMemo(
     () =>
       kind === 'followers'
-        ? [...cloudFollowers, ...SAMPLE_FOLLOWERS]
+        ? [...cloudFollowers, ...(myId ? [] : SAMPLE_FOLLOWERS)]
         : kind === 'following'
           ? following
           : kind === 'find'
@@ -150,7 +156,9 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
       description={
         kind === 'find'
           ? 'BookLog에 가입한 사람들이에요. 팔로우하면 공개한 후기가 홈에 보여요.'
-          : '‘가입’ 표시가 없는 사람은 샘플 사용자예요. 샘플 팔로우는 이 기기에만 저장돼요.'
+          : myId
+            ? '‘가입’ 표시가 없는 사람은 샘플 사용자예요. 샘플 팔로우는 이 기기에만 저장돼요.'
+            : '샘플 사용자예요. 로그인하면 가입한 친구를 찾아 팔로우할 수 있어요.'
       }
     >
       {kind === 'find' && (
@@ -164,7 +172,13 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
         />
       )}
       {members.length === 0 ? (
-        <p className={styles.muted}>{kind === 'find' ? '아직 가입한 다른 사람이 없어요. 친구에게 가입을 부탁해 보세요.' : '아직 아무도 없어요.'}</p>
+        <p className={styles.muted}>
+          {kind === 'find'
+            ? '아직 가입한 다른 사람이 없어요. 친구에게 가입을 부탁해 보세요.'
+            : kind === 'followers'
+              ? '아직 나를 팔로우한 사람이 없어요.'
+              : '아직 팔로우한 사람이 없어요. ‘친구 찾기’에서 찾아보세요.'}
+        </p>
       ) : (
         <ul role="list" className={styles.people}>
           {members.map((m) => {

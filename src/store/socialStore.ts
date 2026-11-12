@@ -54,6 +54,8 @@ interface SocialActions {
   deleteList: (id: string) => void;
   toggleFollow: (memberId: string) => void;
   reset: () => void;
+  /** 계정으로 처음 로그인할 때: 샘플 사용자 팔로우·샘플 모임 참여를 비움 */
+  clearSampleRelations: () => void;
 }
 
 const uid = (p: string) => `${p}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -199,6 +201,7 @@ export const useSocialStore = create<SocialState & SocialActions>()(
       },
 
       reset: () => set(initial()),
+      clearSampleRelations: () => set({ following: [], joinedClubs: [] }),
     }),
     {
       name: 'booklog:social',
