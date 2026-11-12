@@ -32,9 +32,11 @@ export function ReviewCard({ review, showBook = true, variant = 'card' }: Review
         <StarRating value={review.rating} size="sm" />
       </header>
 
-      <Spoiler active={review.spoiler}>
-        <p className={styles.line}>{review.oneLiner}</p>
-      </Spoiler>
+      {review.oneLiner && (
+        <Spoiler active={review.spoiler}>
+          <p className={styles.line}>{review.oneLiner}</p>
+        </Spoiler>
+      )}
 
       <footer className={styles.foot}>
         {showBook && book ? (

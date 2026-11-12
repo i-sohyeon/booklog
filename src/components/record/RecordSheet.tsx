@@ -6,6 +6,7 @@ import type { Book, ReadingStatus } from '@/types/book';
 import { ONE_LINER_MAX, READING_STATUS_LABEL } from '@/types/book';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useShelf } from '@/hooks/useShelf';
+import { useMyCloudId } from '@/hooks/useSocial';
 import { searchCatalogSync } from '@/services/bookSearch';
 import { toDateKey } from '@/lib/date';
 import { josa } from '@/lib/josa';
@@ -115,6 +116,9 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
   const [rating, setRating] = useState<number | undefined>(entry?.rating);
   const [oneLiner, setOneLiner] = useState(entry?.oneLiner ?? '');
   const [finishedAt, setFinishedAt] = useState(entry?.finishedAt ?? today);
+  // 로그인 중일 때만: 별점·한 줄 평을 다른 사용자에게 공개 (기본 비공개)
+  const signedIn = useMyCloudId() !== null;
+  const [share, setShare] = useState(Boolean(entry?.visibility?.rating));
   const [submitted, setSubmitted] = useState(false);
 
   const errors = {
@@ -126,7 +130,13 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
   const save = (more = false) => {
     setSubmitted(true);
     if (!valid || !rating) return;
-    saveFinished(book, { rating, oneLiner, finishedAt, spoiler: entry?.spoiler });
+    saveFinished(book, {
+      rating,
+      oneLiner,
+      finishedAt,
+      spoiler: entry?.spoiler,
+      visibility: signedIn ? { ...entry?.visibility, rating: share, oneLiner: share } : undefined,
+    });
     showToast(entry?.status === 'done' ? '기록을 고쳤어요' : `「${book.title}」${josa(book.title, '을/를')} 서재에 기록했어요`);
     onClose();
     if (more) navigate(paths.recordEdit(book.id));
@@ -159,6 +169,16 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
       />
 
       <TextField label="완독일" type="date" max={today} value={finishedAt} onChange={(e) => setFinishedAt(e.target.value)} error={errors.date} fieldClassName="field-narrow" />
+
+      {signedIn && (
+        <label className={styles.share}>
+          <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
+          <span>
+            <strong>별점·한 줄 평 공개</strong>
+            <span>가입한 친구에게 보여요 (팔로워의 홈 · 책 상세)</span>
+          </span>
+        </label>
+      )}
 
       <div className={styles.saveRow}>
         <Button type="submit" size="lg" block>

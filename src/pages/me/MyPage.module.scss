@@ -185,3 +185,28 @@
     @include line-clamp(1);
   }
 }
+
+.findInput {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  margin-bottom: var(--space-3);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-body);
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-muted);
+  }
+}
+
+.follow .findBtn {
+  margin-left: auto;
+  color: var(--color-text-brand);
+  font-weight: var(--font-bold);
+}

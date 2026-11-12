@@ -47,7 +47,46 @@ interface EntryRow {
   visibility: RecordVisibility;
 }
 
-const toBookRow = (b: Book): BookRow => ({
+
+export const toEntryRow = (userId: string, e: LibraryEntry): EntryRow => ({
+  user_id: userId,
+  book_id: e.bookId,
+  status: e.status,
+  added_at: e.addedAt,
+  updated_at: e.updatedAt,
+  finished_at: e.finishedAt ?? null,
+  rating: e.rating ?? null,
+  one_liner: e.oneLiner ?? null,
+  review: e.review ?? null,
+  spoiler: Boolean(e.spoiler),
+  // 사진은 용량 문제로 아직 올리지 않음 — 텍스트 문장만
+  quotes: (e.quotes ?? []).filter((q) => q.text).map(({ id, text, createdAt }) => ({ id, text, createdAt })),
+  place: e.place ?? null,
+  occasion: e.occasion ?? null,
+  tags: e.tags ?? [],
+  read_count: e.readCount ?? 1,
+  visibility: e.visibility ?? {},
+});
+
+export const fromEntryRow = (r: EntryRow): LibraryEntry => ({
+  bookId: r.book_id,
+  status: r.status,
+  addedAt: r.added_at,
+  updatedAt: r.updated_at,
+  finishedAt: r.finished_at ?? undefined,
+  rating: r.rating !== null ? Number(r.rating) : undefined,
+  oneLiner: r.one_liner ?? undefined,
+  review: r.review ?? undefined,
+  spoiler: r.spoiler || undefined,
+  quotes: r.quotes?.length ? r.quotes : undefined,
+  place: r.place ?? undefined,
+  occasion: r.occasion ?? undefined,
+  tags: r.tags?.length ? r.tags : undefined,
+  readCount: r.read_count > 1 ? r.read_count : undefined,
+  visibility: r.visibility ?? undefined,
+});
+
+export const toBookRow = (b: Book): BookRow => ({
   id: b.id,
   isbn: b.isbn ?? null,
   title: b.title,
@@ -63,7 +102,7 @@ const toBookRow = (b: Book): BookRow => ({
   cover_tone: b.coverTone ?? null,
 });
 
-const fromBookRow = (r: BookRow): Book => ({
+export const fromBookRow = (r: BookRow): Book => ({
   id: r.id,
   isbn: r.isbn ?? undefined,
   title: r.title,
@@ -99,25 +138,7 @@ export async function uploadLibrary(userId: string, s: Snapshot): Promise<{ book
 
   if (books.length) check(await db.from('books').upsert(books.map(toBookRow)));
   if (entries.length) {
-    const rows: EntryRow[] = entries.map((e) => ({
-      user_id: userId,
-      book_id: e.bookId,
-      status: e.status,
-      added_at: e.addedAt,
-      updated_at: e.updatedAt,
-      finished_at: e.finishedAt ?? null,
-      rating: e.rating ?? null,
-      one_liner: e.oneLiner ?? null,
-      review: e.review ?? null,
-      spoiler: Boolean(e.spoiler),
-      // 사진은 용량 문제로 아직 올리지 않음 — 텍스트 문장만
-      quotes: (e.quotes ?? []).filter((q) => q.text).map(({ id, text, createdAt }) => ({ id, text, createdAt })),
-      place: e.place ?? null,
-      occasion: e.occasion ?? null,
-      tags: e.tags ?? [],
-      read_count: e.readCount ?? 1,
-      visibility: e.visibility ?? {},
-    }));
+    const rows = entries.map((e) => toEntryRow(userId, e));
     check(await db.from('library_entries').upsert(rows));
     check(await db.from('library_entries').delete().eq('user_id', userId).not('book_id', 'in', inList(entries.map((e) => e.bookId))));
   } else {
@@ -137,23 +158,7 @@ export async function downloadLibrary(userId: string): Promise<Snapshot> {
     entries: Object.fromEntries(
       entryRows.map((r) => [
         r.book_id,
-        {
-          bookId: r.book_id,
-          status: r.status,
-          addedAt: r.added_at,
-          updatedAt: r.updated_at,
-          finishedAt: r.finished_at ?? undefined,
-          rating: r.rating !== null ? Number(r.rating) : undefined,
-          oneLiner: r.one_liner ?? undefined,
-          review: r.review ?? undefined,
-          spoiler: r.spoiler || undefined,
-          quotes: r.quotes?.length ? r.quotes : undefined,
-          place: r.place ?? undefined,
-          occasion: r.occasion ?? undefined,
-          tags: r.tags?.length ? r.tags : undefined,
-          readCount: r.read_count > 1 ? r.read_count : undefined,
-          visibility: r.visibility ?? undefined,
-        } satisfies LibraryEntry,
+        fromEntryRow(r),
       ]),
     ),
   };

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { useCloudStore } from './cloudStore';
 import type { Club, ClubSession, Comment, CurationList, Post, PostKind } from '@/types/social';
 import { ME_ID, SAMPLE_FOLLOWING, SAMPLE_JOINED_CLUBS } from '@/mocks/social';
 
@@ -74,13 +75,23 @@ export const useSocialStore = create<SocialState & SocialActions>()(
     (set) => ({
       ...initial(),
 
-      toggleLike: (kind, id) =>
+      toggleLike: (kind, id) => {
+        // 가입한 사람의 글·후기는 서버에 저장 (친구와 공유)
+        const cloud = useCloudStore.getState();
+        if ((kind === 'post' && cloud.isCloudPost(id)) || (kind === 'review' && cloud.isCloudReview(id))) {
+          void cloud.toggleLike(kind, id);
+          return;
+        }
         set((s) => {
           const list = s.liked[kind];
           return { liked: { ...s.liked, [kind]: list.includes(id) ? list.filter((x) => x !== id) : [...list, id] } };
-        }),
+        });
+      },
 
       addPost: (input) => {
+        // 로그인 중이면 서버에 올려 친구와 공유
+        const cloud = useCloudStore.getState();
+        if (cloud.me) return cloud.addPost(input);
         const id = uid('post');
         set((s) => ({
           myPosts: [
@@ -102,15 +113,28 @@ export const useSocialStore = create<SocialState & SocialActions>()(
         return id;
       },
 
-      deletePost: (id) => set((s) => ({ myPosts: s.myPosts.filter((p) => p.id !== id) })),
+      deletePost: (id) => {
+        const cloud = useCloudStore.getState();
+        if (cloud.isCloudPost(id)) {
+          void cloud.deletePost(id);
+          return;
+        }
+        set((s) => ({ myPosts: s.myPosts.filter((p) => p.id !== id) }));
+      },
 
-      addComment: (postId, body, spoiler) =>
+      addComment: (postId, body, spoiler) => {
+        const cloud = useCloudStore.getState();
+        if (cloud.isCloudPost(postId)) {
+          void cloud.addComment(postId, body, spoiler);
+          return;
+        }
         set((s) => {
           const comment: Comment = { id: uid('cmt'), memberId: ME_ID, body: body.trim(), createdAt: nowIso(), spoiler: spoiler || undefined };
           const mine = s.myPosts.find((p) => p.id === postId);
           if (mine) return { myPosts: s.myPosts.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, comment] } : p)) };
           return { extraComments: { ...s.extraComments, [postId]: [...(s.extraComments[postId] ?? []), comment] } };
-        }),
+        });
+      },
 
       joinClub: (id) => set((s) => (s.joinedClubs.includes(id) ? s : { joinedClubs: [...s.joinedClubs, id] })),
       leaveClub: (id) => set((s) => ({ joinedClubs: s.joinedClubs.filter((x) => x !== id) })),
@@ -163,10 +187,16 @@ export const useSocialStore = create<SocialState & SocialActions>()(
 
       deleteList: (id) => set((s) => ({ myLists: s.myLists.filter((l) => l.id !== id) })),
 
-      toggleFollow: (memberId) =>
+      toggleFollow: (memberId) => {
+        const cloud = useCloudStore.getState();
+        if (cloud.isCloudMember(memberId)) {
+          void cloud.toggleFollow(memberId);
+          return;
+        }
         set((s) => ({
           following: s.following.includes(memberId) ? s.following.filter((x) => x !== memberId) : [...s.following, memberId],
-        })),
+        }));
+      },
 
       reset: () => set(initial()),
     }),

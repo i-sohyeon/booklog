@@ -5,6 +5,7 @@ import { useSocialStore } from '@/store/socialStore';
 import { useAuthStore } from '@/store/authStore';
 import { authErrorMessage, authService } from '@/services/auth';
 import { downloadLibrary, readLastSync, uploadLibrary, writeLastSync } from '@/services/cloudSync';
+import { useSyncStatus } from '@/services/librarySync';
 import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
@@ -130,13 +131,14 @@ export function SettingsPage() {
         <section className={styles.panel} aria-labelledby="sync-title">
           <div className={styles.head}>
             <CloudUpload aria-hidden />
-            <h2 id="sync-title">기록 옮기기</h2>
+            <h2 id="sync-title">자동 저장</h2>
           </div>
           <p className={styles.desc}>
             {dataSource === 'sample'
-              ? '샘플 데이터가 표시되고 있어 계정에 올릴 수 없어요. 아래에서 비운 뒤 직접 기록하세요.'
-              : '서재·별점·한 줄 평을 계정에 올리거나 계정에서 불러와요. 커뮤니티·모임 활동은 아직 옮겨지지 않아요.'}
+              ? '샘플 데이터가 표시되고 있어 계정에 저장하지 않아요. 아래에서 비운 뒤 직접 기록하세요.'
+              : '로그인한 동안 서재 기록과 게시판 글·댓글·좋아요·팔로우가 계정에 자동으로 저장돼요. 문장 사진, 독서모임, 리스트는 아직 이 기기에만 남아요.'}
           </p>
+          <SyncStatusLine />
           {lastSync && (
             <p className={styles.meta}>
               마지막 {lastSync.direction === 'up' ? '올리기' : '불러오기'}: {formatRelative(lastSync.at)}
@@ -158,7 +160,7 @@ export function SettingsPage() {
         </section>
       )}
 
-      <section className={styles.panel} aria-labelledby="data-title">
+      <section className={styles.panel} aria-labelledby="data-title" id="data">
         <div className={styles.head}>
           <Settings aria-hidden />
           <h2 id="data-title">데이터 관리</h2>
@@ -195,5 +197,17 @@ export function SettingsPage() {
         {null}
       </Sheet>
     </Page>
+  );
+}
+
+const SYNC_LABEL = { off: '꺼짐', loading: '계정 서재 불러오는 중…', saving: '저장 중…', saved: '저장됨', error: '저장 실패' } as const;
+
+function SyncStatusLine() {
+  const { status, error } = useSyncStatus();
+  return (
+    <p className={status === 'error' ? styles.error : styles.meta} role="status">
+      상태: {SYNC_LABEL[status]}
+      {status === 'error' && error ? ` (${error}) — 인터넷 연결을 확인하거나 아래 버튼으로 다시 올려 주세요.` : ''}
+    </p>
   );
 }

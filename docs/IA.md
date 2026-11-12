@@ -47,7 +47,10 @@
 ## 데이터
 | 구분 | 위치 | 비고 |
 |------|------|------|
-| 내 서재·기록 | `store/libraryStore.ts` (localStorage `booklog:library`, v4) | Supabase `library_entries`로 수동 동기화 가능 (문장 사진은 기기에만) |
-| 내 소셜 활동 | `store/socialStore.ts` (localStorage `booklog:social`, v2) | 좋아요·글·댓글·모임 참여·리스트·팔로우 — 이 기기 전용 |
-| 다른 사람 후기·글·모임·리스트·베스트셀러·평점 분포·팔로워 | `mocks/social.ts` | **샘플 데이터** — 화면에 "샘플" 표시 |
+| 내 서재·기록 | `store/libraryStore.ts` (localStorage `booklog:library`, v4) | 로그인하면 `services/librarySync.ts`가 Supabase `library_entries`에 자동 저장 (문장 사진은 기기에만) |
+| 가입한 사람끼리 공유 | `store/cloudStore.ts` ↔ Supabase `profiles`·`follows`·`public_reviews`·`posts`·`comments`·`likes` | 로그인 중에만. 다른 사람에겐 별점을 '공개'한 완독 기록만 보이고, 한 줄 평은 따로 공개해야 보임 |
+| 이 기기 전용 소셜 | `store/socialStore.ts` (localStorage `booklog:social`, v2) | 샘플 글·후기에 남긴 좋아요·댓글, 샘플 사용자 팔로우, 독서모임, 리스트 |
+| 샘플 사용자의 후기·글·모임·리스트·베스트셀러·평점 분포 | `mocks/social.ts` | **샘플 데이터** — 화면에 "샘플" 표시 |
 | 도서 정보 | `mocks/catalog.ts` + `services/bookSearch.ts` | 도서 검색 API 연결 전 샘플 33권 |
+
+서버 설정: `supabase/schema.sql`을 SQL Editor에서 실행, `.env.local`(로컬)·Vercel 환경변수에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`(publishable key).

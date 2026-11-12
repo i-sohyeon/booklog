@@ -25,6 +25,8 @@ export interface FinishInput {
   finishedAt: string;
   review?: string;
   spoiler?: boolean;
+  /** 생략하면 기존 공개 설정 유지 */
+  visibility?: LibraryEntry['visibility'];
 }
 
 interface LibraryActions {
@@ -78,6 +80,7 @@ export const useLibraryStore = create<LibraryStore>()(
             finishedAt: input.finishedAt || toDateKey(new Date()),
             review: input.review !== undefined ? input.review.trim() || undefined : prev?.review,
             spoiler: input.spoiler || undefined,
+            visibility: input.visibility ?? prev?.visibility,
           };
           return { books: { ...s.books, [book.id]: book }, entries: { ...s.entries, [book.id]: entry } };
         }),

@@ -4,11 +4,10 @@ import { BookMarked, CalendarDays, Check, Video } from 'lucide-react';
 import type { Genre } from '@/types/book';
 import { SAMPLE_DAILY_PICKS } from '@/mocks/social';
 import { useLibraryStore } from '@/store/libraryStore';
-import { useSocialStore } from '@/store/socialStore';
 import { finishedBooks, ratingSummary, readingProfile } from '@/store/selectors';
 import { useShelf } from '@/hooks/useShelf';
 import { useProfile } from '@/hooks/useProfile';
-import { useBookLookup, useClubs, useMemberLookup, useReviews } from '@/hooks/useSocial';
+import { useBookLookup, useClubs, useFollowing, useMemberLookup, useReviews } from '@/hooks/useSocial';
 import { formatRelative, formatToday, getGreeting } from '@/lib/date';
 import { formatSchedule, sessionPhase, untilLabel } from '@/lib/time';
 import { josa } from '@/lib/josa';
@@ -138,7 +137,7 @@ function ReadingNow() {
 
 function FriendsFinished() {
   const reviews = useReviews();
-  const following = useSocialStore((s) => s.following);
+  const following = useFollowing();
   const findMember = useMemberLookup();
   const findBook = useBookLookup();
   const feed = useMemo(
@@ -175,9 +174,11 @@ function FriendsFinished() {
                       {book.title}
                     </Link>
                     <StarRating value={r.rating} size="sm" />
-                    <Spoiler active={r.spoiler}>
-                      <p className={styles.feedLine}>{r.oneLiner}</p>
-                    </Spoiler>
+                    {r.oneLiner && (
+                      <Spoiler active={r.spoiler}>
+                        <p className={styles.feedLine}>{r.oneLiner}</p>
+                      </Spoiler>
+                    )}
                   </div>
                 </div>
               </li>

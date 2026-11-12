@@ -153,3 +153,34 @@
   flex-direction: column;
   gap: var(--space-1);
 }
+
+.share {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  input {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    accent-color: var(--color-primary);
+  }
+  > span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  strong {
+    font-size: var(--text-label);
+    font-weight: var(--font-bold);
+  }
+  span span {
+    font-size: var(--text-caption);
+    color: var(--color-text-tertiary);
+  }
+}

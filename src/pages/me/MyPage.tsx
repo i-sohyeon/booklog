@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { ChevronRight, Plus, Settings } from 'lucide-react';
-import { SAMPLE_FOLLOWERS, SAMPLE_MEMBERS } from '@/mocks/social';
+import { SAMPLE_FOLLOWERS } from '@/mocks/social';
 import { useSocialStore } from '@/store/socialStore';
+import { useCloudStore } from '@/store/cloudStore';
 import { useProfile } from '@/hooks/useProfile';
-import { useClubs, useLists, useReviews } from '@/hooks/useSocial';
+import { useCloudFollowers, useClubs, useFollowing, useLists, useMemberLookup, useMyCloudId, useReviews } from '@/hooks/useSocial';
 import { paths } from '@/routes/paths';
 import { Page } from '@/components/layout/Page';
 import { Avatar, Badge, Button, ButtonLink, EmptyState, Sheet, Tabs } from '@/components/ui';
@@ -15,12 +16,14 @@ import { CreateListSheet } from '@/components/social/ListSheets';
 import styles from './MyPage.module.scss';
 
 type Tab = 'reviews' | 'lists' | 'clubs';
-type People = 'followers' | 'following' | null;
+type People = 'followers' | 'following' | 'find' | null;
 
 /** 마이 — 프로필 · 팔로워/팔로잉 · 내 후기 · 내 리스트 · 참여 중인 모임 · 설정 */
 export function MyPage() {
   const profile = useProfile();
-  const following = useSocialStore((s) => s.following);
+  const following = useFollowing();
+  const cloudFollowers = useCloudFollowers();
+  const signedIn = useMyCloudId() !== null;
   const [tab, setTab] = useState<Tab>('reviews');
   const [people, setPeople] = useState<People>(null);
 
@@ -45,11 +48,16 @@ export function MyPage() {
         {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
         <div className={styles.follow}>
           <button type="button" onClick={() => setPeople('followers')}>
-            <strong>{SAMPLE_FOLLOWERS.length}</strong> 팔로워
+            <strong>{SAMPLE_FOLLOWERS.length + cloudFollowers.length}</strong> 팔로워
           </button>
           <button type="button" onClick={() => setPeople('following')}>
             <strong>{following.length}</strong> 팔로잉
           </button>
+          {signedIn && (
+            <button type="button" className={styles.findBtn} onClick={() => setPeople('find')}>
+              친구 찾기
+            </button>
+          )}
         </div>
       </section>
 
@@ -104,17 +112,59 @@ export function MyPage() {
   );
 }
 
+const PEOPLE_TITLE = { followers: '팔로워', following: '팔로잉', find: '친구 찾기' } as const;
+
 function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
-  const following = useSocialStore((s) => s.following);
+  const following = useFollowing();
+  const cloudFollowers = useCloudFollowers();
   const toggleFollow = useSocialStore((s) => s.toggleFollow);
+  const findMember = useMemberLookup();
+  const myId = useMyCloudId();
+  const profiles = useCloudStore((s) => s.profiles);
+  const [q, setQ] = useState('');
   // 열려 있는 동안 목록이 바뀌어 사라지지 않도록, 연 순간의 목록을 기준으로 표시
-  const ids = useMemo(() => (kind === 'followers' ? SAMPLE_FOLLOWERS : kind === 'following' ? following : []), [kind]); // eslint-disable-line react-hooks/exhaustive-deps
-  const members = SAMPLE_MEMBERS.filter((m) => ids.includes(m.id));
+  const ids = useMemo(
+    () =>
+      kind === 'followers'
+        ? [...cloudFollowers, ...SAMPLE_FOLLOWERS]
+        : kind === 'following'
+          ? following
+          : kind === 'find'
+            ? Object.keys(profiles).filter((id) => id !== myId)
+            : [],
+    [kind, profiles], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const members = ids
+    .map(findMember)
+    .filter((m) => kind !== 'find' || !q.trim() || m.nickname.toLowerCase().includes(q.trim().toLowerCase()));
+  const isFriend = (id: string) => Boolean(profiles[id]);
 
   return (
-    <Sheet open={kind !== null} onClose={onClose} title={kind === 'followers' ? '팔로워' : '팔로잉'} description="샘플 사용자예요. 팔로우는 이 기기에만 저장돼요.">
+    <Sheet
+      open={kind !== null}
+      onClose={() => {
+        setQ('');
+        onClose();
+      }}
+      title={kind ? PEOPLE_TITLE[kind] : ''}
+      description={
+        kind === 'find'
+          ? 'BookLog에 가입한 사람들이에요. 팔로우하면 공개한 후기가 홈에 보여요.'
+          : '‘가입’ 표시가 없는 사람은 샘플 사용자예요. 샘플 팔로우는 이 기기에만 저장돼요.'
+      }
+    >
+      {kind === 'find' && (
+        <input
+          type="search"
+          className={styles.findInput}
+          placeholder="닉네임으로 찾기"
+          aria-label="닉네임으로 찾기"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      )}
       {members.length === 0 ? (
-        <p className={styles.muted}>아직 아무도 없어요.</p>
+        <p className={styles.muted}>{kind === 'find' ? '아직 가입한 다른 사람이 없어요. 친구에게 가입을 부탁해 보세요.' : '아직 아무도 없어요.'}</p>
       ) : (
         <ul role="list" className={styles.people}>
           {members.map((m) => {
@@ -123,8 +173,10 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
               <li key={m.id}>
                 <Avatar name={m.nickname} tone={m.tone} size="md" />
                 <span className={styles.personText}>
-                  <strong>{m.nickname}</strong>
-                  <span>{m.bio ?? `@${m.handle}`}</span>
+                  <strong>
+                    {m.nickname} {isFriend(m.id) && <Badge tone="outline">가입</Badge>}
+                  </strong>
+                  <span>{m.bio ?? (isFriend(m.id) ? 'BookLog 사용자' : `@${m.handle}`)}</span>
                 </span>
                 <Button size="sm" variant={on ? 'outline' : 'primary'} aria-pressed={on} onClick={() => toggleFollow(m.id)}>
                   {on ? '팔로잉' : '팔로우'}
