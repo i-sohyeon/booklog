@@ -17,6 +17,7 @@ export function LoginPage() {
   const showToast = useToast((s) => s.show);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
   const [serverError, setServerError] = useState<string>();
@@ -35,7 +36,7 @@ export function LoginPage() {
     if (validateEmail(email) || !password) return;
     setPending(true);
     try {
-      const user = await authService.signIn(email.trim(), password);
+      const user = await authService.signIn(email.trim(), password, remember);
       showToast(`${user.nickname}님, 다시 만나서 반가워요`);
       navigate(from, { replace: true });
     } catch (err) {
@@ -90,6 +91,10 @@ export function LoginPage() {
           disabled={!isSupabaseConfigured}
         />
         <div className={styles.row}>
+          <label className={styles.check}>
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={!isSupabaseConfigured} />
+            <span>자동 로그인</span>
+          </label>
           <Link to={paths.resetPassword} className={styles.link}>
             비밀번호를 잊었어요
           </Link>

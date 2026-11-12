@@ -6,26 +6,59 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 /** .env.local 에 Supabase 값이 있을 때만 true */
 export const isSupabaseConfigured = Boolean(url && anonKey && !url.includes('your-project-ref'));
 
-/** sessionStorage (막혀 있으면 메모리) */
-function tabStorage() {
+type KV = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+
+/** 접근이 막혀 있으면(사파리 개인 정보 보호 모드 등) 메모리로 대신 */
+function safe(get: () => Storage): KV {
   try {
-    // 예전 버전이 localStorage에 남긴 로그인 정보 정리 (이제는 탭에만 저장)
+    const st = get();
+    const k = '__booklog_probe__';
+    st.setItem(k, '1');
+    st.removeItem(k);
+    return st;
+  } catch {
+    const mem = new Map<string, string>();
+    return { getItem: (key) => mem.get(key) ?? null, setItem: (key, value) => void mem.set(key, value), removeItem: (key) => void mem.delete(key) };
+  }
+}
+
+const local = safe(() => window.localStorage);
+const tab = safe(() => window.sessionStorage);
+const REMEMBER_KEY = 'booklog:remember-login';
+
+/** 자동 로그인을 켰는지 */
+export const isRememberLogin = () => local.getItem(REMEMBER_KEY) === '1';
+
+/** 로그인 직전에 호출: 켜면 브라우저를 닫아도 로그인 유지, 끄면 이 탭에서만 */
+export function setRememberLogin(on: boolean) {
+  if (on) local.setItem(REMEMBER_KEY, '1');
+  else local.removeItem(REMEMBER_KEY);
+}
+
+/**
+ * 로그인 정보 저장소.
+ * - 기본(자동 로그인 끔): sessionStorage — 탭을 닫았다 다시 열면 로그아웃 상태로 시작 (새로고침은 유지)
+ * - 자동 로그인 켬: localStorage — 다시 열어도 로그인 유지
+ */
+const authStorage: KV = {
+  getItem: (key) => (isRememberLogin() ? local : tab).getItem(key),
+  setItem: (key, value) => {
+    const [use, other] = isRememberLogin() ? [local, tab] : [tab, local];
+    use.setItem(key, value);
+    other.removeItem(key);
+  },
+  removeItem: (key) => {
+    local.removeItem(key);
+    tab.removeItem(key);
+  },
+};
+
+// 자동 로그인을 켜지 않았는데 localStorage에 남은 로그인 정보(예전 버전 등)는 정리
+if (typeof window !== 'undefined' && !isRememberLogin()) {
+  try {
     for (const key of Object.keys(window.localStorage)) if (/^sb-.*-auth-token/.test(key)) window.localStorage.removeItem(key);
   } catch {
     /* ignore */
-  }
-  try {
-    const k = '__booklog_probe__';
-    window.sessionStorage.setItem(k, '1');
-    window.sessionStorage.removeItem(k);
-    return window.sessionStorage;
-  } catch {
-    const mem = new Map<string, string>();
-    return {
-      getItem: (key: string) => mem.get(key) ?? null,
-      setItem: (key: string, value: string) => void mem.set(key, value),
-      removeItem: (key: string) => void mem.delete(key),
-    };
   }
 }
 
@@ -35,8 +68,7 @@ function tabStorage() {
  */
 export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(url!, anonKey!, {
-      // 기본은 로그아웃 상태: 로그인은 이 탭(브라우저 창)이 열려 있는 동안만 유지되고,
-      // 탭을 닫았다 다시 열면 로그아웃된 상태로 시작합니다. (새로고침은 유지)
-      auth: { persistSession: true, storage: tabStorage(), autoRefreshToken: true, detectSessionInUrl: true },
+      // 기본은 로그아웃 상태로 시작, '자동 로그인'을 켜면 유지 (authStorage 참고)
+      auth: { persistSession: true, storage: authStorage, autoRefreshToken: true, detectSessionInUrl: true },
     })
   : null;
