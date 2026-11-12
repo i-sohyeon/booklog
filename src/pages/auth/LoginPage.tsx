@@ -5,6 +5,7 @@ import { authErrorMessage, authService } from '@/services/auth';
 import { useAuthStore } from '@/store/authStore';
 import { paths } from '@/routes/paths';
 import { Button, TextField, useToast } from '@/components/ui';
+import { DEMO_ACCOUNTS, type DemoAccount } from '@/config/demoAccounts';
 import { AuthLayout } from './AuthLayout';
 import { validateEmail } from './validation';
 import styles from './AuthForm.module.scss';
@@ -19,6 +20,7 @@ export function LoginPage() {
   const [submitted, setSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
   const [serverError, setServerError] = useState<string>();
+  const [demoPending, setDemoPending] = useState<DemoAccount['key'] | null>(null);
 
   const from = (location.state as { from?: string } | null)?.from ?? paths.home;
   if (status === 'signedIn') return <Navigate to={from} replace />;
@@ -40,6 +42,20 @@ export function LoginPage() {
       setServerError(authErrorMessage(err));
     } finally {
       setPending(false);
+    }
+  };
+
+  const demoLogin = async (a: DemoAccount) => {
+    setServerError(undefined);
+    setDemoPending(a.key);
+    try {
+      await authService.signIn(a.email, a.password);
+      showToast(`${a.nickname}(테스트 계정)으로 로그인했어요`);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setServerError(authErrorMessage(err));
+    } finally {
+      setDemoPending(null);
     }
   };
 
@@ -87,6 +103,32 @@ export function LoginPage() {
           로그인
         </Button>
       </form>
+
+      {isSupabaseConfigured && (
+        <section className={styles.demo} aria-labelledby="demo-title">
+          <h2 id="demo-title" className={styles.demoTitle}>
+            가입 없이 테스트 계정으로 둘러보기
+          </h2>
+          <p className={styles.demoDesc}>샘플 기록이 들어 있는 공개 체험 계정이에요. 누구나 같은 계정을 쓰니 개인적인 내용은 남기지 마세요.</p>
+          <ul role="list" className={styles.demoList}>
+            {DEMO_ACCOUNTS.map((a) => (
+              <li key={a.key}>
+                <Button
+                  variant="outline"
+                  block
+                  loading={demoPending === a.key}
+                  disabled={demoPending !== null || pending}
+                  onClick={() => demoLogin(a)}
+                  className={styles.demoBtn}
+                >
+                  <span className={styles.demoName}>{a.nickname}로 시작</span>
+                  <span className={styles.demoSub}>{a.description}</span>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </AuthLayout>
   );
 }

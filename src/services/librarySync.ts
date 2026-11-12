@@ -3,6 +3,7 @@ import type { LibraryEntry } from '@/types/book';
 import { supabase } from '@/lib/supabase';
 import { useLibraryStore, type LibraryState } from '@/store/libraryStore';
 import { useSocialStore } from '@/store/socialStore';
+import { isDemoUser } from '@/config/demoAccounts';
 import { downloadLibrary, toBookRow, toEntryRow } from './cloudSync';
 
 /**
@@ -91,7 +92,8 @@ export async function startLibrarySync(userId: string) {
     if (activeUser !== userId) return;
     const local = useLibraryStore.getState();
     const owner = readOwner();
-    const adoptLocal = local.dataSource === 'local' && (!owner || owner === userId);
+    // 테스트 계정에는 이 기기의 게스트 기록을 섞지 않음
+    const adoptLocal = local.dataSource === 'local' && (!owner || owner === userId) && !isDemoUser(userId);
 
     if (adoptLocal) {
       const ids = new Set([...Object.keys(local.entries), ...Object.keys(server.entries)]);

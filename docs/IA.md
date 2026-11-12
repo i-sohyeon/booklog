@@ -54,3 +54,8 @@
 | 도서 정보 | `mocks/catalog.ts` + `services/bookSearch.ts` | 도서 검색 API 연결 전 샘플 33권 |
 
 서버 설정: `supabase/schema.sql`을 SQL Editor에서 실행, `.env.local`(로컬)·Vercel 환경변수에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`(publishable key).
+
+### 테스트(체험) 계정
+- 로그인 화면 하단 "가입 없이 테스트 계정으로 둘러보기" → 테스트독자A / 테스트독자B (서로 팔로우, 샘플 서재·공개 후기·게시글 포함)
+- 계정·데이터: `supabase/demo_seed.sql` (schema.sql 다음에 실행, 다시 실행하면 초기화) — `npm run demo:seed`로 재생성
+- 로그인 정보는 `src/config/demoAccounts.ts`에 있으며 앱 코드에 공개되는 체험용 값
