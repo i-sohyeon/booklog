@@ -17,6 +17,8 @@ export const paths = {
   library: '/library',
   quotes: '/library/quotes',
   recordEdit: (bookId: string) => `/library/${enc(bookId)}/edit`,
+  /** 친구 서재 */
+  user: (userId: string) => `/u/${enc(userId)}`,
   me: '/me',
   settings: '/me/settings',
   login: '/login',

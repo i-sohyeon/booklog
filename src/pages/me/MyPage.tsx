@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { ChevronRight, Plus, Settings } from 'lucide-react';
+import { ChevronRight, Pencil, Plus, Settings } from 'lucide-react';
 import { SAMPLE_FOLLOWERS } from '@/mocks/social';
 import { useSocialStore } from '@/store/socialStore';
 import { useCloudStore } from '@/store/cloudStore';
@@ -8,7 +8,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useCloudFollowers, useClubs, useFollowing, useLists, useMemberLookup, useMyCloudId, useReviews } from '@/hooks/useSocial';
 import { paths } from '@/routes/paths';
 import { Page } from '@/components/layout/Page';
-import { Avatar, Badge, Button, ButtonLink, EmptyState, Sheet, Tabs } from '@/components/ui';
+import { Avatar, Badge, Button, ButtonLink, EmptyState, IconButton, Sheet, Tabs } from '@/components/ui';
 import { ReviewCard } from '@/components/social/ReviewCard';
 import { ListCard } from '@/components/social/ListCard';
 import { ClubCard } from '@/components/social/ClubCard';
@@ -16,6 +16,8 @@ import { CreateListSheet } from '@/components/social/ListSheets';
 import { useAuthGate } from '@/store/loginGate';
 import { GuestScreen } from '@/components/auth/LoginPrompt';
 import { UserRound as UserRoundIcon } from 'lucide-react';
+import { MemberLink } from '@/components/social/MemberLink';
+import { ProfileEditSheet } from './ProfileEditSheet';
 import styles from './MyPage.module.scss';
 
 type Tab = 'reviews' | 'lists' | 'clubs';
@@ -26,8 +28,10 @@ function MyPageInner() {
   const profile = useProfile();
   const following = useFollowing();
   const cloudFollowers = useCloudFollowers();
-  const signedIn = useMyCloudId() !== null;
+  const myCloudId = useMyCloudId();
+  const signedIn = myCloudId !== null;
   const [tab, setTab] = useState<Tab>('reviews');
+  const [editing, setEditing] = useState(false);
   const [params, setParams] = useSearchParams();
   // 홈의 '친구 찾기' 버튼: /me?people=find 로 들어오면 바로 열기
   const [people, setPeopleState] = useState<People>(() => (signedIn && params.get('people') === 'find' ? 'find' : null));
@@ -49,7 +53,14 @@ function MyPageInner() {
             <Settings aria-hidden />
           </Link>
         </div>
-        <h1 className={styles.name}>{profile.nickname}</h1>
+        <div className={styles.nameRow}>
+          <h1 className={styles.name}>{profile.nickname}</h1>
+          {profile.source === 'account' && (
+            <IconButton label="프로필 편집" size="sm" onClick={() => setEditing(true)}>
+              <Pencil />
+            </IconButton>
+          )}
+        </div>
         <p className={styles.handle}>
           {profile.handle ?? '로그인하지 않은 게스트'}
           {profile.source !== 'account' && <Badge tone="outline">{profile.source === 'sample' ? '샘플 사용자' : '게스트'}</Badge>}
@@ -68,6 +79,11 @@ function MyPageInner() {
             </button>
           )}
         </div>
+        {myCloudId && (
+          <Link to={paths.user(myCloudId)} className={styles.previewLink}>
+            친구에게 보이는 내 서재 보기
+          </Link>
+        )}
       </section>
 
       <section className={styles.activity} aria-label="내 활동">
@@ -117,6 +133,7 @@ function MyPageInner() {
       </nav>
 
       <PeopleSheet kind={people} onClose={() => setPeople(null)} />
+      <ProfileEditSheet key={profile.nickname} open={editing} onClose={() => setEditing(false)} />
     </Page>
   );
 }
@@ -186,11 +203,13 @@ function PeopleSheet({ kind, onClose }: { kind: People; onClose: () => void }) {
             const on = following.includes(m.id);
             return (
               <li key={m.id}>
-                <Avatar name={m.nickname} tone={m.tone} size="md" />
-                <span className={styles.personText}>
-                  <strong>{m.nickname}</strong>
-                  <span>{m.bio ?? (isFriend(m.id) ? 'BookLog 사용자' : `@${m.handle}`)}</span>
-                </span>
+                <MemberLink id={m.id} className={styles.personLink} label={`${m.nickname}님의 서재`}>
+                  <Avatar name={m.nickname} tone={m.tone} size="md" />
+                  <span className={styles.personText}>
+                    <strong>{m.nickname}</strong>
+                    <span>{m.bio ?? (isFriend(m.id) ? 'BookLog 사용자' : `@${m.handle}`)}</span>
+                  </span>
+                </MemberLink>
                 <Button size="sm" variant={on ? 'outline' : 'primary'} aria-pressed={on} onClick={() => toggleFollow(m.id)}>
                   {on ? '팔로잉' : '팔로우'}
                 </Button>

@@ -1,0 +1,19 @@
+.plain,
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  min-width: 0;
+}
+.link {
+  border-radius: var(--radius-sm);
+  &:hover strong {
+    color: var(--color-text-brand);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
