@@ -2,14 +2,17 @@ import { fileURLToPath, URL } from 'node:url';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
-/** 로컬 개발에서 Vercel 서버 함수(/api/books)를 그대로 실행 */
+/** 로컬 개발에서 Vercel 서버 함수(/api/*.ts)를 그대로 실행 */
 function apiRoutes(): Plugin {
   return {
     name: 'booklog-api-routes',
     configureServer(server) {
-      server.middlewares.use('/api/books', async (req, res) => {
+      server.middlewares.use(async (req, res, next) => {
+        const m = req.url?.match(/^\/api\/([a-z-]+)(?:[?#]|$)/);
+        if (!m) return next();
         try {
-          const mod = (await server.ssrLoadModule('/api/books.ts')) as { GET: (r: Request) => Promise<Response> };
+          const mod = (await server.ssrLoadModule(`/api/${m[1]}.ts`)) as { GET?: (r: Request) => Promise<Response> };
+          if (!mod.GET) return next();
           const response = await mod.GET(new Request(`http://localhost${req.originalUrl ?? req.url}`));
           res.statusCode = response.status;
           response.headers.forEach((v, k) => res.setHeader(k, v));
@@ -26,7 +29,7 @@ function apiRoutes(): Plugin {
 export default defineConfig(({ mode }) => {
   // 서버 전용 키(VITE_ 접두사 없음)를 로컬 서버 함수에서만 쓰도록 process.env 로
   const env = loadEnv(mode, process.cwd(), '');
-  if (env.KAKAO_REST_KEY) process.env.KAKAO_REST_KEY = env.KAKAO_REST_KEY;
+  for (const k of ['KAKAO_REST_KEY', 'YOUTUBE_API_KEY']) if (env[k]) process.env[k] = env[k];
   return {
   plugins: [react(), apiRoutes()],
   resolve: {
