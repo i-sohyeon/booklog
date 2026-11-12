@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router/dom';
 import { router } from '@/routes/router';
 import { useAuthStore } from '@/store/authStore';
 import { useCloudStore } from '@/store/cloudStore';
+import { uploadLocalClubs } from '@/store/socialStore';
 import { onSyncStatus, resetAfterSignOut, startLibrarySync, stopLibrarySync } from '@/services/librarySync';
 import { useToast } from '@/components/ui';
 import '@/styles/global.scss';
@@ -21,7 +22,8 @@ useAuthStore.subscribe((s, prev) => {
   if (id === (prev.user?.id ?? null) && s.status === prev.status) return;
   if (s.status === 'signedIn' && id) {
     void startLibrarySync(id);
-    void useCloudStore.getState().start(id);
+    // 서버 준비가 끝나면, 이 기기에만 있던 모임을 계정으로 옮김
+    void useCloudStore.getState().start(id).then(uploadLocalClubs);
   } else if (s.status === 'signedOut') {
     stopLibrarySync();
     useCloudStore.getState().clear();

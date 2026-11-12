@@ -23,7 +23,7 @@ export function ClubsPanel() {
 
   return (
     <>
-      <SampleNotice>샘플 모임이에요. 참여·모임 만들기는 이 기기에만 저장되고, 화상 모임 연결은 준비 중이에요.</SampleNotice>
+      <SampleNotice>로그인하면 만든 모임과 참여·토론이 계정에 저장돼 다른 사람과 함께 볼 수 있어요. 샘플 모임 참여는 이 기기에만 저장되고, 화상 모임 연결은 준비 중이에요.</SampleNotice>
       <div className={styles.filters}>
         <Tabs<Filter>
           label="모임 보기"

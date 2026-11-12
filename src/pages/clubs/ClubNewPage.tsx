@@ -37,6 +37,7 @@ function ClubNewPageInner() {
   const [duration, setDuration] = useState<'45' | '60' | '90'>('60');
   const [sessions, setSessions] = useState<SessionDraft[]>([{ range: '', date: defaultDate(0), time: '21:00' }]);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const dirty = Boolean(name || book || description || sessions.some((s) => s.range));
   const { blocker, allow } = useUnsavedGuard(dirty);
@@ -55,20 +56,27 @@ function ClubNewPageInner() {
 
   const update = (i: number, patch: Partial<SessionDraft>) => setSessions((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
 
-  const submit = () => {
+  const submit = async () => {
     setSubmitted(true);
-    if (!valid || !book) return;
-    const id = createClub({
-      name,
-      bookId: book.id,
-      description,
-      capacity,
-      durationMin: Number(duration),
-      sessions: sessions.map((s) => ({ range: s.range, startsAt: new Date(`${s.date}T${s.time}`).toISOString() })),
-    });
-    showToast('모임을 만들었어요');
-    allow();
-    navigate(paths.club(id), { replace: true });
+    if (!valid || !book || saving) return;
+    setSaving(true);
+    try {
+      const id = await createClub({
+        name,
+        bookId: book.id,
+        description,
+        capacity,
+        durationMin: Number(duration),
+        sessions: sessions.map((s) => ({ range: s.range, startsAt: new Date(`${s.date}T${s.time}`).toISOString() })),
+      });
+      showToast('모임을 만들었어요');
+      allow();
+      navigate(paths.club(id), { replace: true });
+    } catch {
+      // 쓰던 내용은 그대로 두고 다시 시도할 수 있게
+      showToast('모임을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      setSaving(false);
+    }
   };
 
   return (
@@ -77,7 +85,7 @@ function ClubNewPageInner() {
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
-        submit();
+        void submit();
       }}
     >
       <header className={styles.bar}>
@@ -85,7 +93,7 @@ function ClubNewPageInner() {
           <X />
         </IconButton>
         <h1 className={styles.title}>모임 만들기</h1>
-        <Button type="submit" size="sm">
+        <Button type="submit" size="sm" loading={saving}>
           만들기
         </Button>
       </header>

@@ -12,6 +12,7 @@ import { nextSession } from '@/components/social/ClubCard';
 import { cn } from '@/lib/cn';
 import { JoinButton } from './ClubsPanel';
 import { requireLogin } from '@/store/loginGate';
+import { useCloudStore } from '@/store/cloudStore';
 import styles from './ClubDetailPage.module.scss';
 
 /** 1분마다 다시 그려 입장 가능 여부를 갱신 */
@@ -35,7 +36,10 @@ export function ClubDetailPage() {
   const now = useNow();
   const [body, setBody] = useState('');
   const [enterOpen, setEnterOpen] = useState(false);
+  // 새로고침 직후엔 서버 모임을 불러오는 중일 수 있음
+  const cloudLoading = useCloudStore((s) => s.me !== null && (s.status === 'loading' || s.status === 'off'));
 
+  if (!club && cloudLoading) return <Page narrow>{null}</Page>;
   if (!club)
     return (
       <Page narrow>
