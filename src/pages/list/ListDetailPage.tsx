@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Plus, Trash2, X } from 'lucide-react';
 import { useSocialStore } from '@/store/socialStore';
 import { useBookLookup, useLists, useMemberLookup } from '@/hooks/useSocial';
-import { searchCatalogSync } from '@/services/bookSearch';
+import { useBookSearch } from '@/services/bookSearch';
 import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Avatar, Button, ButtonLink, EmptyState, IconButton, LikeButton, SearchField, Sheet, useToast } from '@/components/ui';
@@ -110,7 +110,7 @@ export function ListDetailPage() {
 function AddBooksSheet({ listId, bookIds, onClose }: { listId: string; bookIds: string[]; onClose: () => void }) {
   const toggle = useSocialStore((s) => s.toggleBookInList);
   const [q, setQ] = useState('');
-  const results = useMemo(() => searchCatalogSync(q), [q]);
+  const { items: results } = useBookSearch(q);
   return (
     <Sheet open onClose={onClose} title="책 추가" description="검색해서 리스트에 담아요">
       <div className={styles.addSheet}>

@@ -29,11 +29,15 @@ import { RatingDistribution } from '@/components/book/RatingDistribution';
 import { ReviewCard } from '@/components/social/ReviewCard';
 import { AddToListSheet } from '@/components/social/ListSheets';
 import { useRecord } from '@/components/record';
+import { useBookCache } from '@/store/bookCache';
+import { AladinCredit } from '@/components/book/AladinCredit';
 import styles from './BookDetailPage.module.scss';
 
 export function BookDetailPage() {
   const { bookId = '' } = useParams();
-  const cached = useLibraryStore((s) => s.books[bookId]);
+  const inLibrary = useLibraryStore((s) => s.books[bookId]);
+  const seen = useBookCache((s) => s.books[bookId]);
+  const cached = inLibrary ?? seen;
   const remote = useAsync(cached ? null : (signal) => bookSearchService.getById(bookId, { signal }), [bookId, Boolean(cached)]);
   const navigate = useNavigate();
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate(paths.home));
@@ -177,9 +181,15 @@ function BookDetail({ book }: { book: Book }) {
 
         <section className={styles.section} aria-labelledby="about">
           <h2 id="about" className={styles.h2}>
-            줄거리
+            책 소개
           </h2>
-          <p className={styles.desc}>{book.description}</p>
+          {book.description ? <p className={styles.desc}>{book.description}</p> : <p className={styles.muted}>등록된 소개가 없어요.</p>}
+          {book.id.startsWith('al-') && (
+            <AladinCredit
+              href={book.sourceUrl ?? `https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=${encodeURIComponent(book.isbn ?? book.title)}`}
+              label="도서 정보 제공: 알라딘 인터넷서점 · 알라딘에서 보기"
+            />
+          )}
         </section>
 
         <section className={styles.section} aria-labelledby="ratings">

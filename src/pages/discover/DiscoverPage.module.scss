@@ -32,6 +32,9 @@
   }
 }
 .count {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin-block: var(--space-4) var(--space-2);
   font-size: var(--text-label);
   color: var(--color-text-secondary);

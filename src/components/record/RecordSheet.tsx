@@ -1,5 +1,5 @@
 import { SAMPLE_CATALOG } from '@/mocks/catalog';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, BookCheck, BookMarked, BookOpen, ChevronRight } from 'lucide-react';
 import type { Book, ReadingStatus } from '@/types/book';
@@ -7,7 +7,7 @@ import { ONE_LINER_MAX, READING_STATUS_LABEL } from '@/types/book';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useShelf } from '@/hooks/useShelf';
 import { useMyCloudId } from '@/hooks/useSocial';
-import { searchCatalogSync } from '@/services/bookSearch';
+import { useBookSearch } from '@/services/bookSearch';
 import { toDateKey } from '@/lib/date';
 import { josa } from '@/lib/josa';
 import { paths } from '@/routes/paths';
@@ -38,7 +38,7 @@ export function RecordSheet() {
 function PickStep({ onPick }: { onPick: (b: Book) => void }) {
   const [q, setQ] = useState('');
   const shelf = useShelf();
-  const results = useMemo(() => searchCatalogSync(q), [q]);
+  const { items: results, loading, isSample } = useBookSearch(q);
   const reading = shelf.filter((i) => i.entry.status === 'reading').map((i) => i.book);
   const list = q.trim() ? results : reading;
 
@@ -46,7 +46,10 @@ function PickStep({ onPick }: { onPick: (b: Book) => void }) {
     <div className={styles.pick}>
       <SearchField label="책 검색" placeholder="제목, 저자로 찾기" value={q} onValueChange={setQ} autoFocus />
       {!q.trim() && reading.length > 0 && <p className={styles.hint}>읽는 중인 책</p>}
-      {q.trim() && results.length === 0 && <p className={styles.hint}>‘{q}’에 맞는 책이 없어요. (샘플 도서 {SAMPLE_CATALOG.length}권 안에서 검색돼요)</p>}
+      {q.trim() && loading && results.length === 0 && <p className={styles.hint}>찾는 중…</p>}
+      {q.trim() && !loading && results.length === 0 && (
+        <p className={styles.hint}>‘{q}’에 맞는 책이 없어요.{isSample && ` (지금은 샘플 도서 ${SAMPLE_CATALOG.length}권 안에서 검색돼요)`}</p>
+      )}
       {!q.trim() && reading.length === 0 && <p className={styles.hint}>읽은 책이나 읽고 싶은 책을 검색해 보세요.</p>}
       <ul role="list" className={styles.results}>
         {list.map((b) => (

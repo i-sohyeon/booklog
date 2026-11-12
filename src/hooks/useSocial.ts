@@ -5,6 +5,7 @@ import { SAMPLE_CATALOG } from '@/mocks/catalog';
 import { useSocialStore } from '@/store/socialStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useAuthStore } from '@/store/authStore';
+import { useBookCache } from '@/store/bookCache';
 import { cloudUserFollowing, useCloudStore } from '@/store/cloudStore';
 import type { AvatarTone } from '@/types/social';
 import { useProfile } from './useProfile';
@@ -60,10 +61,11 @@ export function useCloudFollowers(): string[] {
 
 
 
-/** 책 조회: 내 서재 → 샘플 카탈로그 */
+/** 책 조회: 내 서재 → 샘플 카탈로그 → 도서 API로 본 책(캐시) */
 export function useBookLookup() {
   const books = useLibraryStore((s) => s.books);
-  return useCallback((id: string): Book | undefined => books[id] ?? catalogMap.get(id), [books]);
+  const cached = useBookCache((s) => s.books);
+  return useCallback((id: string): Book | undefined => books[id] ?? catalogMap.get(id) ?? cached[id], [books, cached]);
 }
 
 export interface ReviewView extends Review {

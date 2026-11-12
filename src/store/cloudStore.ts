@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
 import type { Comment, Post, PostKind } from '@/types/social';
+import { SAMPLE_CATALOG } from '@/mocks/catalog';
+import { cacheBooks, useBookCache } from './bookCache';
+import { useLibraryStore } from './libraryStore';
+import { fromBookRow, toBookRow } from '@/services/cloudSync';
 
 /**
  * 서버(Supabase)에 저장되는 소셜 데이터 — 로그인한 사용자끼리 공유됩니다.
@@ -159,6 +163,14 @@ export const useCloudStore = create<CloudState & CloudActions>()((set, get) => {
           })),
           likes: (check(likes) as { kind: 'post' | 'review'; target_id: string; user_id: string }[]).map((l) => ({ kind: l.kind, targetId: l.target_id, userId: l.user_id })),
         });
+        // 친구 기록·글에 나온 책 중 이 기기가 모르는 책(도서 API 책)은 서버 books 테이블에서 가져옴
+        const st = get();
+        const known = new Set([...SAMPLE_CATALOG.map((b) => b.id), ...Object.keys(useLibraryStore.getState().books), ...Object.keys(useBookCache.getState().books)]);
+        const missing = [...new Set([...st.reviews.map((r) => r.bookId), ...st.posts.map((p) => p.bookId).filter((x): x is string => Boolean(x))])].filter((id) => !known.has(id));
+        if (missing.length) {
+          const { data } = await db.from('books').select('*').in('id', missing.slice(0, 200));
+          if (data) cacheBooks((data as Parameters<typeof fromBookRow>[0][]).map(fromBookRow));
+        }
       } catch (e) {
         set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
       }
@@ -213,6 +225,9 @@ export const useCloudStore = create<CloudState & CloudActions>()((set, get) => {
         comments: [],
         createdAt: new Date().toISOString(),
       };
+      // 도서 API에서 고른 책이면 친구도 볼 수 있게 서버 books 에 저장
+      const book = input.bookId ? (useLibraryStore.getState().books[input.bookId] ?? useBookCache.getState().books[input.bookId]) : undefined;
+      if (book && !SAMPLE_CATALOG.some((b) => b.id === book.id)) void supabase.from('books').upsert(toBookRow(book));
       void mutate({ posts: [post, ...posts] }, { posts }, () =>
         supabase!.from('posts').insert({
           id,

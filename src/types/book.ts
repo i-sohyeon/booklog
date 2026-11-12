@@ -7,7 +7,9 @@ export type Genre =
   | '역사'
   | '경제경영'
   | '자기계발'
-  | '예술';
+  | '예술'
+  /** 도서 API 분류가 위에 없을 때 */
+  | '기타';
 
 /** 표지 이미지가 없을 때 생성형 표지에 쓰이는 톤 */
 export type CoverTone = 'plum' | 'forest' | 'navy' | 'clay' | 'mustard' | 'charcoal' | 'rose' | 'sea';
@@ -25,8 +27,10 @@ export interface Book {
   pageCount: number;
   genre: Genre;
   description: string;
-  /** 외부 도서 API 연결 후 채워질 표지 URL */
+  /** 표지 이미지 URL (알라딘 등 도서 API) */
   coverUrl?: string;
+  /** 도서 API의 상품 페이지 (출처 링크) — 서버에 저장하지 않음 */
+  sourceUrl?: string;
   coverTone?: CoverTone;
 }
 
