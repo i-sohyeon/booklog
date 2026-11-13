@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Link, useLocation } from 'react-router';
-import { BookMarked, BookOpen, CalendarDays, Check, LogIn, Users, Video } from 'lucide-react';
+import { Link } from 'react-router';
+import { BookMarked, BookOpen, CalendarDays, Check, Users, Video } from 'lucide-react';
 import type { Genre } from '@/types/book';
 import { SAMPLE_DAILY_PICKS } from '@/mocks/social';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -18,6 +18,7 @@ import { Page } from '@/components/layout/Page';
 import { Avatar, BookCover, Button, ButtonLink, RatingValue, SectionHeader, Spoiler, StarRating, useToast } from '@/components/ui';
 import { nextSession } from '@/components/social/ClubCard';
 import { byline } from '@/lib/byline';
+import { GuestBanner } from '@/components/auth/LoginPrompt';
 import { MemberLink } from '@/components/social/MemberLink';
 import styles from './HomePage.module.scss';
 
@@ -40,7 +41,7 @@ export function HomePage() {
         </h1>
       </header>
 
-      {gate === 'guest' && <GuestWelcome />}
+      {gate === 'guest' && <GuestBanner />}
       <TodayPick />
       {gate === 'member' && (
         <>
@@ -50,35 +51,6 @@ export function HomePage() {
         </>
       )}
     </Page>
-  );
-}
-
-/** 로그인하지 않은 상태임을 분명히 알리는 카드 */
-function GuestWelcome() {
-  const { pathname } = useLocation();
-  return (
-    <section className={styles.guestCard} aria-labelledby="guest-title">
-      <p className={styles.guestEyebrow}>로그인하지 않은 상태예요</p>
-      <h2 id="guest-title" className={styles.guestTitle}>
-        로그인하고 나만의 서재를 시작하세요
-      </h2>
-      <ul className={styles.guestList}>
-        <li>다 읽은 책에 별점과 한 줄 평 남기기</li>
-        <li>친구를 팔로우하고 서로의 완독 소식 보기</li>
-        <li>어느 기기에서든 내 기록 이어보기</li>
-      </ul>
-      <div className={styles.guestActions}>
-        <ButtonLink to={paths.login} state={{ from: pathname }} leadingIcon={<LogIn aria-hidden />}>
-          로그인
-        </ButtonLink>
-        <ButtonLink to={paths.signup} variant="outline">
-          회원가입
-        </ButtonLink>
-      </div>
-      <p className={styles.guestNote}>
-        지금은 둘러보기만 할 수 있어요. 가입 없이 써 보려면 로그인 화면의 <strong>테스트 계정</strong>을 이용해 보세요.
-      </p>
-    </section>
   );
 }
 
