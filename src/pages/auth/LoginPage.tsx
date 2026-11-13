@@ -24,6 +24,8 @@ export function LoginPage() {
   const [demoPending, setDemoPending] = useState<DemoAccount['key'] | null>(null);
 
   const from = (location.state as { from?: string } | null)?.from ?? paths.home;
+  // 테스트 계정은 작업자 확인용: /login?test 로 들어올 때만 보임
+  const showDemo = isSupabaseConfigured && new URLSearchParams(location.search).has('test');
   if (status === 'signedIn') return <Navigate to={from} replace />;
 
   const emailError = submitted ? validateEmail(email) : undefined;
@@ -118,12 +120,12 @@ export function LoginPage() {
         </Button>
       </form>
 
-      {isSupabaseConfigured && (
+      {showDemo && (
         <section className={styles.demo} aria-labelledby="demo-title">
           <h2 id="demo-title" className={styles.demoTitle}>
-            가입 없이 테스트 계정으로 둘러보기
+            테스트 계정 (작업자용)
           </h2>
-          <p className={styles.demoDesc}>샘플 기록이 들어 있는 공개 체험 계정이에요. 누구나 같은 계정을 쓰니 개인적인 내용은 남기지 마세요.</p>
+          <p className={styles.demoDesc}>샘플 기록이 들어 있는 확인용 계정이에요. 여러 사람이 같이 쓰니 개인적인 내용은 남기지 마세요.</p>
           <ul role="list" className={styles.demoList}>
             {DEMO_ACCOUNTS.map((a) => (
               <li key={a.key}>

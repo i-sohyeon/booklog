@@ -4,6 +4,17 @@
 
 화면 구조와 기록 방식은 [docs/IA.md](docs/IA.md), 디자인 원칙은 [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)를 보세요.
 
+## 바로가기
+
+| 무엇 | 주소 | 비고 |
+|---|---|---|
+| 서비스 | https://booklog-azure.vercel.app | |
+| 디자인 가이드 | https://booklog-azure.vercel.app/design | 컬러·글자·아이콘·컴포넌트·간격·로고를 한 화면에서 확인. 메뉴에는 없고 주소로만 들어감. 로컬은 `http://localhost:5180/design` |
+| 테스트 계정 로그인 | https://booklog-azure.vercel.app/login?test | **작업자 확인용.** `?test`로 들어올 때만 로그인 화면 아래에 테스트독자A·B가 보임. 계정 정보는 `src/config/demoAccounts.ts` |
+
+- 테스트 계정은 여러 사람이 같이 쓰는 계정이라 닉네임을 바꿀 수 없고, 개인적인 내용은 남기지 않습니다.
+- 테스트 계정 데이터는 Supabase SQL Editor에서 `supabase/demo_seed.sql`을 실행하면 처음 상태로 돌아갑니다(두 테스트 계정의 기록만 지우고 다시 넣음).
+
 ## 실행
 
 ```bash
@@ -54,4 +65,4 @@ supabase/      schema.sql
 - 도서 검색 API: `src/services/bookSearch.ts`의 `BookSearchService` 구현 교체
 - 인증: `src/services/auth.ts`, 세션 상태: `src/store/authStore.ts`
 - 기기 ↔ 계정 데이터 이관: `src/services/cloudSync.ts` (마이 › 설정 › 기록 옮기기, 수동 실행 — 서재만)
-- 커뮤니티·독서모임·리스트는 아직 서버 테이블이 없어 `src/store/socialStore.ts`에 로컬 저장됩니다.
+- 로그인 중 게시판 글·댓글·공감·독서모임은 Supabase에 저장됩니다(`src/store/cloudStore.ts`). 큐레이션 리스트와 샘플 콘텐츠에 대한 반응은 아직 `src/store/socialStore.ts`에 로컬 저장됩니다.
