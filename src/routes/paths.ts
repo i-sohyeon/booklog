@@ -14,6 +14,7 @@ export const paths = {
   clubs: '/community?tab=clubs',
   club: (clubId: string) => `/clubs/${enc(clubId)}`,
   clubNew: '/clubs/new',
+  design: '/design',
   library: '/library',
   quotes: '/library/quotes',
   recordEdit: (bookId: string) => `/library/${enc(bookId)}/edit`,

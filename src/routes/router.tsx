@@ -67,6 +67,8 @@ export const router = createBrowserRouter([
       { path: 'signup', lazy: lazy(() => import('@/pages/auth/SignupPage'), 'SignupPage') },
       { path: 'reset-password', lazy: lazy(() => import('@/pages/auth/ResetPasswordPage'), 'ResetPasswordPage') },
       { path: 'account/password', lazy: lazy(() => import('@/pages/auth/UpdatePasswordPage'), 'UpdatePasswordPage') },
+      // 디자인 가이드 (메뉴에는 없고 주소로만 들어옴)
+      { path: 'design', lazy: lazy(() => import('@/pages/design/DesignGuidePage'), 'DesignGuidePage') },
     ],
   },
 ]);
