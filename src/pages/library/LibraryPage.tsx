@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { ChevronLeft, ChevronRight, Lock, Plus, Quote as QuoteIcon, Star } from 'lucide-react';
 import type { ReadingStatus } from '@/types/book';
@@ -12,13 +12,14 @@ import { paths } from '@/routes/paths';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { BookCover, Button, ButtonLink, EmptyState, StarRating, Tabs } from '@/components/ui';
 import { useRecord } from '@/components/record';
+import { BookSpine, SPINE_MAX_HEIGHT } from '@/components/book/BookSpine';
 import { byline } from '@/lib/byline';
 import { useAuthGate } from '@/store/loginGate';
 import { GuestScreen } from '@/components/auth/LoginPrompt';
 import { Library as LibraryIcon } from 'lucide-react';
 import styles from './LibraryPage.module.scss';
 
-type View = 'calendar' | 'list';
+type View = 'calendar' | 'list' | 'shelf';
 type RatingFilter = 'all' | '5' | '4.5' | '4' | 'low';
 
 const RATING_FILTERS: Array<{ value: RatingFilter; label: string }> = [
@@ -29,6 +30,8 @@ const RATING_FILTERS: Array<{ value: RatingFilter; label: string }> = [
   { value: 'low', label: '★ 3.5점 이하' },
 ];
 
+const VIEW_LABEL: Record<View, string> = { calendar: '캘린더', list: '리스트', shelf: '책꽂이' };
+
 const STATUS_ORDER: ReadingStatus[] = ['done', 'reading', 'want'];
 
 /** 서재 — 나만의 독서기록장 */
@@ -36,7 +39,7 @@ function LibraryPageInner() {
   const shelf = useShelf();
   const [params, setParams] = useSearchParams();
   const status = (STATUS_ORDER.includes(params.get('status') as ReadingStatus) ? params.get('status') : 'done') as ReadingStatus;
-  const view: View = params.get('view') === 'list' ? 'list' : 'calendar';
+  const view: View = params.get('view') === 'list' ? 'list' : params.get('view') === 'shelf' ? 'shelf' : 'calendar';
   const update = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params);
     for (const [k, v] of Object.entries(patch)) v === null ? next.delete(k) : next.set(k, v);
@@ -138,7 +141,7 @@ function YearSummary({ shelf }: { shelf: ShelfItem[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// 다 읽은 책: 태그·별점 필터 + 캘린더 | 리스트
+// 다 읽은 책: 태그·별점 필터 + 캘린더 | 리스트 | 책꽂이
 // ---------------------------------------------------------------------------
 function matchesRating(r: number | undefined, f: RatingFilter) {
   if (f === 'all') return true;
@@ -233,17 +236,20 @@ function Finished({
           items={[
             { value: 'calendar', label: '캘린더' },
             { value: 'list', label: '리스트' },
+            { value: 'shelf', label: '책꽂이' },
           ]}
         />
       </div>
 
-      <div id="finished-view" role="tabpanel" aria-label={view === 'calendar' ? '캘린더' : '리스트'}>
+      <div id="finished-view" role="tabpanel" aria-label={VIEW_LABEL[view]}>
         {items.length === 0 ? (
           <EmptyState compact title="조건에 맞는 책이 없어요" action={<Button variant="outline" onClick={() => onFilter({ tag: null, rating: null })}>필터 지우기</Button>} />
         ) : view === 'calendar' ? (
           <CalendarView items={items} />
-        ) : (
+        ) : view === 'list' ? (
           <ListView items={items} />
+        ) : (
+          <ShelfView items={items} />
         )}
       </div>
     </>
@@ -411,6 +417,50 @@ function RecordRows({ items }: { items: ShelfItem[] }) {
         );
       })}
     </ul>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 책꽂이: 해마다 한 칸, 다 읽은 순서대로 책등이 왼쪽부터 꽂힘
+// ---------------------------------------------------------------------------
+function ShelfView({ items }: { items: ShelfItem[] }) {
+  const years = useMemo(() => {
+    const map = new Map<string, ShelfItem[]>();
+    for (const i of items) {
+      const y = i.entry.finishedAt!.slice(0, 4);
+      map.set(y, [...(map.get(y) ?? []), i]);
+    }
+    return [...map.entries()]
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([y, list]) => [y, [...list].sort((a, b) => a.entry.finishedAt!.localeCompare(b.entry.finishedAt!))] as const);
+  }, [items]);
+
+  return (
+    <div className={styles.groups}>
+      {years.map(([y, list]) => (
+        <section key={y} aria-label={`${y}년 책꽂이`}>
+          <h3 className={styles.groupTitle}>
+            {y}년 <span>{list.length}권</span>
+          </h3>
+          <div className={styles.bookcase}>
+            <ul role="list" className={styles.shelf} style={{ '--spine-max': `${SPINE_MAX_HEIGHT}px` } as CSSProperties}>
+              {list.map(({ book, entry }) => (
+                <li key={book.id} className={styles.slot}>
+                  <Link
+                    to={paths.book(book.id)}
+                    className={styles.spineLink}
+                    aria-label={`${book.title}, ${book.authors[0] ?? ''}${entry.rating ? `, 별점 ${entry.rating}점` : ''}`}
+                    title={book.title}
+                  >
+                    <BookSpine book={book} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }
 

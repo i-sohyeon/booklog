@@ -1,0 +1,87 @@
+// 책등 — 책꽂이 보기에서 씀
+
+.spine {
+  --spine-bg: #4b2a6b;
+  --spine-fg: #f1eaf6;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding-block: var(--space-3) var(--space-2);
+  border-radius: 2px 2px 1px 1px;
+  overflow: hidden;
+  background-color: var(--spine-bg);
+  color: var(--spine-fg);
+  isolation: isolate;
+  // 둥근 책등의 입체감: 왼쪽은 밝게, 오른쪽은 어둡게
+  box-shadow:
+    inset 2px 0 0 rgb(255 255 255 / 0.12),
+    inset -3px 0 4px rgb(0 0 0 / 0.18),
+    0 1px 2px rgb(24 24 27 / 0.18);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.1), transparent 30%, transparent 70%, rgb(0 0 0 / 0.16));
+  }
+}
+
+// 표지 이미지가 있을 때: 표지 가운데를 세로로 잘라 쓰고, 글자가 읽히도록 살짝 어둡게
+.spine[data-image] {
+  --spine-fg: #fff;
+  background-image: linear-gradient(rgb(0 0 0 / 0.32), rgb(0 0 0 / 0.32)), var(--spine-image);
+  background-size: auto 100%;
+  background-position: center;
+  .title,
+  .author {
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+  }
+}
+
+.probe {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.title,
+.author {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.title {
+  flex: 1;
+  min-height: 0;
+  font-size: var(--text-caption);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.author {
+  flex-shrink: 0;
+  max-height: 40%;
+  font-size: 10px;
+  font-weight: var(--font-medium);
+  opacity: 0.8;
+}
+
+// ---- 톤 (생성형 표지 BookCover.module.scss 와 같은 값) ----
+.spine[data-tone='plum'] { --spine-bg: #4b2a6b; --spine-fg: #f1eaf6; }
+.spine[data-tone='forest'] { --spine-bg: #2f4a40; --spine-fg: #e9efe9; }
+.spine[data-tone='navy'] { --spine-bg: #26304a; --spine-fg: #e8ebf2; }
+.spine[data-tone='clay'] { --spine-bg: #9c5a43; --spine-fg: #f8ece6; }
+.spine[data-tone='mustard'] { --spine-bg: #8b84a6; --spine-fg: #f4f2f8; }
+.spine[data-tone='charcoal'] { --spine-bg: #2c2c30; --spine-fg: #ececee; }
+.spine[data-tone='rose'] { --spine-bg: #dcbab4; --spine-fg: #3a2421; }
+.spine[data-tone='sea'] { --spine-bg: #46767d; --spine-fg: #eaf3f4; }
