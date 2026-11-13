@@ -14,15 +14,14 @@
   gap: var(--space-2);
   font-size: var(--text-label);
   color: var(--color-text-tertiary);
+  // 로그인 화면의 '아직 계정이 없나요? 회원가입'과 같은 모양
   a {
     font-weight: var(--font-bold);
-    color: var(--color-text-secondary);
-    text-decoration: underline;
-    text-decoration-color: var(--color-border-strong);
-    text-underline-offset: 3px;
+    color: var(--color-text-brand);
     @media (hover: hover) {
       &:hover {
-        color: var(--color-text);
+        text-decoration: underline;
+        text-underline-offset: 3px;
       }
     }
   }

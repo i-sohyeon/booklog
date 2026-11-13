@@ -106,16 +106,10 @@ function Sidebar() {
       <div className={styles.sideBottom}>
         <SampleDataBadge />
         {gate === 'guest' ? (
-          <div className={styles.sideGuest}>
-            <p>
-              <strong>로그인하지 않은 상태</strong>
-              <span>로그인하면 기록을 남길 수 있어요</span>
-            </p>
-            <Link to={paths.login} state={{ from: pathname }} className={styles.sideLogin}>
-              <LogIn aria-hidden />
-              로그인
-            </Link>
-          </div>
+          <Link to={paths.login} state={{ from: pathname }} className={styles.sideLink}>
+            <LogIn aria-hidden />
+            <span>로그인</span>
+          </Link>
         ) : gate === 'member' ? (
           <NavLink to={paths.me} className={({ isActive }) => cn(styles.profile, isActive && styles.active)}>
             <Avatar name={profile.nickname} size="sm" />
