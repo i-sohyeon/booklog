@@ -29,7 +29,6 @@ export function AppLayout() {
   const hideBottomNav = handles.some((h) => h?.hideBottomNav);
   const { pathname } = useLocation();
   const fabHidden = useHideOnScroll(pathname);
-  const gate = useAuthGate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -59,11 +58,6 @@ export function AppLayout() {
             <NavLink to={paths.discover} aria-label="책 검색" className={styles.headerIcon}>
               <Search aria-hidden />
             </NavLink>
-            {gate === 'guest' && (
-              <Link to={paths.login} state={{ from: pathname }} className={styles.loginPill}>
-                로그인
-              </Link>
-            )}
           </div>
         </header>
       )}

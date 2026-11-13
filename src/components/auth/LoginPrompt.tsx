@@ -6,7 +6,7 @@ import { Button, Sheet } from '@/components/ui';
 import styles from './LoginPrompt.module.scss';
 
 /**
- * 로그인 안내의 공통 버튼 묶음: [로그인] 하나 + 작은 링크 둘(회원가입 · 테스트 계정).
+ * 로그인 안내의 공통 버튼 묶음: [로그인] 하나 + 작은 회원가입 링크.
  * 홈 띠 · 로그인 필요 시트 · 로그인 전용 화면이 모두 같은 구성과 문구를 씁니다.
  */
 function GuestActions({ onGo }: { onGo?: () => void }) {
@@ -26,12 +26,9 @@ function GuestActions({ onGo }: { onGo?: () => void }) {
         로그인
       </Button>
       <p className={styles.links}>
+        처음이신가요?
         <Link to={paths.signup} state={state} onClick={onGo}>
           회원가입
-        </Link>
-        <span aria-hidden>·</span>
-        <Link to={`${paths.login}#demo`} state={state} onClick={onGo}>
-          테스트 계정으로 둘러보기
         </Link>
       </p>
     </div>

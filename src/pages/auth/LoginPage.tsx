@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { authErrorMessage, authService } from '@/services/auth';
@@ -24,10 +24,6 @@ export function LoginPage() {
   const [demoPending, setDemoPending] = useState<DemoAccount['key'] | null>(null);
 
   const from = (location.state as { from?: string } | null)?.from ?? paths.home;
-  // '테스트 계정으로 둘러보기'(#demo)로 들어오면 테스트 계정 목록으로 바로 이동
-  useEffect(() => {
-    if (location.hash === '#demo') document.getElementById('demo')?.scrollIntoView({ block: 'start' });
-  }, [location.hash]);
   if (status === 'signedIn') return <Navigate to={from} replace />;
 
   const emailError = submitted ? validateEmail(email) : undefined;
@@ -123,7 +119,7 @@ export function LoginPage() {
       </form>
 
       {isSupabaseConfigured && (
-        <section id="demo" className={styles.demo} aria-labelledby="demo-title">
+        <section className={styles.demo} aria-labelledby="demo-title">
           <h2 id="demo-title" className={styles.demoTitle}>
             가입 없이 테스트 계정으로 둘러보기
           </h2>
