@@ -165,27 +165,36 @@ export interface ClubView extends Club {
   full: boolean;
 }
 
+/** 독서모임: 로그인하면 서버 모임(다른 사용자와 공유) + 이 기기 모임 + 샘플 모임 */
 export function useClubs(): ClubView[] {
   const myClubs = useSocialStore((s) => s.myClubs);
   const joined = useSocialStore((s) => s.joinedClubs);
   const threads = useSocialStore((s) => s.clubThreads);
-  return useMemo(
-    () =>
-      [...myClubs, ...SAMPLE_CLUBS].map((c) => {
-        const isHost = c.hostId === ME_ID;
-        const isJoined = isHost || joined.includes(c.id);
-        const memberIds = isJoined && !c.memberIds.includes(ME_ID) ? [...c.memberIds, ME_ID] : c.memberIds;
-        return {
-          ...c,
-          memberIds,
-          thread: [...c.thread, ...(threads[c.id] ?? [])],
-          joined: isJoined,
-          isHost,
-          full: memberIds.length >= c.capacity,
-        };
-      }),
-    [myClubs, joined, threads],
-  );
+  const cloudClubs = useCloudStore((s) => s.clubs);
+  const myId = useMyCloudId();
+  return useMemo(() => {
+    const server: ClubView[] = myId
+      ? cloudClubs.map((c) => {
+          const isHost = c.hostId === myId;
+          const isJoined = isHost || c.memberIds.includes(myId);
+          return { ...c, joined: isJoined, isHost, full: c.memberIds.length >= c.capacity };
+        })
+      : [];
+    const local: ClubView[] = [...myClubs, ...SAMPLE_CLUBS].map((c) => {
+      const isHost = c.hostId === ME_ID;
+      const isJoined = isHost || joined.includes(c.id);
+      const memberIds = isJoined && !c.memberIds.includes(ME_ID) ? [...c.memberIds, ME_ID] : c.memberIds;
+      return {
+        ...c,
+        memberIds,
+        thread: [...c.thread, ...(threads[c.id] ?? [])],
+        joined: isJoined,
+        isHost,
+        full: memberIds.length >= c.capacity,
+      };
+    });
+    return [...server, ...local];
+  }, [myClubs, joined, threads, cloudClubs, myId]);
 }
 
 export interface ListView extends CurationList {

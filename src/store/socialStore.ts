@@ -7,8 +7,8 @@ import { ME_ID, SAMPLE_FOLLOWING, SAMPLE_JOINED_CLUBS } from '@/mocks/social';
 
 /**
  * 소셜 상호작용 (이 기기 로컬 저장).
- * 서버 연결 전이라 내 좋아요·글·댓글·모임 참여는 이 브라우저에만 저장되고
- * 다른 사용자에게 보이지 않습니다.
+ * 로그인한 사용자의 글·댓글·좋아요·독서모임은 서버(cloudStore)로 보내고,
+ * 여기에는 샘플 콘텐츠에 대한 반응과 서버를 쓸 수 없을 때의 기록만 남습니다.
  */
 type LikeKind = 'review' | 'post' | 'list';
 
@@ -48,7 +48,8 @@ interface SocialActions {
   addComment: (postId: string, body: string, spoiler?: boolean) => void;
   joinClub: (id: string) => void;
   leaveClub: (id: string) => void;
-  createClub: (input: NewClubInput) => string;
+  /** 로그인 중이고 서버에 모임 테이블이 있으면 서버에, 아니면 이 기기에 저장 */
+  createClub: (input: NewClubInput) => Promise<string>;
   addClubComment: (clubId: string, body: string) => void;
   createList: (title: string, description: string, bookIds: string[]) => string;
   toggleBookInList: (listId: string, bookId: string) => void;
@@ -143,11 +144,25 @@ export const useSocialStore = create<SocialState & SocialActions>()(
 
       joinClub: (id) => {
         if (!requireLogin('모임에 참여하려면 로그인해 주세요.')) return;
+        const cloud = useCloudStore.getState();
+        if (cloud.isCloudClub(id)) {
+          void cloud.joinClub(id);
+          return;
+        }
         set((s) => (s.joinedClubs.includes(id) ? s : { joinedClubs: [...s.joinedClubs, id] }));
       },
-      leaveClub: (id) => set((s) => ({ joinedClubs: s.joinedClubs.filter((x) => x !== id) })),
+      leaveClub: (id) => {
+        const cloud = useCloudStore.getState();
+        if (cloud.isCloudClub(id)) {
+          void cloud.leaveClub(id);
+          return;
+        }
+        set((s) => ({ joinedClubs: s.joinedClubs.filter((x) => x !== id) }));
+      },
 
-      createClub: (input) => {
+      createClub: async (input) => {
+        const cloud = useCloudStore.getState();
+        if (cloud.me && cloud.clubsReady) return cloud.createClub(input);
         const id = uid('club');
         set((s) => ({
           myClubs: [
@@ -172,6 +187,11 @@ export const useSocialStore = create<SocialState & SocialActions>()(
 
       addClubComment: (clubId, body) => {
         if (!requireLogin('모임 글을 남기려면 로그인해 주세요.')) return;
+        const cloud = useCloudStore.getState();
+        if (cloud.isCloudClub(clubId)) {
+          void cloud.addClubComment(clubId, body);
+          return;
+        }
         set((s) => ({
           clubThreads: {
             ...s.clubThreads,
@@ -226,3 +246,44 @@ export const useSocialStore = create<SocialState & SocialActions>()(
     },
   ),
 );
+
+/**
+ * 서버 저장 전에 이 기기에만 만들어 둔 모임을 계정으로 옮깁니다(로그인 후 서버 준비가 끝나면 한 번).
+ * 옮긴 모임은 기기 목록에서 지우고, 내가 남긴 토론 글도 함께 옮깁니다.
+ */
+let uploadingClubs = false;
+export async function uploadLocalClubs() {
+  const cloud = useCloudStore.getState();
+  if (uploadingClubs || !cloud.me || !cloud.clubsReady) return;
+  uploadingClubs = true;
+  try {
+    await uploadEach();
+  } finally {
+    uploadingClubs = false;
+  }
+}
+
+async function uploadEach() {
+  const cloud = useCloudStore.getState();
+  const { myClubs, clubThreads } = useSocialStore.getState();
+  for (const club of [...myClubs].reverse()) {
+    try {
+      const id = await cloud.createClub({
+        name: club.name,
+        bookId: club.bookId,
+        description: club.description,
+        capacity: club.capacity,
+        durationMin: club.durationMin,
+        sessions: club.sessions,
+      });
+      for (const c of clubThreads[club.id] ?? []) await useCloudStore.getState().addClubComment(id, c.body);
+      useSocialStore.setState((s) => {
+        const threads = { ...s.clubThreads };
+        delete threads[club.id];
+        return { myClubs: s.myClubs.filter((x) => x.id !== club.id), clubThreads: threads };
+      });
+    } catch {
+      // 실패한 모임은 기기에 남겨 두고 다음 로그인 때 다시 시도
+    }
+  }
+}
