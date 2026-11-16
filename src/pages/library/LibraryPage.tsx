@@ -421,7 +421,8 @@ function RecordRows({ items }: { items: ShelfItem[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// 책꽂이: 해마다 한 칸, 다 읽은 순서대로 책등이 왼쪽부터 꽂힘
+// 책꽂이: 해마다 한 칸, 다 읽은 순서대로 책등이 왼쪽부터 꽂힘.
+// 실제 책장처럼 몇 권(별점이 높은 책, 6권에 1권꼴)은 표지가 앞을 보게 세워 둠
 // ---------------------------------------------------------------------------
 function ShelfView({ items }: { items: ShelfItem[] }) {
   const years = useMemo(() => {
@@ -432,12 +433,22 @@ function ShelfView({ items }: { items: ShelfItem[] }) {
     }
     return [...map.entries()]
       .sort((a, b) => b[0].localeCompare(a[0]))
-      .map(([y, list]) => [y, [...list].sort((a, b) => a.entry.finishedAt!.localeCompare(b.entry.finishedAt!))] as const);
+      .map(([y, list]) => {
+        const sorted = [...list].sort((a, b) => a.entry.finishedAt!.localeCompare(b.entry.finishedAt!));
+        const faceCount = Math.max(1, Math.round(sorted.length / 6));
+        const faceOut = new Set(
+          [...sorted]
+            .sort((a, b) => (b.entry.rating ?? 0) - (a.entry.rating ?? 0) || b.entry.finishedAt!.localeCompare(a.entry.finishedAt!))
+            .slice(0, faceCount)
+            .map((i) => i.book.id),
+        );
+        return [y, sorted, faceOut] as const;
+      });
   }, [items]);
 
   return (
     <div className={styles.groups}>
-      {years.map(([y, list]) => (
+      {years.map(([y, list, faceOut]) => (
         <section key={y} aria-label={`${y}년 책꽂이`}>
           <h3 className={styles.groupTitle}>
             {y}년 <span>{list.length}권</span>
@@ -448,11 +459,11 @@ function ShelfView({ items }: { items: ShelfItem[] }) {
                 <li key={book.id} className={styles.slot}>
                   <Link
                     to={paths.book(book.id)}
-                    className={styles.spineLink}
+                    className={cn(styles.spineLink, faceOut.has(book.id) && styles.faceOut)}
                     aria-label={`${book.title}, ${book.authors[0] ?? ''}${entry.rating ? `, 별점 ${entry.rating}점` : ''}`}
                     title={book.title}
                   >
-                    <BookSpine book={book} />
+                    {faceOut.has(book.id) ? <BookCover book={book} size="fluid" /> : <BookSpine book={book} />}
                   </Link>
                 </li>
               ))}
