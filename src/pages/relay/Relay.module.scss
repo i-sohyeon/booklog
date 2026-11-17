@@ -499,3 +499,70 @@
   align-items: center;
   margin-top: var(--space-16);
 }
+
+// 진행 중 '친구 더 초대하기' (접었다 펴기)
+.moreInvite {
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  text-align: center;
+  summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--text-label);
+    font-weight: var(--font-bold);
+    color: var(--color-text-brand);
+    min-height: 36px;
+    &::-webkit-details-marker {
+      display: none;
+    }
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+  &[open] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-bottom: var(--space-5);
+  }
+}
+
+.seatManage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  &:hover {
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+.seatHint {
+  margin-top: var(--space-2);
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.kickNotes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  list-style: disc;
+  font-size: var(--text-label);
+  color: var(--color-text-secondary);
+}
+.kickError {
+  margin-top: var(--space-3);
+  font-size: var(--text-caption);
+  color: var(--color-danger);
+}

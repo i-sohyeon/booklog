@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/authStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { SAMPLE_USER } from '@/mocks/user';
+import { useCloudStore } from '@/store/cloudStore';
 
 export interface DisplayProfile {
   nickname: string;
@@ -14,7 +15,9 @@ export interface DisplayProfile {
 export function useProfile(): DisplayProfile {
   const user = useAuthStore((s) => s.user);
   const isSample = useLibraryStore((s) => s.dataSource === 'sample');
-  if (user) return { nickname: user.nickname, handle: user.email, source: 'account' };
+  // 소개는 서버 프로필(profiles.bio)에서
+  const bio = useCloudStore((s) => (user ? s.profiles[user.id]?.bio : undefined));
+  if (user) return { nickname: user.nickname, handle: user.email, bio, source: 'account' };
   if (isSample) return { nickname: SAMPLE_USER.nickname, handle: `@${SAMPLE_USER.handle}`, bio: SAMPLE_USER.bio, source: 'sample' };
   return { nickname: '독자', source: 'guest' };
 }

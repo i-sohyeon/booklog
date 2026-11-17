@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { Copy, Crown, Repeat, Send, Share2 } from 'lucide-react';
+import { Copy, Crown, Repeat, Send, Share2, UserPlus } from 'lucide-react';
 import { useBookLookup, useMemberLookup, useMyCloudId } from '@/hooks/useSocial';
 import { relayError, turnInfo, useRelayStore, type RelayDetail } from '@/store/relayStore';
 import { useCloudStore } from '@/store/cloudStore';
@@ -95,22 +95,22 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
   const book = findBook(relay.bookId);
   const info = turnInfo(relay);
   const isHost = relay.hostId === me;
-  const n = Math.max(1, relay.members.length);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(t);
   }, []);
 
-  // 글이 없는 지난 차례 = 방장이 넘긴 차례
+  // 바통 기록: 서버 기록 그대로 (넘긴 차례도 기록됨). 예전 버전에서 넘긴 차례는 기록이 없어 빈 칸으로
   const timeline = useMemo(() => {
     const byTurn = new Map(relay.posts.map((p) => [p.turn, p]));
+    let lap = 1;
     return Array.from({ length: relay.turn }, (_, t) => {
-      const seat = t % n;
-      const member = relay.members.find((m) => m.seat === seat);
-      return { turn: t, lap: Math.floor(t / n) + 1, post: byTurn.get(t), userId: byTurn.get(t)?.userId ?? member?.userId };
+      const post = byTurn.get(t);
+      lap = post?.lap ?? lap;
+      return { turn: t, lap, post: post && !post.skipped ? post : undefined, userId: post?.userId };
     });
-  }, [relay.posts, relay.turn, relay.members, n]);
+  }, [relay.posts, relay.turn]);
   const lastQuestion = [...relay.posts].reverse().find((p) => p.question);
 
   return (
@@ -139,9 +139,19 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
         )}
       </section>
 
-      <Seats relay={relay} currentUserId={info.current?.userId} />
+      <Seats relay={relay} currentUserId={info.current?.userId} isHost={isHost} />
 
       {relay.status === 'waiting' && <WaitingRoom relay={relay} isHost={isHost} />}
+      {relay.status === 'active' && relay.members.length < 8 && (
+        <details className={styles.moreInvite}>
+          <summary>
+            <UserPlus aria-hidden />
+            친구 더 초대하기
+          </summary>
+          <p className={styles.inviteText}>지금 들어온 친구는 맨 뒤 차례로 이어서 참여해요.</p>
+          <InviteCode relay={relay} />
+        </details>
+      )}
 
       {relay.status !== 'waiting' && (
         <section className={styles.thread} aria-labelledby="thread-title">
@@ -193,7 +203,7 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
           name={findMember(info.current.userId).nickname}
           question={lastQuestion?.question}
           asker={lastQuestion ? findMember(lastQuestion.userId).nickname : undefined}
-          last={relay.turn + 1 >= info.total}
+          last={info.last}
           deadline={remaining(info.deadline, now)}
           reload={reload}
         />
@@ -211,13 +221,16 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
   );
 }
 
-function Seats({ relay, currentUserId }: { relay: RelayDetail; currentUserId?: string }) {
+function Seats({ relay, currentUserId, isHost }: { relay: RelayDetail; currentUserId?: string; isHost: boolean }) {
   const findMember = useMemberLookup();
   const me = useMyCloudId();
+  const [managing, setManaging] = useState<string | null>(null);
+  // 방장은 완주 전까지 다른 멤버를 눌러 내보낼 수 있음
+  const canManage = (userId: string) => isHost && relay.status !== 'done' && userId !== relay.hostId;
   return (
     <section className={styles.seatsWrap} aria-labelledby="seats-title">
       <h2 id="seats-title" className={styles.h2}>
-        차례 <span>{relay.status === 'waiting' ? `${relay.members.length}/8명` : `${relay.members.length}명`}</span>
+        차례 <span>{relay.status === 'done' ? `${relay.members.length}명` : `${relay.members.length}/8명`}</span>
       </h2>
       <ol className={styles.seats}>
         {relay.members.map((m) => {
@@ -225,6 +238,9 @@ function Seats({ relay, currentUserId }: { relay: RelayDetail; currentUserId?: s
           const now = m.userId === currentUserId;
           return (
             <li key={m.userId} className={cn(styles.seat, now && styles.seatNow)} aria-current={now ? 'step' : undefined}>
+              {canManage(m.userId) && (
+                <button type="button" className={styles.seatManage} onClick={() => setManaging(m.userId)} aria-label={`${p.nickname} 관리`} />
+              )}
               <span className={styles.seatNo}>{m.seat + 1}</span>
               <Avatar name={p.nickname} tone={p.tone} size="md" />
               <span className={styles.seatName}>{p.nickname}</span>
@@ -239,21 +255,83 @@ function Seats({ relay, currentUserId }: { relay: RelayDetail; currentUserId?: s
           );
         })}
       </ol>
+      {isHost && relay.status !== 'done' && relay.members.length > 1 && <p className={styles.seatHint}>멤버를 누르면 내보낼 수 있어요.</p>}
+      <KickSheet relay={relay} userId={managing} isCurrent={managing !== null && managing === currentUserId} onClose={() => setManaging(null)} />
     </section>
   );
 }
 
-function WaitingRoom({ relay, isHost }: { relay: RelayDetail; isHost: boolean }) {
-  const start = useRelayStore((s) => s.start);
-  const leave = useRelayStore((s) => s.leave);
+/** 방장: 멤버 내보내기 확인 */
+function KickSheet({ relay, userId, isCurrent, onClose }: { relay: RelayDetail; userId: string | null; isCurrent: boolean; onClose: () => void }) {
+  const member = useMemberLookup()(userId ?? '');
+  const kick = useRelayStore((s) => s.kick);
   const showToast = useToast((s) => s.show);
-  const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
-  const [confirm, setConfirm] = useState(false);
+  const [error, setError] = useState<string>();
+  const close = () => {
+    if (busy) return;
+    setError(undefined);
+    onClose();
+  };
+  return (
+    <Sheet
+      open={userId !== null}
+      onClose={close}
+      title={`${member.nickname}님을 내보낼까요?`}
+      description={
+        relay.status === 'active'
+          ? isCurrent
+            ? '지금 이 멤버의 차례예요. 내보내면 바통이 바로 다음 사람에게 넘어가요.'
+            : '뒷사람들이 한 칸씩 당겨 앉고, 지금 차례는 그대로 이어져요.'
+          : '뒷사람들이 한 칸씩 당겨 앉아요.'
+      }
+      footer={
+        <>
+          <Button variant="ghost" onClick={close} disabled={busy}>
+            취소
+          </Button>
+          <Button
+            variant="danger"
+            loading={busy}
+            onClick={async () => {
+              if (!userId) return;
+              setBusy(true);
+              setError(undefined);
+              try {
+                await kick(relay.id, userId);
+                showToast(`${member.nickname}님을 내보냈어요`);
+                onClose();
+              } catch (e) {
+                setError(relayError(e));
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            내보내기
+          </Button>
+        </>
+      }
+    >
+      <ul className={styles.kickNotes}>
+        <li>내보낸 멤버는 이 릴레이를 더 볼 수 없어요.</li>
+        <li>같은 초대 코드로 다시 들어올 수 없어요.</li>
+        <li>이미 남긴 바통 글은 기록에 그대로 남아요.</li>
+      </ul>
+      {error && (
+        <p className={styles.kickError} role="alert">
+          {error}
+        </p>
+      )}
+    </Sheet>
+  );
+}
+
+/** 초대 코드(눌러서 복사) + 링크 복사 + 공유 */
+function InviteCode({ relay }: { relay: RelayDetail }) {
+  const showToast = useToast((s) => s.show);
   const link = `${window.location.origin}${paths.relayJoin(relay.code)}`;
   const canShare = typeof navigator !== 'undefined' && 'share' in navigator;
-  const enough = relay.members.length >= 2;
-
   const copy = async (text: string, done: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -262,25 +340,8 @@ function WaitingRoom({ relay, isHost }: { relay: RelayDetail; isHost: boolean })
       showToast('복사하지 못했어요. 길게 눌러 직접 복사해 주세요');
     }
   };
-
-  const run = async (fn: () => Promise<void>, ok: string) => {
-    setBusy(true);
-    try {
-      await fn();
-      showToast(ok);
-    } catch (e) {
-      showToast(relayError(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
-    <section className={styles.invite} aria-labelledby="invite-title">
-      <h2 id="invite-title" className={styles.inviteTitle}>
-        친구를 초대해 주세요
-      </h2>
-      <p className={styles.inviteText}>초대 코드나 링크를 보내면 친구가 바로 들어올 수 있어요. 시작하면 더는 들어올 수 없어요.</p>
+    <>
       <button type="button" className={styles.code} onClick={() => void copy(relay.code, '초대 코드를 복사했어요')} aria-label={`초대 코드 ${relay.code}, 눌러서 복사`}>
         {relay.code.split('').map((c, i) => (
           <span key={i}>{c}</span>
@@ -300,6 +361,38 @@ function WaitingRoom({ relay, isHost }: { relay: RelayDetail; isHost: boolean })
           </Button>
         )}
       </div>
+    </>
+  );
+}
+
+function WaitingRoom({ relay, isHost }: { relay: RelayDetail; isHost: boolean }) {
+  const start = useRelayStore((s) => s.start);
+  const leave = useRelayStore((s) => s.leave);
+  const showToast = useToast((s) => s.show);
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const enough = relay.members.length >= 2;
+
+  const run = async (fn: () => Promise<void>, ok: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      showToast(ok);
+    } catch (e) {
+      showToast(relayError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className={styles.invite} aria-labelledby="invite-title">
+      <h2 id="invite-title" className={styles.inviteTitle}>
+        친구를 초대해 주세요
+      </h2>
+      <p className={styles.inviteText}>초대 코드나 링크를 보내면 친구가 바로 들어올 수 있어요. 시작한 뒤에 들어온 친구는 맨 뒤 차례로 이어서 참여해요.</p>
+      <InviteCode relay={relay} />
       {isHost ? (
         <>
           <Button block size="lg" disabled={!enough} loading={busy} onClick={() => void run(() => start(relay.id), '릴레이를 시작했어요')}>

@@ -34,6 +34,7 @@ import { useBookCache } from '@/store/bookCache';
 import { SourceCredit } from '@/components/book/SourceCredit';
 import { knownGenre } from '@/lib/byline';
 import { requireLogin } from '@/store/loginGate';
+import { VideoRail } from '@/components/video/VideoRail';
 import styles from './BookDetailPage.module.scss';
 
 export function BookDetailPage() {
@@ -203,6 +204,13 @@ function BookDetail({ book }: { book: Book }) {
               label="도서 정보 제공: 카카오(Daum 책) · 자세히 보기"
             />
           )}
+        </section>
+
+        <section className={styles.section} aria-labelledby="videos">
+          <h2 id="videos" className={styles.h2}>
+            이 책을 다룬 영상
+          </h2>
+          <VideoRail query={`${book.title} ${book.authors[0] ?? ''} 책`.trim()} limit={6} emptyText="이 책을 다룬 영상을 찾지 못했어요." />
         </section>
 
         <section className={styles.section} aria-labelledby="ratings">

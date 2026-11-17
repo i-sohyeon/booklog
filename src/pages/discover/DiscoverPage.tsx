@@ -16,6 +16,7 @@ import { ListCard } from '@/components/social/ListCard';
 import { ReviewCard } from '@/components/social/ReviewCard';
 import { CreateListSheet } from '@/components/social/ListSheets';
 import { requireLogin } from '@/store/loginGate';
+import { VideoRail } from '@/components/video/VideoRail';
 import styles from './DiscoverPage.module.scss';
 
 export function DiscoverPage() {
@@ -140,6 +141,8 @@ function Browse() {
         </div>
       </section>
 
+      <BookVideos />
+
       <section className={styles.section} aria-labelledby="hot-title">
         <SectionHeader id="hot-title" title="지금 화제인 후기" description="공감을 많이 받은 한 줄 평" aside={<Badge tone="outline">샘플</Badge>} />
         <ul role="list" className={styles.reviewRail}>
@@ -172,5 +175,37 @@ function Browse() {
       </section>
       <CreateListSheet open={creating} onClose={() => setCreating(false)} />
     </>
+  );
+}
+
+const VIDEO_TOPICS = [
+  { value: 'pick', label: '추천', query: '북튜버 책 추천' },
+  { value: 'novel', label: '소설', query: '소설 추천 책 리뷰' },
+  { value: 'essay', label: '에세이', query: '에세이 추천 책' },
+  { value: 'humanities', label: '인문', query: '인문학 책 추천' },
+  { value: 'talk', label: '북토크', query: '작가 북토크' },
+] as const;
+type VideoTopic = (typeof VIDEO_TOPICS)[number]['value'];
+
+/** 유튜브에서 찾은 책 이야기 영상 (북튜버·북토크) */
+function BookVideos() {
+  const [topic, setTopic] = useState<VideoTopic>('pick');
+  const query = VIDEO_TOPICS.find((t) => t.value === topic)!.query;
+  return (
+    <section className={styles.section} aria-labelledby="video-title">
+      <SectionHeader id="video-title" title="책 이야기 영상" description="유튜브의 북튜버·북토크 영상" />
+      <Tabs<VideoTopic>
+        label="영상 주제"
+        variant="pill"
+        bleed
+        value={topic}
+        onChange={setTopic}
+        controls="video-panel"
+        items={VIDEO_TOPICS.map((t) => ({ value: t.value, label: t.label }))}
+      />
+      <div id="video-panel" role="tabpanel" className={styles.videoPanel}>
+        <VideoRail query={query} />
+      </div>
+    </section>
   );
 }

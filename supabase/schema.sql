@@ -552,6 +552,127 @@ revoke all on function public.is_relay_member(uuid), public.gen_relay_code(), pu
 grant execute on function public.is_relay_member(uuid), public.create_relay(text, text, int, int), public.join_relay(text),
   public.start_relay(uuid), public.leave_relay(uuid), public.post_relay(uuid, text, text), public.skip_relay_turn(uuid) to authenticated;
 
+-- ---------- 릴레이: 시작한 뒤에도 참여 (migrations/005_relay_join_anytime.sql 과 같음) ----------
+
+alter table public.relays add column if not exists current_seat int not null default 0;
+alter table public.relays add column if not exists lap int not null default 1;
+alter table public.relay_posts add column if not exists lap int;
+alter table public.relay_posts add column if not exists skipped boolean not null default false;
+
+-- 넘긴 차례는 글이 없음
+alter table public.relay_posts alter column body drop not null;
+alter table public.relay_posts drop constraint if exists relay_posts_body_check;
+alter table public.relay_posts drop constraint if exists relay_posts_body_or_skipped;
+alter table public.relay_posts add constraint relay_posts_body_or_skipped
+  check ((skipped and body is null) or (not skipped and char_length(body) between 1 and 1000));
+
+-- 이미 진행 중이던 릴레이는 예전 계산으로 자리·바퀴를 채움 (한 번만)
+update public.relays r
+set current_seat = r.turn % greatest(1, m.n),
+    lap = least(r.rounds, r.turn / greatest(1, m.n) + 1)
+from (select relay_id, count(*)::int as n from public.relay_members group by relay_id) m
+where m.relay_id = r.id and r.status = 'active' and r.turn > 0 and r.current_seat = 0 and r.lap = 1;
+
+update public.relay_posts p
+set lap = p.turn / greatest(1, m.n) + 1
+from (select relay_id, count(*)::int as n from public.relay_members group by relay_id) m
+where m.relay_id = p.relay_id and p.lap is null;
+
+-- 참여: 완주 전이면 언제든 (진행 중이면 맨 뒷자리)
+create or replace function public.join_relay(p_code text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  r public.relays;
+  n int;
+begin
+  if me is null then raise exception '로그인이 필요해요' using errcode = '42501'; end if;
+  select * into r from public.relays where code = upper(trim(p_code)) for update;
+  if not found then raise exception '초대 코드를 찾을 수 없어요' using errcode = 'P0002'; end if;
+  if exists (select 1 from public.relay_members where relay_id = r.id and user_id = me) then return r.id; end if;
+  if r.status = 'done' then raise exception '이미 완주한 릴레이예요' using errcode = 'P0001'; end if;
+  select count(*) into n from public.relay_members where relay_id = r.id;
+  if n >= 8 then raise exception '정원(8명)이 찼어요' using errcode = 'P0001'; end if;
+  insert into public.relay_members (relay_id, user_id, seat) values (r.id, me, n);
+  return r.id;
+end;
+$$;
+
+-- 바통 넘기기: 다음 자리로, 마지막 자리 다음은 1번 자리 + 다음 바퀴, 정한 바퀴를 넘기면 완주
+create or replace function public.advance_relay(r public.relays)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  n int;
+  next_seat int := r.current_seat + 1;
+  next_lap int := r.lap;
+begin
+  select count(*) into n from public.relay_members where relay_id = r.id;
+  if next_seat >= n then
+    next_seat := 0;
+    next_lap := r.lap + 1;
+  end if;
+  if next_lap > r.rounds then
+    update public.relays set turn = r.turn + 1, status = 'done', finished_at = now(), turn_started_at = null where id = r.id;
+  else
+    update public.relays set turn = r.turn + 1, current_seat = next_seat, lap = next_lap, turn_started_at = now() where id = r.id;
+  end if;
+end;
+$$;
+
+create or replace function public.post_relay(p_id uuid, p_body text, p_question text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  r public.relays;
+  my_seat int;
+begin
+  select * into r from public.relays where id = p_id for update;
+  if not found or not public.is_relay_member(p_id) then raise exception '참여한 릴레이가 아니에요' using errcode = '42501'; end if;
+  if r.status <> 'active' then raise exception '진행 중인 릴레이가 아니에요' using errcode = 'P0001'; end if;
+  select seat into my_seat from public.relay_members where relay_id = p_id and user_id = me;
+  if my_seat <> r.current_seat then raise exception '지금은 내 차례가 아니에요' using errcode = 'P0001'; end if;
+  insert into public.relay_posts (relay_id, user_id, turn, lap, body, question)
+  values (p_id, me, r.turn, r.lap, trim(p_body), nullif(trim(coalesce(p_question, '')), ''));
+  perform public.advance_relay(r);
+end;
+$$;
+
+-- 방장: 응답 없는 차례 넘기기 (누구 차례였는지 기록에 남김)
+create or replace function public.skip_relay_turn(p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  r public.relays;
+  who uuid;
+begin
+  select * into r from public.relays where id = p_id for update;
+  if not found or r.host_id <> auth.uid() then raise exception '방장만 차례를 넘길 수 있어요' using errcode = '42501'; end if;
+  if r.status <> 'active' then raise exception '진행 중인 릴레이가 아니에요' using errcode = 'P0001'; end if;
+  select user_id into who from public.relay_members where relay_id = p_id and seat = r.current_seat;
+  insert into public.relay_posts (relay_id, user_id, turn, lap, body, skipped) values (p_id, who, r.turn, r.lap, null, true);
+  perform public.advance_relay(r);
+end;
+$$;
+
+revoke all on function public.join_relay(text), public.advance_relay(public.relays), public.post_relay(uuid, text, text),
+  public.skip_relay_turn(uuid) from public, anon;
+grant execute on function public.join_relay(text), public.post_relay(uuid, text, text), public.skip_relay_turn(uuid) to authenticated;
+
 -- 큐레이션 리스트는 아직 기기에만 저장됩니다(다음 단계에서 추가).
 
 -- ---------- 권한 (Data API) ----------
@@ -568,3 +689,135 @@ grant select, insert, delete on public.follows to authenticated;
 grant select, insert, delete on public.posts to authenticated;
 grant select, insert, delete on public.comments to authenticated;
 grant select, insert, delete on public.likes to authenticated;
+
+-- =====================================================================
+-- 릴레이 멤버 내보내기 (migrations/006_relay_kick.sql 과 동일)
+create table if not exists public.relay_bans (
+  relay_id uuid not null references public.relays (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  banned_at timestamptz not null default now(),
+  primary key (relay_id, user_id)
+);
+
+alter table public.relay_bans enable row level security;
+-- 직접 읽기·쓰기는 막고(정책 없음) 아래 함수에서만 사용
+revoke all on public.relay_bans from anon, authenticated;
+
+-- 빈 자리 뒤 사람들을 한 칸씩 앞으로 (앞사람부터 한 명씩 → 자리 번호 중복 없음)
+create or replace function public.compact_relay_seats(p_id uuid, p_from_seat int)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  m record;
+begin
+  for m in select user_id, seat from public.relay_members where relay_id = p_id and seat > p_from_seat order by seat asc loop
+    update public.relay_members set seat = m.seat - 1 where relay_id = p_id and user_id = m.user_id;
+  end loop;
+end;
+$$;
+
+-- 시작 전 나가기 (자리 당기기만 위 함수로 바꿈)
+create or replace function public.leave_relay(p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  r public.relays;
+  my_seat int;
+begin
+  select * into r from public.relays where id = p_id for update;
+  if not found then return; end if;
+  if r.status <> 'waiting' then raise exception '시작한 뒤에는 나갈 수 없어요' using errcode = 'P0001'; end if;
+  if r.host_id = me then
+    delete from public.relays where id = p_id;
+    return;
+  end if;
+  delete from public.relay_members where relay_id = p_id and user_id = me returning seat into my_seat;
+  if my_seat is not null then
+    perform public.compact_relay_seats(p_id, my_seat);
+  end if;
+end;
+$$;
+
+create or replace function public.kick_relay_member(p_id uuid, p_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  r public.relays;
+  kicked_seat int;
+  n int;
+  next_seat int;
+  next_lap int;
+begin
+  select * into r from public.relays where id = p_id for update;
+  if not found or r.host_id <> auth.uid() then raise exception '방장만 멤버를 내보낼 수 있어요' using errcode = '42501'; end if;
+  if p_user_id = r.host_id then raise exception '방장은 내보낼 수 없어요' using errcode = 'P0001'; end if;
+  if r.status = 'done' then raise exception '완주한 릴레이에서는 내보낼 수 없어요' using errcode = 'P0001'; end if;
+
+  delete from public.relay_members where relay_id = p_id and user_id = p_user_id returning seat into kicked_seat;
+  if kicked_seat is null then raise exception '이미 릴레이에 없는 멤버예요' using errcode = 'P0002'; end if;
+  perform public.compact_relay_seats(p_id, kicked_seat);
+  insert into public.relay_bans (relay_id, user_id) values (p_id, p_user_id) on conflict do nothing;
+
+  if r.status <> 'active' then return; end if;
+
+  select count(*) into n from public.relay_members where relay_id = p_id;
+  if kicked_seat < r.current_seat then
+    -- 앞자리가 빠짐: 같은 사람이 계속 차례
+    update public.relays set current_seat = r.current_seat - 1 where id = p_id;
+  elsif kicked_seat = r.current_seat then
+    -- 차례인 사람이 빠짐: 그 자리로 당겨 앉은 다음 사람에게 바통 (마지막 자리였으면 다음 바퀴)
+    next_seat := r.current_seat;
+    next_lap := r.lap;
+    if next_seat >= n then
+      next_seat := 0;
+      next_lap := r.lap + 1;
+    end if;
+    if next_lap > r.rounds or n = 0 then
+      update public.relays set status = 'done', finished_at = now(), turn_started_at = null where id = p_id;
+    else
+      update public.relays set current_seat = next_seat, lap = next_lap, turn_started_at = now() where id = p_id;
+    end if;
+  end if;
+end;
+$$;
+
+-- 참여: 내보낸 사람은 다시 들어올 수 없음 (그 외는 005와 같음)
+create or replace function public.join_relay(p_code text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  r public.relays;
+  n int;
+begin
+  if me is null then raise exception '로그인이 필요해요' using errcode = '42501'; end if;
+  select * into r from public.relays where code = upper(trim(p_code)) for update;
+  if not found then raise exception '초대 코드를 찾을 수 없어요' using errcode = 'P0002'; end if;
+  if exists (select 1 from public.relay_members where relay_id = r.id and user_id = me) then return r.id; end if;
+  if exists (select 1 from public.relay_bans where relay_id = r.id and user_id = me) then
+    raise exception '방장이 내보낸 릴레이에는 다시 들어갈 수 없어요' using errcode = '42501';
+  end if;
+  if r.status = 'done' then raise exception '이미 완주한 릴레이예요' using errcode = 'P0001'; end if;
+  select count(*) into n from public.relay_members where relay_id = r.id;
+  if n >= 8 then raise exception '정원(8명)이 찼어요' using errcode = 'P0001'; end if;
+  insert into public.relay_members (relay_id, user_id, seat) values (r.id, me, n);
+  return r.id;
+end;
+$$;
+
+revoke all on function public.compact_relay_seats(uuid, int), public.kick_relay_member(uuid, uuid),
+  public.leave_relay(uuid), public.join_relay(text) from public, anon;
+grant execute on function public.kick_relay_member(uuid, uuid), public.leave_relay(uuid), public.join_relay(text) to authenticated;

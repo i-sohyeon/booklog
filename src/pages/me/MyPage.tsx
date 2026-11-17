@@ -65,7 +65,15 @@ function MyPageInner() {
           {profile.handle ?? '로그인하지 않은 게스트'}
           {profile.source !== 'account' && <Badge tone="outline">{profile.source === 'sample' ? '샘플 사용자' : '게스트'}</Badge>}
         </p>
-        {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
+        {profile.bio ? (
+          <p className={styles.bio}>{profile.bio}</p>
+        ) : (
+          profile.source === 'account' && (
+            <button type="button" className={styles.addBio} onClick={() => setEditing(true)}>
+              + 소개 추가
+            </button>
+          )
+        )}
         <div className={styles.follow}>
           <button type="button" onClick={() => setPeople('followers')}>
             <strong>{(signedIn ? 0 : SAMPLE_FOLLOWERS.length) + cloudFollowers.length}</strong> 팔로워
@@ -133,7 +141,7 @@ function MyPageInner() {
       </nav>
 
       <PeopleSheet kind={people} onClose={() => setPeople(null)} />
-      <ProfileEditSheet key={profile.nickname} open={editing} onClose={() => setEditing(false)} />
+      <ProfileEditSheet key={`${profile.nickname}|${profile.bio ?? ''}`} open={editing} onClose={() => setEditing(false)} />
     </Page>
   );
 }
