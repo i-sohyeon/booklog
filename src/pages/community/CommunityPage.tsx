@@ -10,15 +10,17 @@ import { ButtonLink, EmptyState, Tabs } from '@/components/ui';
 import { PostCard } from '@/components/social/PostCard';
 import { SampleNotice } from '@/components/common/SampleNotice';
 import { ClubsPanel } from '@/pages/clubs/ClubsPanel';
+import { RelaysPanel } from '@/pages/relay/RelaysPanel';
 import styles from './CommunityPage.module.scss';
 
-type Segment = 'board' | 'clubs';
+type Segment = 'board' | 'clubs' | 'relay';
 
-/** 커뮤니티 — 상단 세그먼트: 게시판 | 독서모임 (?tab=clubs) */
+/** 커뮤니티 — 상단 세그먼트: 게시판 | 독서모임 (?tab=clubs) | 릴레이 (?tab=relay) */
 export function CommunityPage() {
   const [params, setParams] = useSearchParams();
-  const segment: Segment = params.get('tab') === 'clubs' ? 'clubs' : 'board';
-  const setSegment = (s: Segment) => setParams(s === 'clubs' ? { tab: 'clubs' } : {}, { replace: true });
+  const tab = params.get('tab');
+  const segment: Segment = tab === 'clubs' || tab === 'relay' ? tab : 'board';
+  const setSegment = (s: Segment) => setParams(s === 'board' ? {} : { tab: s }, { replace: true });
 
   return (
     <Page narrow>
@@ -31,9 +33,13 @@ export function CommunityPage() {
               <ButtonLink to={paths.postNew} size="sm" leadingIcon={<PenLine aria-hidden />}>
                 글쓰기
               </ButtonLink>
-            ) : (
+            ) : segment === 'clubs' ? (
               <ButtonLink to={paths.clubNew} size="sm" leadingIcon={<Plus aria-hidden />}>
                 모임 만들기
+              </ButtonLink>
+            ) : (
+              <ButtonLink to={paths.relayNew} size="sm" leadingIcon={<Plus aria-hidden />}>
+                릴레이 만들기
               </ButtonLink>
             )}
           </span>
@@ -48,10 +54,11 @@ export function CommunityPage() {
         items={[
           { value: 'board', label: '게시판' },
           { value: 'clubs', label: '독서모임' },
+          { value: 'relay', label: '릴레이' },
         ]}
       />
       <div id="community-panel" role="tabpanel" className={styles.panel}>
-        {segment === 'board' ? <Board /> : <ClubsPanel />}
+        {segment === 'board' ? <Board /> : segment === 'clubs' ? <ClubsPanel /> : <RelaysPanel />}
       </div>
     </Page>
   );
