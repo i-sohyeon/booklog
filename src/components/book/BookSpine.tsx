@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { Book, CoverTone } from '@/types/book';
 import { useSampleCover } from '@/store/coverStore';
 import { inkFor, useCoverColor } from '@/lib/coverColor';
@@ -30,14 +30,18 @@ function spineAuthor(author: string | undefined): string {
 }
 
 /**
- * 책등. 표지를 자르지 않고 실제 책등처럼 그립니다.
- * - 색: 표지 이미지의 대표 색(없으면 생성형 표지와 같은 톤)
- * - 글자: 제목(세로, 굵게)과 저자. 글자색은 바탕에 따라 밝게/진하게
+ * 책등.
+ * - 표지 이미지가 있으면 책등 전체에 표지를 깔고, 제목·저자는 표지 대표 색의 라벨 위에 씀
+ * - 표지가 없으면 단색(생성형 표지와 같은 톤)
+ * - 글자색은 라벨 색에 따라 밝게/진하게
  * - 두께는 쪽수에 비례, 높이는 책마다 조금씩 다름(같은 책은 늘 같음)
  */
 export function BookSpine({ book }: { book: Pick<Book, 'id' | 'title' | 'authors' | 'coverUrl' | 'coverTone' | 'pageCount'> }) {
   const found = useSampleCover(book);
-  const color = useCoverColor(book.coverUrl ?? found);
+  const src = book.coverUrl ?? found;
+  const color = useCoverColor(src);
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(src) && !failed;
   const h = hash(book.id);
   const tone = book.coverTone ?? TONES[h % TONES.length];
   const width = Math.round(Math.min(48, Math.max(26, (book.pageCount || 260) / 10)));
@@ -45,7 +49,7 @@ export function BookSpine({ book }: { book: Pick<Book, 'id' | 'title' | 'authors
 
   const author = spineAuthor(book.authors[0]);
   // 제목이 들어갈 세로 길이에 맞춰 글자 크기를 정하고(10~14px), 그래도 길면 글자 수를 줄여 말줄임
-  const room = height - 34 - (author ? author.length * 11 + 10 : 0);
+  const room = height - 44 - (author ? author.length * 9.5 + 10 : 0);
   const full = spineTitle(book.title);
   const fontSize = Math.max(10, Math.min(14, Math.floor(room / Math.max(1, full.length) / 1.12)));
   const maxChars = Math.max(2, Math.floor(room / (fontSize * 1.12)));
@@ -56,15 +60,20 @@ export function BookSpine({ book }: { book: Pick<Book, 'id' | 'title' | 'authors
     height,
     '--title-size': `${fontSize}px`,
     ...(color ? { '--spine-bg': color, '--spine-fg': inkFor(color) } : {}),
+    ...(showImage ? { '--spine-image': `url("${src}")` } : {}),
   } as CSSProperties;
 
   return (
-    <span className={styles.spine} data-tone={color ? undefined : tone} style={style}>
+    <span className={styles.spine} data-tone={color ? undefined : tone} data-image={showImage || undefined} style={style}>
+      {/* 표지가 깨지면 단색 책등으로 바꾸려고 몰래 불러 봄 */}
+      {showImage && <img src={src} alt="" className={styles.probe} onError={() => setFailed(true)} />}
       <span className={styles.band} aria-hidden />
-      <span className={styles.title} title={book.title}>
-        {title}
+      <span className={styles.label}>
+        <span className={styles.title} title={book.title}>
+          {title}
+        </span>
+        {author && <span className={styles.author}>{author}</span>}
       </span>
-      {author && <span className={styles.author}>{author}</span>}
       <span className={styles.band} aria-hidden />
     </span>
   );
