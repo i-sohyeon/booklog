@@ -7,11 +7,12 @@ import { useCloudStore } from '@/store/cloudStore';
 import { useAuthGate } from '@/store/loginGate';
 import { GuestScreen } from '@/components/auth/LoginPrompt';
 import { Page, PageHeader } from '@/components/layout/Page';
-import { Avatar, BookCover, Button, EmptyState, Sheet, Skeleton, TextArea, TextField, useToast } from '@/components/ui';
+import { Avatar, BookCover, Button, EmptyState, SegmentedControl, Sheet, Skeleton, TextArea, TextField, useToast } from '@/components/ui';
 import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { cn } from '@/lib/cn';
 import styles from './Relay.module.scss';
+import { HOUR_OPTIONS, ROUND_OPTIONS, toHours, toRounds, type Hours, type Rounds } from './relayOptions';
 
 /** 마감까지 남은 시간 */
 function remaining(deadline: Date | undefined, now: number) {
@@ -372,6 +373,7 @@ function WaitingRoom({ relay, isHost }: { relay: RelayDetail; isHost: boolean })
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [editing, setEditing] = useState(false);
   const enough = relay.members.length >= 2;
 
   const run = async (fn: () => Promise<void>, ok: string) => {
@@ -398,9 +400,13 @@ function WaitingRoom({ relay, isHost }: { relay: RelayDetail; isHost: boolean })
           <Button block size="lg" disabled={!enough} loading={busy} onClick={() => void run(() => start(relay.id), '릴레이를 시작했어요')}>
             {enough ? '시작하기' : '2명 이상 모이면 시작할 수 있어요'}
           </Button>
+          <Button block variant="outline" onClick={() => setEditing(true)}>
+            바퀴 수·시간 바꾸기
+          </Button>
           <button type="button" className={styles.textLink} onClick={() => setConfirm(true)}>
             릴레이 없애기
           </button>
+          <SettingsSheet key={`${relay.rounds}-${relay.turnHours}`} relay={relay} open={editing} onClose={() => setEditing(false)} />
         </>
       ) : (
         <>
@@ -564,5 +570,69 @@ function CurrentTurn({
         {last ? '마지막 바통으로 완주하기' : '바통 넘기기'}
       </Button>
     </form>
+  );
+}
+
+/** 방장: 시작 전 바퀴 수·한 사람당 시간 바꾸기 */
+function SettingsSheet({ relay, open, onClose }: { relay: RelayDetail; open: boolean; onClose: () => void }) {
+  const updateSettings = useRelayStore((s) => s.updateSettings);
+  const showToast = useToast((s) => s.show);
+  const [rounds, setRounds] = useState<Rounds>(toRounds(relay.rounds));
+  const [hours, setHours] = useState<Hours>(toHours(relay.turnHours));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const unchanged = Number(rounds) === relay.rounds && Number(hours) === relay.turnHours;
+
+  const close = () => {
+    if (busy) return;
+    setRounds(toRounds(relay.rounds));
+    setHours(toHours(relay.turnHours));
+    setError(undefined);
+    onClose();
+  };
+
+  return (
+    <Sheet
+      open={open}
+      onClose={close}
+      title="릴레이 설정 바꾸기"
+      description="시작하기 전까지만 바꿀 수 있어요. 참여한 친구들에게도 바로 반영돼요."
+      footer={
+        <>
+          <Button variant="ghost" onClick={close} disabled={busy}>
+            취소
+          </Button>
+          <Button
+            loading={busy}
+            disabled={unchanged}
+            onClick={async () => {
+              setBusy(true);
+              setError(undefined);
+              try {
+                await updateSettings(relay.id, Number(rounds), Number(hours));
+                showToast('릴레이 설정을 바꿨어요');
+                onClose();
+              } catch (e) {
+                setError(relayError(e));
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            저장
+          </Button>
+        </>
+      }
+    >
+      <div className={styles.settingsForm}>
+        <SegmentedControl label="몇 바퀴 돌까요?" value={rounds} onChange={setRounds} options={ROUND_OPTIONS} />
+        <SegmentedControl label="한 사람당 시간" value={hours} onChange={setHours} options={HOUR_OPTIONS} />
+        {error && (
+          <p className={styles.kickError} role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    </Sheet>
   );
 }
