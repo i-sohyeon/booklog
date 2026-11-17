@@ -136,6 +136,8 @@ interface RelayState {
   leave: (id: string) => Promise<void>;
   post: (id: string, body: string, question: string) => Promise<void>;
   skip: (id: string) => Promise<void>;
+  /** 방장: 시작 전 바퀴 수·한 사람당 시간 바꾸기 */
+  updateSettings: (id: string, rounds: number, turnHours: number) => Promise<void>;
   /** 방장: 멤버 내보내기 (다시 들어올 수 없음) */
   kick: (id: string, userId: string) => Promise<void>;
   clear: () => void;
@@ -230,6 +232,12 @@ export const useRelayStore = create<RelayState>()((set, get) => ({
 
   skip: async (id) => {
     const { error } = await db().rpc('skip_relay_turn', { p_id: id });
+    if (error) throw error;
+    await get().loadDetail(id);
+  },
+
+  updateSettings: async (id, rounds, turnHours) => {
+    const { error } = await db().rpc('update_relay_settings', { p_id: id, p_rounds: rounds, p_turn_hours: turnHours });
     if (error) throw error;
     await get().loadDetail(id);
   },

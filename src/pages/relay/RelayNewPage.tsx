@@ -11,9 +11,8 @@ import { Button, IconButton, SegmentedControl, TextField, useToast } from '@/com
 import { paths } from '@/routes/paths';
 import editor from '@/pages/clubs/ClubNewPage.module.scss';
 import styles from './Relay.module.scss';
+import { HOUR_OPTIONS, ROUND_OPTIONS, type Hours, type Rounds } from './relayOptions';
 
-type Rounds = '1' | '2' | '3';
-type Hours = '12' | '24' | '72';
 
 function RelayNewInner() {
   const navigate = useNavigate();
@@ -82,25 +81,18 @@ function RelayNewInner() {
           label="몇 바퀴 돌까요?"
           value={rounds}
           onChange={setRounds}
-          options={[
-            { value: '1', label: '1바퀴' },
-            { value: '2', label: '2바퀴' },
-            { value: '3', label: '3바퀴' },
-          ]}
+          options={ROUND_OPTIONS}
         />
         <SegmentedControl
           label="한 사람당 시간"
           value={hours}
           onChange={setHours}
-          options={[
-            { value: '12', label: '12시간' },
-            { value: '24', label: '하루' },
-            { value: '72', label: '3일' },
-          ]}
+          options={HOUR_OPTIONS}
         />
         <ol className={styles.rules}>
           <li>만들면 초대 코드와 링크가 생겨요. 친구에게 보내 주세요(최대 8명).</li>
           <li>2명 이상 모이면 방장이 시작해요. 들어온 순서대로 차례가 돌아요.</li>
+          <li>바퀴 수와 한 사람당 시간은 시작하기 전까지 방장이 바꿀 수 있어요.</li>
           <li>시작한 뒤에도 친구를 초대할 수 있어요. 늦게 온 친구는 맨 뒤 차례예요.</li>
           <li>내 차례에는 생각을 쓰고, 다음 사람에게 질문 하나로 바통을 넘겨요.</li>
           <li>정한 바퀴 수만큼 돌면 완주! 응답이 없는 차례는 방장이 넘길 수 있어요.</li>
