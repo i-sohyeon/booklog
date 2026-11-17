@@ -21,6 +21,10 @@ export interface RelayPost {
   id: string;
   userId: string;
   turn: number;
+  /** 몇 바퀴째 바통인지 (005 이전 기록은 없을 수 있음) */
+  lap?: number;
+  /** 방장이 넘긴 차례 (글 없음) */
+  skipped: boolean;
   body: string;
   question?: string;
   createdAt: string;
@@ -36,6 +40,10 @@ export interface Relay {
   rounds: number;
   turnHours: number;
   turn: number;
+  /** 지금 차례인 자리 (005_relay_join_anytime.sql 이후) */
+  currentSeat?: number;
+  /** 지금 몇 바퀴째 */
+  lap?: number;
   turnStartedAt?: string;
   createdAt: string;
   startedAt?: string;
@@ -57,6 +65,8 @@ type RelayRow = {
   rounds: number;
   turn_hours: number;
   turn: number;
+  current_seat?: number;
+  lap?: number;
   turn_started_at: string | null;
   created_at: string;
   started_at: string | null;
@@ -74,6 +84,8 @@ const fromRow = (r: RelayRow): Relay => ({
   rounds: r.rounds,
   turnHours: r.turn_hours,
   turn: r.turn,
+  currentSeat: r.current_seat,
+  lap: r.lap,
   turnStartedAt: r.turn_started_at ?? undefined,
   createdAt: r.created_at,
   startedAt: r.started_at ?? undefined,
@@ -81,15 +93,21 @@ const fromRow = (r: RelayRow): Relay => ({
   members: (r.relay_members ?? []).map((m) => ({ userId: m.user_id, seat: m.seat })).sort((a, b) => a.seat - b.seat),
 });
 
-/** 지금 차례 정보 */
-export function turnInfo(r: Pick<Relay, 'turn' | 'rounds' | 'members' | 'turnStartedAt' | 'turnHours' | 'status'>) {
+/**
+ * 지금 차례 정보.
+ * 진행 중에 사람이 들어올 수 있어서, 차례는 서버가 저장한 자리(currentSeat)·바퀴(lap)를 씀.
+ * (005 실행 전 서버면 예전처럼 바통 수로 계산)
+ */
+export function turnInfo(r: Pick<Relay, 'turn' | 'rounds' | 'members' | 'turnStartedAt' | 'turnHours' | 'status' | 'currentSeat' | 'lap'>) {
   const n = Math.max(1, r.members.length);
-  const total = r.rounds * n;
-  const seat = r.turn % n;
+  const seat = r.currentSeat ?? r.turn % n;
+  const lap = r.lap ?? Math.min(r.rounds, Math.floor(r.turn / n) + 1);
   const current = r.status === 'active' ? r.members.find((m) => m.seat === seat) : undefined;
-  const lap = Math.min(r.rounds, Math.floor(r.turn / n) + 1);
+  // 전체 바통 수 = 지금까지 + 남은 것 (중간에 사람이 늘면 함께 늘어남)
+  const remaining = r.status === 'active' ? (r.rounds - lap) * n + (n - seat) : 0;
+  const total = r.status === 'waiting' ? r.rounds * n : r.turn + remaining;
   const deadline = r.turnStartedAt ? new Date(new Date(r.turnStartedAt).getTime() + r.turnHours * 3600_000) : undefined;
-  return { total, current, lap, deadline };
+  return { total, current, lap, deadline, last: r.status === 'active' && remaining === 1 };
 }
 
 /** 서버 오류 메시지 → 사람이 읽을 문장 (서버 함수가 이미 한국어로 알려 줌) */
@@ -150,11 +168,15 @@ export const useRelayStore = create<RelayState>()((set, get) => ({
     if (posts.error) throw posts.error;
     const detail: RelayDetail = {
       ...fromRow(relay.data as RelayRow),
-      posts: (posts.data as { id: string; user_id: string; turn: number; body: string; question: string | null; created_at: string }[]).map((p) => ({
+      posts: (
+        posts.data as { id: string; user_id: string; turn: number; lap?: number | null; skipped?: boolean; body: string | null; question: string | null; created_at: string }[]
+      ).map((p) => ({
         id: p.id,
         userId: p.user_id,
         turn: p.turn,
-        body: p.body,
+        lap: p.lap ?? undefined,
+        skipped: Boolean(p.skipped),
+        body: p.body ?? '',
         question: p.question ?? undefined,
         createdAt: p.created_at,
       })),
