@@ -194,6 +194,7 @@
 }
 .spineLink {
   display: block;
+  flex-shrink: 0;
   border-radius: 2px;
   transition: transform var(--duration-base) var(--ease-out);
   @media (hover: hover) {
@@ -203,6 +204,14 @@
   }
   &:active {
     transform: translateY(-4px);
+  }
+}
+// 표지가 앞을 보게 세운 책: 책등보다 조금 낮게, 양옆에 살짝 여유
+.faceOut {
+  width: 108px;
+  margin-inline: var(--space-1);
+  @include up('md') {
+    width: 120px;
   }
 }
 
