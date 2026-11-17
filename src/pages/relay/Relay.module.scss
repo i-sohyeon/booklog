@@ -533,3 +533,36 @@
     padding-bottom: var(--space-5);
   }
 }
+
+.seatManage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  &:hover {
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+.seatHint {
+  margin-top: var(--space-2);
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.kickNotes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  list-style: disc;
+  font-size: var(--text-label);
+  color: var(--color-text-secondary);
+}
+.kickError {
+  margin-top: var(--space-3);
+  font-size: var(--text-caption);
+  color: var(--color-danger);
+}
