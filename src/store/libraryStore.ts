@@ -36,6 +36,8 @@ interface LibraryActions {
   saveFinished: (book: Book, input: FinishInput) => void;
   /** 기록 편집 화면에서 전체 저장 */
   saveRecord: (book: Book, record: RecordInput) => void;
+  /** 항목별 공개 설정만 바꿈 (계정에 자동 저장) */
+  setVisibility: (bookId: string, visibility: LibraryEntry['visibility']) => void;
   removeBook: (bookId: string) => void;
   replaceAll: (state: Omit<LibraryState, 'dataSource'>) => void;
   loadSample: () => void;
@@ -83,6 +85,13 @@ export const useLibraryStore = create<LibraryStore>()(
             visibility: input.visibility ?? prev?.visibility,
           };
           return { books: { ...s.books, [book.id]: book }, entries: { ...s.entries, [book.id]: entry } };
+        }),
+
+      setVisibility: (bookId, visibility) =>
+        set((s) => {
+          const prev = s.entries[bookId];
+          if (!prev) return s;
+          return { entries: { ...s.entries, [bookId]: { ...prev, visibility, updatedAt: nowIso() } } };
         }),
 
       saveRecord: (book, r) =>
