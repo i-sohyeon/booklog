@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { ArrowLeft, BookCheck, BookMarked, BookOpen, ListPlus, Lock, PenLine, Trash2 } from 'lucide-react';
-import type { Book, ReadingStatus, RecordVisibility } from '@/types/book';
-import { READING_STATUS_LABEL } from '@/types/book';
+import { ArrowLeft, BookCheck, BookMarked, BookOpen, ChevronRight, Globe, ListPlus, Lock, PenLine, Trash2 } from 'lucide-react';
+import type { Book, LibraryEntry, ReadingStatus } from '@/types/book';
+import { READING_STATUS_LABEL, RECORD_FIELD_LABEL } from '@/types/book';
 import { useLibraryStore } from '@/store/libraryStore';
 import { ratingSummary } from '@/store/selectors';
 import { useAsync } from '@/hooks/useAsync';
@@ -29,6 +29,7 @@ import { RatingDistribution } from '@/components/book/RatingDistribution';
 import { ReviewCard } from '@/components/social/ReviewCard';
 import { AddToListSheet } from '@/components/social/ListSheets';
 import { useRecord } from '@/components/record';
+import { VisibilitySheet, publicFields } from '@/components/record/VisibilitySheet';
 import { useBookCache } from '@/store/bookCache';
 import { SourceCredit } from '@/components/book/SourceCredit';
 import { knownGenre } from '@/lib/byline';
@@ -79,9 +80,12 @@ const STATUS_BUTTONS: Array<{ status: ReadingStatus; icon: typeof BookOpen }> = 
   { status: 'done', icon: BookCheck },
 ];
 
-function visibilityLabel(v?: RecordVisibility) {
-  const n = Object.values(v ?? {}).filter(Boolean).length;
-  return n === 0 ? '나만 보는 기록이에요' : `${n}개 항목을 공개 중이에요`;
+/** 공개 상태 한 줄: 내용이 있는 항목 기준 */
+function visibilityLabel(entry: LibraryEntry) {
+  const on = publicFields(entry);
+  if (on.length === 0) return '나만 보는 기록이에요';
+  const names = on.map((f) => RECORD_FIELD_LABEL[f]);
+  return names.length <= 2 ? `${names.join('·')} 공개 중` : `${names.slice(0, 2).join('·')} 외 ${names.length - 2}개 공개 중`;
 }
 
 function BookDetail({ book }: { book: Book }) {
@@ -93,6 +97,7 @@ function BookDetail({ book }: { book: Book }) {
   const allReviews = useReviews();
   const [sort, setSort] = useState<Sort>('likes');
   const [listOpen, setListOpen] = useState(false);
+  const [visOpen, setVisOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   const summary = ratingSummary(book.id, entry?.status === 'done' ? entry.rating : undefined);
@@ -163,10 +168,15 @@ function BookDetail({ book }: { book: Book }) {
                 {entry.tags?.map((t) => `#${t}`).join(' ')}
               </p>
             )}
-            <p className={styles.privacy}>
-              <Lock aria-hidden />
-              {visibilityLabel(entry.visibility)}
-            </p>
+            <button type="button" className={styles.privacy} onClick={() => setVisOpen(true)} aria-haspopup="dialog">
+              {publicFields(entry).length ? <Globe aria-hidden /> : <Lock aria-hidden />}
+              <span>{visibilityLabel(entry)}</span>
+              <span className={styles.privacyAction}>
+                공개 설정
+                <ChevronRight aria-hidden />
+              </span>
+            </button>
+            <VisibilitySheet entry={entry} open={visOpen} onClose={() => setVisOpen(false)} />
             <div className={styles.mineActions}>
               <ButtonLink to={paths.recordEdit(book.id)} size="sm" variant="outline" leadingIcon={<PenLine aria-hidden />}>
                 기록 자세히 쓰기

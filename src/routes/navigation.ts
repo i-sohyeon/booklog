@@ -13,7 +13,7 @@ export interface NavItem {
 export const mainNav: NavItem[] = [
   { to: paths.home, label: '홈', icon: Home, match: [] },
   { to: paths.discover, label: '발견', icon: Compass, match: ['/discover', '/books', '/lists'] },
-  { to: paths.community, label: '커뮤니티', icon: MessagesSquare, match: ['/community', '/clubs'] },
+  { to: paths.community, label: '커뮤니티', icon: MessagesSquare, match: ['/community', '/clubs', '/relays'] },
   { to: paths.library, label: '서재', icon: Library, match: ['/library'] },
   { to: paths.me, label: '마이', icon: UserRound, match: ['/me', '/u'] },
 ];
