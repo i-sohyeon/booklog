@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { ChevronRight, Pencil, Plus, Settings } from 'lucide-react';
+import { ChevronRight, Eye, Pencil, Plus, Settings, UserPlus } from 'lucide-react';
 import { SAMPLE_FOLLOWERS } from '@/mocks/social';
 import { useSocialStore } from '@/store/socialStore';
 import { useCloudStore } from '@/store/cloudStore';
@@ -47,24 +47,29 @@ function MyPageInner() {
   return (
     <Page narrow>
       <section className={styles.profile} aria-label="프로필">
+        {/* 1줄: 사진 · 이름/이메일 · 설정 */}
         <div className={styles.profileTop}>
           <Avatar name={profile.nickname} size="lg" />
+          <div className={styles.identity}>
+            <div className={styles.nameRow}>
+              <h1 className={styles.name}>{profile.nickname}</h1>
+              {profile.source === 'account' && (
+                <IconButton label="프로필 편집" size="sm" onClick={() => setEditing(true)}>
+                  <Pencil />
+                </IconButton>
+              )}
+            </div>
+            <p className={styles.handle}>
+              <span>{profile.handle ?? '로그인하지 않은 게스트'}</span>
+              {profile.source !== 'account' && <Badge tone="outline">{profile.source === 'sample' ? '샘플 사용자' : '게스트'}</Badge>}
+            </p>
+          </div>
           <Link to={paths.settings} className={styles.settings} aria-label="설정">
             <Settings aria-hidden />
           </Link>
         </div>
-        <div className={styles.nameRow}>
-          <h1 className={styles.name}>{profile.nickname}</h1>
-          {profile.source === 'account' && (
-            <IconButton label="프로필 편집" size="sm" onClick={() => setEditing(true)}>
-              <Pencil />
-            </IconButton>
-          )}
-        </div>
-        <p className={styles.handle}>
-          {profile.handle ?? '로그인하지 않은 게스트'}
-          {profile.source !== 'account' && <Badge tone="outline">{profile.source === 'sample' ? '샘플 사용자' : '게스트'}</Badge>}
-        </p>
+
+        {/* 소개 */}
         {profile.bio ? (
           <p className={styles.bio}>{profile.bio}</p>
         ) : (
@@ -74,23 +79,32 @@ function MyPageInner() {
             </button>
           )
         )}
+
+        {/* 팔로워 · 팔로잉 */}
         <div className={styles.follow}>
           <button type="button" onClick={() => setPeople('followers')}>
             <strong>{(signedIn ? 0 : SAMPLE_FOLLOWERS.length) + cloudFollowers.length}</strong> 팔로워
           </button>
+          <span className={styles.dot} aria-hidden />
           <button type="button" onClick={() => setPeople('following')}>
             <strong>{following.length}</strong> 팔로잉
           </button>
-          {signedIn && (
-            <button type="button" className={styles.findBtn} onClick={() => setPeople('find')}>
-              친구 찾기
-            </button>
-          )}
         </div>
-        {myCloudId && (
-          <Link to={paths.user(myCloudId)} className={styles.previewLink}>
-            친구에게 보이는 내 서재 보기
-          </Link>
+
+        {/* 동작: 같은 모양의 버튼 두 개 */}
+        {(signedIn || myCloudId) && (
+          <div className={styles.profileActions}>
+            {signedIn && (
+              <Button size="sm" variant="outline" leadingIcon={<UserPlus aria-hidden />} onClick={() => setPeople('find')}>
+                친구 찾기
+              </Button>
+            )}
+            {myCloudId && (
+              <ButtonLink to={paths.user(myCloudId)} size="sm" variant="outline" leadingIcon={<Eye aria-hidden />}>
+                친구에게 보이는 내 서재
+              </ButtonLink>
+            )}
+          </div>
         )}
       </section>
 

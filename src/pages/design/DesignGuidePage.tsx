@@ -7,7 +7,7 @@ import {
   Star, Trash2, UserRound, Users, Video, X, type LucideIcon,
 } from 'lucide-react';
 import {
-  Avatar, Badge, BookCover, Button, EmptyState, ErrorState, IconButton, LikeButton, LoadingRegion, RatingValue, SearchField,
+  Avatar, Badge, BookCover, Button, ButtonLink, Card, EmptyState, ErrorState, IconButton, LikeButton, LoadingRegion, RatingValue, SearchField,
   SectionHeader, SegmentedControl, Sheet, Skeleton, Spoiler, StarRating, StatusBadge, Switch, Tabs, TextArea, TextField,
   ToastViewport, useToast,
 } from '@/components/ui';
@@ -43,6 +43,18 @@ const SAMPLE_BOOKS: Array<{ id: string; title: string; authors: string[]; coverT
   { id: 'dg-charcoal', title: '소년이 온다', authors: ['한강'], coverTone: 'charcoal' },
   { id: 'dg-rose', title: '여름의 빌라', authors: ['백수린'], coverTone: 'rose' },
   { id: 'dg-sea', title: '우리가 빛의 속도로 갈 수 없다면', authors: ['김초엽'], coverTone: 'sea' },
+];
+
+/** 화면 공통 간격 규칙 (docs/DESIGN_SYSTEM.md 와 같음) */
+const SPACING_RULES: Array<[string, string, string]> = [
+  ['화면 좌우 여백', '24px (태블릿 이상 40px)', 'page-gutter'],
+  ['섹션과 섹션 사이', '40px', 'space-10'],
+  ['섹션 제목 줄 → 내용 (정렬 탭·더 보기 포함)', '16px', 'space-4'],
+  ['카드 목록에서 카드 사이', '12px', 'space-3'],
+  ['카드 안쪽 여백', '20px', 'space-5'],
+  ['카드 헤더 · 본문 · 푸터 사이', '12px', 'space-3'],
+  ['카드 본문 안 문단 사이', '8px', 'space-2'],
+  ['아이콘과 글자 / 버튼 사이', '8px', 'space-2'],
 ];
 
 const AVATAR_TONES: AvatarTone[] = ['plum', 'ochre', 'sage', 'clay', 'sea', 'ink'];
@@ -388,6 +400,49 @@ function ComponentSection() {
       }
     >
       <div className={styles.demos}>
+        <Demo name="Card" use="헤더(누가·언제 | 별점·상태) · 본문 · 푸터(구분선 위, 관련 정보 | 동작). 후기·내 기록·릴레이 바통에 공통으로 써요." wide>
+          <div className={styles.cardDemo}>
+            <Card
+              header={
+                <>
+                  <Avatar name="책갈피" size="sm" />
+                  <span className={styles.cardWho}>
+                    <strong>책갈피</strong>
+                    <span>3일 전</span>
+                  </span>
+                </>
+              }
+              headerAside={<StarRating value={4.5} />}
+              footer={
+                <span className={styles.cardBook}>
+                  <BookCover book={SAMPLE_BOOKS[0]!} size="xs" />
+                  작별하지 않는다
+                </span>
+              }
+              footerAside={<LikeButton liked={false} count={24} onToggle={() => {}} label="예시 후기" />}
+            >
+              <p className={styles.cardText}>눈이 계속 내리는 장면에서 손이 시렸다. 오래 남는 소설.</p>
+            </Card>
+            <Card
+              header={<span className={styles.cardDone}>2026.11.14 완독</span>}
+              headerAside={<StarRating value={5} size="md" />}
+              footer={
+                <ButtonLink to={paths.design} size="sm" variant="outline">
+                  기록 자세히 쓰기
+                </ButtonLink>
+              }
+              footerAside={
+                <IconButton label="기록 삭제" size="sm">
+                  <Trash2 />
+                </IconButton>
+              }
+            >
+              <p className={styles.cardText}>짧지만 오래 남는 소설.</p>
+              <p className={styles.cardMeta}>#얇은책 #겨울</p>
+            </Card>
+          </div>
+        </Demo>
+
         <Demo name="Button" use="주 동작은 primary 하나. 크기 sm 36 / md 44 / lg 52px." wide>
           <div className={styles.stack}>
             <div className={styles.wrap}>
@@ -625,7 +680,32 @@ function LayoutSection() {
 
   return (
     <Section id="layout" title="간격·모양" description="4px 단위 간격, 알약·둥근 모서리, 아주 옅은 그림자. 카드는 그림자 대신 1px 테두리로 구분해요.">
-      <Group title="간격" note="SCSS에서는 sp(n) = n × 4px. 카드 목록 간격 12px, 카드 안쪽 20px.">
+      <Group title="간격 규칙" note="화면을 만들 때 아래 값만 써요. 같은 관계의 요소는 같은 간격으로 묶여 보여야 해요.">
+        <div className={styles.ruleTable}>
+          <table>
+            <thead>
+              <tr>
+                <th>어디</th>
+                <th>간격</th>
+                <th>토큰</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SPACING_RULES.map(([where, px, token]) => (
+                <tr key={where}>
+                  <td>{where}</td>
+                  <td className={styles.num}>{px}</td>
+                  <td>
+                    <code>{token}</code>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Group>
+
+      <Group title="간격" note="SCSS에서는 sp(n) = n × 4px.">
         <ul role="list" className={styles.spaces}>
           {spacing.map((t) => (
             <li key={t.name}>

@@ -24,6 +24,7 @@ import {
   StarRating,
   Tabs,
   useToast,
+  Card,
 } from '@/components/ui';
 import { RatingDistribution } from '@/components/book/RatingDistribution';
 import { ReviewCard } from '@/components/social/ReviewCard';
@@ -152,14 +153,28 @@ function BookDetail({ book }: { book: Book }) {
         </div>
 
         {entry?.status === 'done' && (
-          <section className={styles.mine} aria-label="내 기록">
-            <div className={styles.mineHead}>
+          <Card
+            as="section"
+            aria-label="내 기록"
+            className={styles.mine}
+            header={
               <span className={styles.mineLabel}>
                 {entry.finishedAt ? `${formatDate(entry.finishedAt)} 완독` : '완독'}
                 {entry.readCount && entry.readCount > 1 && <span className={styles.reread}>{entry.readCount}회독</span>}
               </span>
-              <StarRating value={entry.rating} size="md" />
-            </div>
+            }
+            headerAside={<StarRating value={entry.rating} size="md" />}
+            footer={
+              <ButtonLink to={paths.recordEdit(book.id)} size="sm" variant="outline" leadingIcon={<PenLine aria-hidden />}>
+                기록 자세히 쓰기
+              </ButtonLink>
+            }
+            footerAside={
+              <IconButton label="기록 삭제" size="sm" onClick={() => setConfirmRemove(true)}>
+                <Trash2 />
+              </IconButton>
+            }
+          >
             {entry.oneLiner ? <p className={styles.mineLine}>{entry.oneLiner}</p> : <p className={styles.muted}>한 줄 평을 남기지 않았어요.</p>}
             {entry.review && <p className={styles.mineReview}>{entry.review}</p>}
             {Boolean(entry.quotes?.length || entry.tags?.length) && (
@@ -178,15 +193,7 @@ function BookDetail({ book }: { book: Book }) {
               </span>
             </button>
             <VisibilitySheet entry={entry} open={visOpen} onClose={() => setVisOpen(false)} />
-            <div className={styles.mineActions}>
-              <ButtonLink to={paths.recordEdit(book.id)} size="sm" variant="outline" leadingIcon={<PenLine aria-hidden />}>
-                기록 자세히 쓰기
-              </ButtonLink>
-              <IconButton label="기록 삭제" size="sm" onClick={() => setConfirmRemove(true)}>
-                <Trash2 />
-              </IconButton>
-            </div>
-          </section>
+          </Card>
         )}
 
         <button type="button" className={styles.textBtn} onClick={() => requireLogin('리스트에 담으려면 로그인해 주세요.') && setListOpen(true)}>
