@@ -1,11 +1,3 @@
-.back {
-  position: absolute;
-  top: 18px;
-  right: 64px;
-  @include up('md') {
-    top: 26px;
-  }
-}
 .pick {
   display: flex;
   flex-direction: column;
