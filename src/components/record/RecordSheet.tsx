@@ -2,8 +2,8 @@ import { SAMPLE_CATALOG } from '@/mocks/catalog';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, BookCheck, BookMarked, BookOpen, ChevronRight } from 'lucide-react';
-import type { Book, ReadingStatus } from '@/types/book';
-import { ONE_LINER_MAX, READING_STATUS_LABEL } from '@/types/book';
+import type { Book, Genre, ReadingStatus } from '@/types/book';
+import { GENRES, ONE_LINER_MAX, READING_STATUS_LABEL } from '@/types/book';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useShelf } from '@/hooks/useShelf';
 import { useMyCloudId } from '@/hooks/useSocial';
@@ -14,6 +14,7 @@ import { paths } from '@/routes/paths';
 import { BookCover, Button, IconButton, SearchField, Sheet, StarRating, TextField, useToast } from '@/components/ui';
 import { useRecord } from './recordStore';
 import { byline } from '@/lib/byline';
+import { cn } from '@/lib/cn';
 import styles from './RecordSheet.module.scss';
 
 /** 화면 어디서든 열리는 기록 시트: 책 검색 → 상태 → (다 읽었으면) 별점·한 줄 평·완독일 → 서재에 저장 */
@@ -120,6 +121,8 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
   const [rating, setRating] = useState<number | undefined>(entry?.rating);
   const [oneLiner, setOneLiner] = useState(entry?.oneLiner ?? '');
   const [finishedAt, setFinishedAt] = useState(entry?.finishedAt ?? today);
+  // 책 검색 API는 장르를 주지 않아 '기타'로 들어옴 → 이미 완독 기록이 있거나 장르가 정해진 책만 미리 선택
+  const [genre, setGenre] = useState<Genre | undefined>(entry?.status === 'done' || book.genre !== '기타' ? book.genre : undefined);
   // 로그인 중일 때만: 별점·한 줄 평을 다른 사용자에게 공개 (기본 비공개)
   const signedIn = useMyCloudId() !== null;
   const [share, setShare] = useState(Boolean(entry?.visibility?.rating));
@@ -127,14 +130,15 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
 
   const errors = {
     rating: rating ? undefined : '별점을 골라주세요.',
+    genre: genre ? undefined : '장르를 골라주세요.',
     date: !finishedAt ? '완독일을 입력해 주세요.' : finishedAt > today ? '미래 날짜는 고를 수 없어요.' : undefined,
   };
   const valid = !Object.values(errors).some(Boolean);
 
   const save = (more = false) => {
     setSubmitted(true);
-    if (!valid || !rating) return;
-    saveFinished(book, {
+    if (!valid || !rating || !genre) return;
+    saveFinished(genre !== book.genre ? { ...book, genre } : book, {
       rating,
       oneLiner,
       finishedAt,
@@ -161,6 +165,27 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
           {rating ? `${rating.toFixed(1)}점` : submitted && errors.rating ? errors.rating : '별을 눌러주세요 (반 개 단위)'}
         </p>
       </div>
+
+      <label className={styles.genre}>
+        <span className={styles.genreLabel}>장르</span>
+        <select
+          className={cn(styles.genreSelect, !genre && styles.genrePlaceholder, submitted && errors.genre && styles.genreInvalid)}
+          value={genre ?? ''}
+          onChange={(e) => setGenre(e.target.value as Genre)}
+          aria-invalid={submitted && Boolean(errors.genre)}
+          required
+        >
+          <option value="" disabled>
+            장르를 골라주세요
+          </option>
+          {GENRES.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+        {submitted && errors.genre && <span className={styles.error}>{errors.genre}</span>}
+      </label>
 
       <TextField
         label="한 줄 평"

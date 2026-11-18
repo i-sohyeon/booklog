@@ -184,3 +184,39 @@
     color: var(--color-text-tertiary);
   }
 }
+
+// ---- 장르 (필수) ----
+.genre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.genreLabel {
+  font-size: var(--text-label);
+  font-weight: var(--font-bold);
+  color: var(--color-text-secondary);
+}
+.genreSelect {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 var(--space-10) 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center;
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  appearance: none;
+  font: inherit;
+  font-size: var(--text-body);
+  color: var(--color-text);
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 1.5px var(--color-primary), 0 0 0 4px var(--plum-100);
+  }
+}
+.genrePlaceholder {
+  color: var(--color-text-tertiary);
+}
+.genreInvalid {
+  box-shadow: inset 0 0 0 1.5px var(--color-danger);
+}
