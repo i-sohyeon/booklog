@@ -9,7 +9,18 @@ import { uploadLocalClubs } from '@/store/socialStore';
 import { onSyncStatus, resetAfterSignOut, startLibrarySync, stopLibrarySync } from '@/services/librarySync';
 import { useToast } from '@/components/ui';
 import { reloadForNewVersion } from '@/lib/staleChunk';
+import { initPwa } from '@/lib/pwa';
+import { useRecord } from '@/components/record';
 import '@/styles/global.scss';
+
+// 앱으로 쓰기(PWA): 서비스 워커·설치 안내
+initPwa();
+
+// 홈 화면 아이콘을 길게 눌러 고른 '책 기록하기' 바로가기
+if (new URLSearchParams(window.location.search).get('record') === '1') {
+  window.history.replaceState(null, '', window.location.pathname);
+  useRecord.getState().start();
+}
 
 // Supabase 세션 복원 및 구독 (설정이 없으면 아무 일도 하지 않음)
 useAuthStore.getState().init();
