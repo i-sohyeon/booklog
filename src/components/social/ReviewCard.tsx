@@ -4,7 +4,7 @@ import { useBookLookup, useMemberLookup } from '@/hooks/useSocial';
 import { useSocialStore } from '@/store/socialStore';
 import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
-import { Avatar, BookCover, LikeButton, Spoiler, StarRating } from '@/components/ui';
+import { Avatar, BookCover, Card, LikeButton, Spoiler, StarRating } from '@/components/ui';
 import { cn } from '@/lib/cn';
 import { MemberLink } from '@/components/social/MemberLink';
 import styles from './ReviewCard.module.scss';
@@ -22,9 +22,18 @@ export function ReviewCard({ review, showBook = true, variant = 'card' }: Review
   const book = useBookLookup()(review.bookId);
   const toggleLike = useSocialStore((s) => s.toggleLike);
 
+  const footer =
+    showBook && book ? (
+      <Link to={paths.book(book.id)} className={styles.book}>
+        <BookCover book={book} size="xs" />
+        <span>{book.title}</span>
+      </Link>
+    ) : undefined;
+
   return (
-    <article className={cn(styles.card, styles[variant])}>
-      <header className={styles.head}>
+    <Card
+      className={cn(variant === 'row' && styles.row)}
+      header={
         <MemberLink id={review.memberId} className={styles.whoLink} label={`${member.nickname}님의 서재`}>
           <Avatar name={member.nickname} tone={member.tone} size="sm" />
           <span className={styles.who}>
@@ -32,30 +41,22 @@ export function ReviewCard({ review, showBook = true, variant = 'card' }: Review
             <span>{formatRelative(review.createdAt)}</span>
           </span>
         </MemberLink>
-        <StarRating value={review.rating} size="sm" />
-      </header>
-
+      }
+      headerAside={<StarRating value={review.rating} size="sm" />}
+      footer={footer}
+      footerAside={
+        review.isMine ? (
+          <span className={styles.mine}>내 후기</span>
+        ) : (
+          <LikeButton liked={review.liked} count={review.likeCount} onToggle={() => toggleLike('review', review.id)} label={`${member.nickname}의 후기`} />
+        )
+      }
+    >
       {review.oneLiner && (
         <Spoiler active={review.spoiler}>
           <p className={styles.line}>{review.oneLiner}</p>
         </Spoiler>
       )}
-
-      <footer className={styles.foot}>
-        {showBook && book ? (
-          <Link to={paths.book(book.id)} className={styles.book}>
-            <BookCover book={book} size="xs" />
-            <span>{book.title}</span>
-          </Link>
-        ) : (
-          <span />
-        )}
-        {review.isMine ? (
-          <span className={styles.mine}>내 후기</span>
-        ) : (
-          <LikeButton liked={review.liked} count={review.likeCount} onToggle={() => toggleLike('review', review.id)} label={`${member.nickname}의 후기`} />
-        )}
-      </footer>
-    </article>
+    </Card>
   );
 }

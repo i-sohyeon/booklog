@@ -33,11 +33,35 @@
 ## 간격 & 레이아웃
 - 4px 기반: `--space-1`(4) … `--space-20`(80), SCSS `sp(n)` 헬퍼
 - 모바일 좌우 여백 `--page-gutter: 24px` (태블릿 이상 40px)
+
+### 간격 규칙 (같은 관계는 같은 간격)
+| 어디 | 간격 | 토큰 |
+|------|------|------|
+| 섹션과 섹션 사이 | 40px | `space-10` |
+| 섹션 제목 줄 → 내용 (정렬 탭·더 보기가 있어도 같음) | 16px | `space-4` |
+| 카드 목록에서 카드 사이 | 12px | `space-3` |
+| 카드 안쪽 여백 | 20px | `space-5` |
+| 카드 헤더 · 본문 · 푸터 사이 | 12px | `space-3` |
+| 카드 본문 안 문단 사이 | 8px | `space-2` |
+| 아이콘과 글자 / 나란한 버튼 사이 | 8px | `space-2` |
 - 브레이크포인트: sm 480 / md 768 / lg 1024(사이드바 전환) / xl 1280
 - 375px · 393px에서 가로 스크롤 없이 동작하도록 검증
 
 ## 컴포넌트 (src/components/ui)
-Button / ButtonLink / IconButton · BookCover(생성형 표지) · StarRating(표시/입력) · StatusBadge / Badge · Skeleton / LoadingRegion · EmptyState / ErrorState · Tabs(WAI-ARIA · underline / pill / segment, `bleed`) · Sheet(모바일 바텀시트/데스크톱 다이얼로그) · SearchField · SectionHeader · Avatar · Toast
+Button / ButtonLink / IconButton · Card(헤더·본문·푸터) · BookCover(생성형 표지) · StarRating(표시/입력) · StatusBadge / Badge · Skeleton / LoadingRegion · EmptyState / ErrorState · Tabs(WAI-ARIA · underline / pill / segment, `bleed`) · Sheet(모바일 바텀시트/데스크톱 다이얼로그) · SearchField · SectionHeader · Avatar · Toast
+
+### 카드 (`Card`)
+후기·내 기록·릴레이 바통처럼 "누가/언제 → 내용 → 동작"이 있는 정보는 모두 공통 `Card`를 씁니다.
+- **헤더:** 왼쪽 누가·언제(아바타·이름·시간, 또는 완독일) / 오른쪽 별점·상태
+- **본문:** 한 줄 평·감상·메타 정보. 문단 사이 8px
+- **푸터:** 구분선 위에 둠. 왼쪽 관련 정보(책·편집 버튼) / 오른쪽 동작(공감·삭제)
+- 헤더와 푸터는 한 줄(최소 높이 40px)에서 양 끝 정렬, 세로 가운데
+- 카드 하나에 동작 버튼은 푸터에만 둡니다. 본문 중간에 버튼을 섞지 않습니다
+
+### 프로필 영역
+- 1줄: 사진 · (이름 + 이메일) · 설정을 세로 가운데로 정렬
+- 그 아래 소개 → 팔로워·팔로잉 → 동작 버튼(같은 크기·같은 모양 outline sm)을 16px 간격으로 쌓음
+- 링크처럼 보이는 밑줄 글자 대신 버튼을 씁니다
 
 ### 상태 정의
 - 버튼: default / hover(포인터 기기만) / active(scale .98) / focus-visible(plum 링) / disabled(45%) / loading(스피너 + aria-busy)

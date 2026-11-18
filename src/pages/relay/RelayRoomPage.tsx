@@ -7,7 +7,7 @@ import { useCloudStore } from '@/store/cloudStore';
 import { useAuthGate } from '@/store/loginGate';
 import { GuestScreen } from '@/components/auth/LoginPrompt';
 import { Page, PageHeader } from '@/components/layout/Page';
-import { Avatar, BookCover, Button, EmptyState, SegmentedControl, Sheet, Skeleton, TextArea, TextField, useToast } from '@/components/ui';
+import { Avatar, BookCover, Button, EmptyState, SegmentedControl, Sheet, Skeleton, TextArea, TextField, useToast, Card } from '@/components/ui';
 import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { cn } from '@/lib/cn';
@@ -165,18 +165,24 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
               const m = userId ? findMember(userId) : undefined;
               return (
                 <li key={turn} className={cn(styles.post, !post && styles.skipped)}>
-                  <span className={styles.baton}>
-                    바통 {turn + 1} · {lap}바퀴
-                  </span>
-                  {post ? (
-                    <>
-                      <p className={styles.who}>
+                  {/* 공통 카드: 헤더(누가·언제 | 바통 번호) · 본문 · 푸터(다음 질문) */}
+                  <Card
+                    as="div"
+                    className={styles.postCard}
+                    header={
+                      <span className={styles.who}>
                         <Avatar name={m?.nickname ?? '?'} tone={m?.tone} size="sm" />
-                        <strong>{m?.nickname}</strong>
-                        <span>{formatRelative(post.createdAt)}</span>
-                      </p>
-                      <p className={styles.body}>{post.body}</p>
-                      {post.question && (
+                        <strong>{m?.nickname ?? '참여자'}</strong>
+                        {post && <span>{formatRelative(post.createdAt)}</span>}
+                      </span>
+                    }
+                    headerAside={
+                      <span className={styles.baton}>
+                        바통 {turn + 1} · {lap}바퀴
+                      </span>
+                    }
+                    footer={
+                      post?.question ? (
                         <p className={styles.question}>
                           <Send aria-hidden />
                           <span>
@@ -184,11 +190,11 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
                             {post.question}
                           </span>
                         </p>
-                      )}
-                    </>
-                  ) : (
-                    <p className={styles.muted}>{m?.nickname ?? '참여자'}님 차례를 방장이 넘겼어요.</p>
-                  )}
+                      ) : undefined
+                    }
+                  >
+                    {post ? <p className={styles.body}>{post.body}</p> : <p className={styles.muted}>차례를 방장이 넘겼어요.</p>}
+                  </Card>
                 </li>
               );
             })}

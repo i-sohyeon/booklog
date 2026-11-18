@@ -15,3 +15,4 @@ export * from './RatingValue';
 export * from './LikeButton';
 export * from './Spoiler';
 export * from './Switch';
+export * from './Card';
