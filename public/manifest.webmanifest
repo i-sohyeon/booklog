@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "BookLog · 북로그",
+  "short_name": "북로그",
+  "description": "나의 독서 생활을 기록하고, 함께 나누는 공간",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#5B2590",
+  "theme_color": "#F7F7F8",
+  "categories": ["books", "lifestyle", "social"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "책 기록하기", "short_name": "기록", "url": "/?record=1", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "내 서재", "short_name": "서재", "url": "/library", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

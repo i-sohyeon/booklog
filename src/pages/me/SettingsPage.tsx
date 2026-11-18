@@ -1,3 +1,4 @@
+import { InstallPanel } from '@/components/pwa/InstallGuide';
 import { useState } from 'react';
 import { CloudDownload, CloudUpload, KeyRound, LogIn, LogOut, Settings, Users } from 'lucide-react';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -189,6 +190,8 @@ export function SettingsPage() {
         </div>
       </section>
       )}
+
+      <InstallPanel className={styles.panel} />
 
       <Sheet
         open={copy !== null}

@@ -19,6 +19,7 @@ import { Avatar, BookCover, Button, ButtonLink, RatingValue, SectionHeader, Spoi
 import { nextSession } from '@/components/social/ClubCard';
 import { byline } from '@/lib/byline';
 import { GuestBanner } from '@/components/auth/LoginPrompt';
+import { InstallBanner } from '@/components/pwa/InstallGuide';
 import { MemberLink } from '@/components/social/MemberLink';
 import styles from './HomePage.module.scss';
 
@@ -41,6 +42,7 @@ export function HomePage() {
         </h1>
       </header>
 
+      <InstallBanner />
       {gate === 'guest' && <GuestBanner />}
       <TodayPick />
       {gate === 'member' && (
