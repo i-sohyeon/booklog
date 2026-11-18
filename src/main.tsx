@@ -58,3 +58,14 @@ createRoot(root).render(
     <RouterProvider router={router} />
   </StrictMode>,
 );
+
+// 첫 화면이 그려지면 스플래시를 부드럽게 걷어 냄 (index.html 의 #splash)
+const splash = document.getElementById('splash');
+if (splash) {
+  const done = () => {
+    splash.classList.add('is-done');
+    window.setTimeout(() => splash.remove(), 400);
+  };
+  // 두 프레임 뒤 = React 가 첫 화면을 실제로 그린 뒤
+  requestAnimationFrame(() => requestAnimationFrame(done));
+}
