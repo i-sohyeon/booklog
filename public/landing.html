@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F7F7F8">
+<meta name="format-detection" content="telephone=no, email=no, address=no">
+<title>BookLog · 북로그 — 기록하고, 발견하고, 함께 읽는</title>
+<meta name="description" content="읽은 책은 캘린더와 책꽂이에 기록하고, 친구와 후기를 나누고, 릴레이 독서 토론으로 함께 읽어요.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BookLog · 북로그">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://booklog-azure.vercel.app/landing">
+<meta property="og:title" content="BookLog · 북로그">
+<meta property="og:description" content="기록하고, 발견하고, 함께 읽는 — 나의 독서 생활을 위한 공간">
+<meta property="og:image" content="https://booklog-azure.vercel.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+a{color:#532788}a:hover{color:#3E1D66}
+img{max-width:100%}
+section{scroll-margin-top:16px}
+</style>
+</head>
+<body>
+<!-- 랜딩페이지 (정적). 원본은 Claude 디자인 캔버스 'BookLog 랜딩페이지'. 이미지는 public/landing/ -->
+<div style="background: #F7F7F8; color: #18181A; font-family: 'Noto Sans KR', sans-serif; min-height: 100vh">
+
+<header style="max-width: 1200px; margin: 0 auto; padding: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="#top" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #18181A">
+<span style="width: 40px; height: 40px; border-radius: 10px; background: #532788; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px">B<span style="color: #DAAB5B">.</span></span>
+<span style="font-weight: 800; font-size: 26px; letter-spacing: -0.5px">Book<span style="color: #532788">Log</span></span>
+</a>
+<nav aria-label="주요 메뉴" style="display: flex; flex-wrap: wrap; align-items: center; gap: 28px; font-size: 15px; font-weight: 500">
+<a href="#features" style="text-decoration: none; color: #4B4B52">기능</a>
+<a href="#recommend" style="text-decoration: none; color: #4B4B52">추천</a>
+<a href="#community" style="text-decoration: none; color: #4B4B52">독서모임</a>
+<a href="#relay" style="text-decoration: none; color: #4B4B52">릴레이 토론</a>
+<a href="#faq" style="text-decoration: none; color: #4B4B52">FAQ</a>
+<a href="https://booklog-azure.vercel.app" style="text-decoration: none; background: #532788; color: #FFFFFF; padding: 12px 22px; border-radius: 999px; font-weight: 700">시작하기</a>
+</nav>
+</header>
+
+<section id="top" style="max-width: 1200px; margin: 0 auto; padding: clamp(32px, 9vw, 56px) 20px 96px; display: flex; flex-wrap: wrap; align-items: center; gap: clamp(32px, 6vw, 64px)">
+<div style="flex: 1 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+<span style="align-self: flex-start; font-size: 14px; font-weight: 700; color: #532788; background: #EFE9F7; padding: 8px 14px; border-radius: 999px">기록하고, 발견하고, 함께 읽는</span>
+<h1 style="margin: 0; font-weight: 800; font-size: clamp(32px, 6.5vw, 58px); line-height: 1.25; letter-spacing: -1.5px">혼자 읽던 책을<br><span style="color: #532788">함께 읽는 즐거움</span>으로</h1>
+<p style="margin: 0; font-size: clamp(15px, 2vw, 19px); line-height: 1.75; color: #55555C; max-width: 520px">읽은 책은 캘린더에 기록하고, 친구와 후기를 나누고, 계절에 어울리는 책을 추천받고, 친구와 바통을 넘기며 이야기하는 릴레이 토론까지. BookLog 하나면 충분해요.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<a href="https://booklog-azure.vercel.app" style="display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 30px; background: #532788; color: #FFFFFF; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: clamp(14px, 1.8vw, 17px)">
+지금 시작하기
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+</a>
+<a href="#features" style="display: flex; align-items: center; min-height: 56px; padding: 0 26px; background: #FFFFFF; border: 1px solid #E4E4E8; color: #18181A; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: clamp(14px, 1.8vw, 17px)">기능 둘러보기</a>
+</div>
+<p style="margin: 0; font-size: 14px; color: #6E6E75">설치 없이 웹에서 바로 이용할 수 있어요.</p>
+</div>
+
+<div style="flex: 1 1 340px; min-width: 0; display: flex; justify-content: center">
+<div style="width: 320px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/home.jpg" alt="BookLog 홈 화면: 읽는 중인 책과 친구들이 다 읽은 책" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+</div>
+</section>
+
+<section id="features" style="background: #FFFFFF; padding: clamp(48px, 9vw, 96px) 20px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: center">
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); letter-spacing: -1px">기록하고, 나누고, 추천받고, 함께 읽고</h2>
+<p style="margin: 0; font-size: clamp(14px, 1.8vw, 17px); color: #55555C; line-height: 1.7">책과 함께하는 모든 순간을 BookLog 하나로.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 20px">
+<a href="#calendar" style="text-decoration: none; color: #18181A; background: #F7F7F8; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path></svg></span>
+<span style="font-size: clamp(17px, 2.2vw, 21px); font-weight: 800">독서 캘린더</span>
+<span style="font-size: clamp(14px, 1.7vw, 16px); line-height: 1.7; color: #55555C">읽은 책을 날짜별로 캘린더에 남겨, 나의 독서 기록을 한눈에 봐요.</span>
+</a>
+<a href="#friends" style="text-decoration: none; color: #18181A; background: #F7F7F8; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path><path d="M18 14a6.5 6.5 0 0 1 3.5 6"></path></svg></span>
+<span style="font-size: clamp(17px, 2.2vw, 21px); font-weight: 800">친구와 후기 공유</span>
+<span style="font-size: clamp(14px, 1.7vw, 16px); line-height: 1.7; color: #55555C">친구들이 읽은 책과 후기를 보고, 내 감상도 함께 나눠요.</span>
+</a>
+<a href="#recommend" style="text-decoration: none; color: #18181A; background: #F7F7F8; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg></span>
+<span style="font-size: clamp(17px, 2.2vw, 21px); font-weight: 800">테마별 책 추천</span>
+<span style="font-size: clamp(14px, 1.7vw, 16px); line-height: 1.7; color: #55555C">‘여름에 읽기 좋은 책’처럼 그때그때 어울리는 책을 추천받아요.</span>
+</a>
+<a href="#community" style="text-decoration: none; color: #18181A; background: #F7F7F8; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"></path></svg></span>
+<span style="font-size: clamp(17px, 2.2vw, 21px); font-weight: 800">비대면 독서모임</span>
+<span style="font-size: clamp(14px, 1.7vw, 16px); line-height: 1.7; color: #55555C">커뮤니티에서 모임을 열고, 어디서든 같은 책을 함께 읽어요.</span>
+</a>
+<a href="#shelf" style="text-decoration: none; color: #18181A; background: #F7F7F8; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16"></path><path d="M8 4v16"></path><path d="M12 6l4 14"></path><path d="M3 20h18"></path></svg></span>
+<span style="font-size: clamp(17px, 2.2vw, 21px); font-weight: 800">책꽂이 서재</span>
+<span style="font-size: clamp(14px, 1.7vw, 16px); line-height: 1.7; color: #55555C">다 읽은 책이 책등으로 꽂히는 나만의 책꽂이. 장르별 결산도 한눈에 봐요.</span>
+</a>
+<a href="#relay" style="text-decoration: none; color: #18181A; background: #F7F7F8; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="M7 22l-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg></span>
+<span style="font-size: clamp(17px, 2.2vw, 21px); font-weight: 800">릴레이 독서 토론</span>
+<span style="font-size: clamp(14px, 1.7vw, 16px); line-height: 1.7; color: #55555C">초대 코드로 친구를 모아, 차례대로 바통을 넘기며 한 권을 깊이 이야기해요.</span>
+</a>
+</div>
+</div>
+</section>
+
+<section id="calendar" style="padding: clamp(56px, 9vw, 112px) 20px 56px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: clamp(32px, 6vw, 64px)">
+<div style="flex: 1 1 420px; min-width: 0; display: flex; justify-content: center">
+<div style="display: flex; gap: clamp(12px, 3vw, 20px); align-items: flex-start; justify-content: center; min-width: 0; max-width: 100%">
+<div style="width: 260px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/library.jpg" alt="서재 화면: 2026년 결산과 읽은 책 통계" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+<div style="width: 260px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16); margin-top: 56px"><img src="/landing/calendar.jpg" alt="독서 캘린더 화면: 다 읽은 날마다 책 표지가 표시된 11월 캘린더" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+</div>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<span style="font-size: 15px; font-weight: 700; color: #532788">독서 캘린더</span>
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); line-height: 1.35; letter-spacing: -1px">다 읽은 날,<br>캘린더에 책 한 권</h2>
+<p style="margin: 0; font-size: clamp(14px, 1.8vw, 17px); line-height: 1.75; color: #55555C">책을 다 읽은 날 캘린더에 기록해두세요. 한 달이 지나면 표지로 채워진 캘린더가 나만의 독서 일기가 돼요.</p>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>다 읽은 날 캘린더에 책 기록하기</div>
+<div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>월별로 읽은 권수 확인하기</div>
+<div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>지난 기록을 날짜로 다시 찾아보기</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="shelf" style="padding: clamp(32px, 9vw, 56px) 20px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap-reverse; align-items: center; gap: clamp(32px, 6vw, 64px)">
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<span style="font-size: 15px; font-weight: 700; color: #532788">책꽂이 서재</span>
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); line-height: 1.35; letter-spacing: -1px">다 읽은 책이<br>책꽂이에 한 권씩</h2>
+<p style="margin: 0; font-size: clamp(14px, 1.8vw, 17px); line-height: 1.75; color: #55555C">서재를 캘린더·리스트·책꽂이 중 원하는 모양으로 봐요. 책꽂이에선 표지로 만든 책등이 나란히 꽂히고, 가끔은 표지가 앞을 보고 서 있어요.</p>
+<div style="display: flex; flex-direction: column; gap: 12px"><div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>표지 이미지로 만든 책등 책꽂이</div><div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>기록할 때 고른 장르로 ‘많이 읽은 장르’ 결산</div><div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>기억하고 싶은 문장만 모아보기</div></div>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; display: flex; justify-content: center">
+<div style="width: 300px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/shelf.jpg" alt="서재 책꽂이 보기: 표지 색 책등이 꽂힌 2026년 책꽂이" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+</div>
+</div>
+</section>
+
+<section id="friends" style="padding: clamp(32px, 9vw, 56px) 20px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap-reverse; align-items: center; gap: clamp(32px, 6vw, 64px)">
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<span style="font-size: 15px; font-weight: 700; color: #532788">친구와 후기 공유</span>
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); line-height: 1.35; letter-spacing: -1px">친구는 요즘<br>무슨 책을 읽을까?</h2>
+<p style="margin: 0; font-size: clamp(14px, 1.8vw, 17px); line-height: 1.75; color: #55555C">친구를 팔로우하면 친구가 다 읽은 책과 별점, 후기가 홈에 올라와요. 친구 서재에 놀러 가 어떤 책을 읽었는지 구경할 수도 있어요.</p>
+<div style="display: flex; flex-direction: column; gap: 12px"><div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>친구 서재 놀러가기</div><div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>별점·한 줄 평·장소·태그를 항목별로 공개/비공개</div><div style="display: flex; gap: 12px; align-items: center; font-size: 16px; color: #2E2E33"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; color: #532788; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>책 상세에서 공개 설정을 바로 바꾸기</div></div>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; display: flex; justify-content: center">
+<div style="display: flex; gap: clamp(12px, 3vw, 20px); align-items: flex-start; justify-content: center; min-width: 0; max-width: 100%">
+<div style="width: 260px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/me.jpg" alt="마이 화면: 팔로워, 팔로잉과 내가 쓴 후기 목록" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+<div style="width: 260px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16); margin-top: 56px"><img src="/landing/visibility.jpg" alt="공개 설정 시트: 별점·한 줄 평·장소·태그를 항목별로 켜고 끄기" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="recommend" style="padding: clamp(32px, 9vw, 56px) 20px 112px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+<div style="display: flex; flex-direction: column; gap: 16px; flex: 1 1 420px; min-width: 0">
+<span style="font-size: 15px; font-weight: 700; color: #532788">테마별 책 추천</span>
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); line-height: 1.35; letter-spacing: -1px">지금 이 계절,<br>이 기분에 맞는 책</h2>
+<p style="margin: 0; font-size: clamp(14px, 1.8vw, 17px); line-height: 1.75; color: #55555C">무엇을 읽을지 고민될 땐 테마별 추천을 열어보세요. 계절과 상황에 맞춰 고른 책 목록에서 다음 책을 찾을 수 있어요.</p>
+</div>
+<div style="flex: 1 1 360px; min-width: 0; display: flex; justify-content: center">
+<div style="width: 290px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/discover.jpg" alt="발견 화면: 장르별 이번 주 베스트셀러" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px">
+<div style="background: #FFF4DC; border-radius: 24px; padding: 26px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: flex-end; gap: 8px; height: 110px">
+<div style="width: 58px; height: 100px; border-radius: 6px; background: #E9A23B"></div>
+<div style="width: 58px; height: 110px; border-radius: 6px; background: #5FA8C9"></div>
+<div style="width: 58px; height: 92px; border-radius: 6px; background: #F2C879"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: clamp(15px, 2vw, 19px); font-weight: 800; color: #18181A">여름에 읽기 좋은 책</span>
+<span style="font-size: 14px; color: #4B4B52">시원한 그늘에서 단숨에 읽히는</span>
+</div>
+</div>
+<div style="background: #EFE9F7; border-radius: 24px; padding: 26px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: flex-end; gap: 8px; height: 110px">
+<div style="width: 58px; height: 100px; border-radius: 6px; background: #532788"></div>
+<div style="width: 58px; height: 110px; border-radius: 6px; background: #8E7CC3"></div>
+<div style="width: 58px; height: 92px; border-radius: 6px; background: #3D3A6B"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: clamp(15px, 2vw, 19px); font-weight: 800; color: #18181A">잠들기 전 한 챕터</span>
+<span style="font-size: 14px; color: #4B4B52">하루를 조용히 마무리하는</span>
+</div>
+</div>
+<div style="background: #E7F0F7; border-radius: 24px; padding: 26px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: flex-end; gap: 8px; height: 110px">
+<div style="width: 58px; height: 100px; border-radius: 6px; background: #3D5A80"></div>
+<div style="width: 58px; height: 110px; border-radius: 6px; background: #8FA9C9"></div>
+<div style="width: 58px; height: 92px; border-radius: 6px; background: #4F79C4"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: clamp(15px, 2vw, 19px); font-weight: 800; color: #18181A">출퇴근길 짧은 책</span>
+<span style="font-size: 14px; color: #4B4B52">짧은 챕터로 끊어 읽기 좋은</span>
+</div>
+</div>
+<div style="background: #F7E9E3; border-radius: 24px; padding: 26px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: flex-end; gap: 8px; height: 110px">
+<div style="width: 58px; height: 100px; border-radius: 6px; background: #A34C32"></div>
+<div style="width: 58px; height: 110px; border-radius: 6px; background: #C9704F"></div>
+<div style="width: 58px; height: 92px; border-radius: 6px; background: #D9B86A"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: clamp(15px, 2vw, 19px); font-weight: 800; color: #18181A">친구들이 많이 읽은 책</span>
+<span style="font-size: 14px; color: #4B4B52">내 친구들의 서재에서 자주 보이는</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="community" style="background: #FFFFFF; padding: clamp(56px, 9vw, 112px) 20px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 32px">
+<div style="flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<span style="font-size: 15px; font-weight: 700; color: #A34C32">비대면 독서모임</span>
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); line-height: 1.35; letter-spacing: -1px">만나지 않아도,<br>끝까지 함께 읽어요</h2>
+</div>
+<p style="flex: 1 1 400px; min-width: 0; margin: 0; font-size: clamp(14px, 1.8vw, 17px); line-height: 1.75; color: #55555C">커뮤니티에서 읽고 싶은 책으로 모임을 열거나, 모집 중인 모임에 참여하세요. 시간과 장소를 맞출 필요 없이 주차별 일정에 따라 읽고 이야기 나누면 돼요.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 32px">
+<div style="width: 280px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/community.jpg" alt="커뮤니티 게시판 화면: 책 추천 요청과 문장 공유 글" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+<div style="width: 280px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/clubs.jpg" alt="독서모임 화면: 모집 중인 모임과 참여하기 버튼" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+<div style="background: #F7F7F8; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">01</span>
+<span style="font-size: 18px; font-weight: 800">모임 찾기 또는 만들기</span>
+<span style="font-size: 15px; line-height: 1.6; color: #55555C">모집 중인 모임을 둘러보거나 직접 열어요.</span>
+</div>
+<div style="background: #F7F7F8; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">02</span>
+<span style="font-size: 18px; font-weight: 800">일정 따라 읽기</span>
+<span style="font-size: 15px; line-height: 1.6; color: #55555C">주차별로 정해진 분량을 각자 읽어요.</span>
+</div>
+<div style="background: #F7F7F8; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">03</span>
+<span style="font-size: 18px; font-weight: 800">온라인으로 이야기 나누기</span>
+<span style="font-size: 15px; line-height: 1.6; color: #55555C">정해진 시간에 모여 감상을 나눠요.</span>
+</div>
+<div style="background: #F7F7F8; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">04</span>
+<span style="font-size: 18px; font-weight: 800">함께 완독</span>
+<span style="font-size: 15px; line-height: 1.6; color: #55555C">다 읽은 책은 내 캘린더에 기록돼요.</span>
+</div>
+</div>
+</div>
+</section>
+
+<section id="relay" style="background: #F3EEF9; padding: clamp(56px, 9vw, 112px) 20px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 32px">
+<div style="flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<span style="align-self: flex-start; font-size: 14px; font-weight: 700; color: #FFFFFF; background: #532788; padding: 6px 12px; border-radius: 999px">NEW · 릴레이 독서 토론</span>
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); line-height: 1.35; letter-spacing: -1px">게임방처럼 초대하고,<br>바통을 넘기며 이야기해요</h2>
+</div>
+<p style="flex: 1 1 400px; min-width: 0; margin: 0; font-size: clamp(14px, 1.8vw, 17px); line-height: 1.75; color: #4B4B52">초대 코드 하나로 친구를 모아 한 권의 책을 두고 차례대로 이야기해요. 내 차례엔 생각을 쓰고, 다음 사람에게 질문 하나로 바통을 넘겨요. 시간을 맞출 필요 없이, 각자 편할 때 이어 쓰면 돼요.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 24px">
+<div style="width: 250px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/relay-invite.jpg" alt="릴레이 대기실: 6자리 초대 코드와 링크 복사" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+<div style="width: 250px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16); margin-top: 48px"><img src="/landing/relay-thread.jpg" alt="바통 기록: 차례대로 이어진 글과 다음 사람에게 넘긴 질문" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+<div style="width: 250px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16)"><img src="/landing/relay-card.jpg" alt="내 차례: 공부형 질문 카드와 앞사람의 질문" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+<div style="width: 250px; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; background: #18181A; border-radius: 44px; padding: 10px; box-shadow: 0 30px 60px rgba(83,39,136,0.16); margin-top: 48px"><img src="/landing/relay-terms.jpg" alt="용어장: 참여자들이 내 말로 풀어 쓴 경제 용어 목록" style="display: block; width: 100%; height: auto; border-radius: 34px"></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px">
+<div style="background: #FFFFFF; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">01</span><span style="font-size: 18px; font-weight: 800">방 만들고 초대</span><span style="font-size: 15px; line-height: 1.6; color: #55555C">책을 고르면 초대 코드와 링크가 생겨요. 최대 8명까지 모여요.</span></div>
+<div style="background: #FFFFFF; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">02</span><span style="font-size: 18px; font-weight: 800">차례대로 바통</span><span style="font-size: 15px; line-height: 1.6; color: #55555C">들어온 순서대로 차례가 돌고, 정한 시간 안에 내 생각을 남겨요.</span></div>
+<div style="background: #FFFFFF; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">03</span><span style="font-size: 18px; font-weight: 800">질문으로 넘기기</span><span style="font-size: 15px; line-height: 1.6; color: #55555C">다음 사람에게 질문 하나를 넘기면 이야기가 자연스럽게 이어져요.</span></div>
+<div style="background: #FFFFFF; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(24px, 3.5vw, 32px); font-weight: 800; color: #532788">04</span><span style="font-size: 18px; font-weight: 800">바퀴 돌고 완주</span><span style="font-size: 15px; line-height: 1.6; color: #55555C">2~5바퀴 중 정한 만큼 돌면 완주! 늦게 온 친구도 맨 뒤로 합류해요.</span></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px">
+<div style="background: #FFFFFF; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px">
+<span style="font-size: 15px; font-weight: 700; color: #A34C32">감상형</span>
+<span style="font-size: clamp(18px, 2.4vw, 22px); font-weight: 800">소설·에세이는 자유롭게</span>
+<span style="font-size: 15px; line-height: 1.7; color: #55555C">읽고 든 느낌을 편하게 쓰고, 궁금한 걸 질문으로 넘겨요. 가장 오래 남은 장면, 제목의 의미처럼 감상을 나누기 좋아요.</span>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 14px; box-shadow: inset 0 0 0 2px #532788">
+<span style="font-size: 15px; font-weight: 700; color: #532788">공부형</span>
+<span style="font-size: clamp(18px, 2.4vw, 22px); font-weight: 800">경제·인문·과학은 질문 카드로</span>
+<span style="font-size: 15px; line-height: 1.7; color: #55555C">무엇을 이야기할지 막막한 입문자도 괜찮아요. 바통마다 질문 카드가 순서대로 나와 이해부터 내 생각까지 차근차근 이끌어줘요.</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; background: #F3EEF9; border-radius: 16px; padding: 14px">
+<span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #532788"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; display: flex; align-items: center; justify-content: center; font-size: 12px">1</span>용어 풀이</span><span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #532788"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; display: flex; align-items: center; justify-content: center; font-size: 12px">2</span>핵심 요약</span><span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #532788"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; display: flex; align-items: center; justify-content: center; font-size: 12px">3</span>물음표</span><span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #532788"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; display: flex; align-items: center; justify-content: center; font-size: 12px">4</span>현실 대입</span><span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px 0 6px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #532788"><span style="width: 24px; height: 24px; border-radius: 50%; background: #EFE9F7; display: flex; align-items: center; justify-content: center; font-size: 12px">5</span>내 생각</span>
+</div>
+</div>
+</div>
+<div style="background: #532788; color: #FFFFFF; border-radius: 24px; padding: clamp(26px, 4vw, 40px); display: flex; flex-wrap: wrap; align-items: center; gap: 24px">
+<span style="width: 56px; height: 56px; border-radius: 16px; background: rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"></path><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"></path><path d="M9 7h6"></path><path d="M9 11h4"></path></svg></span>
+<div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: clamp(18px, 2.4vw, 22px); font-weight: 800">함께 만드는 용어장</span>
+<span style="font-size: 15px; line-height: 1.7; color: #E4DAF2">책에서 만난 낯선 용어를 사전 뜻 대신 내 말로 풀어 적어요. 다 읽고 나면 우리만의 사전이 남아요.</span>
+</div>
+</div>
+</div>
+</section>
+
+<section id="forwho" style="padding: clamp(56px, 9vw, 112px) 20px 56px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px">
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); letter-spacing: -1px; text-align: center">이런 분께 BookLog를 추천해요</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px">
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: 30px; font-weight: 800; color: #DAAB5B">“</span><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 700; line-height: 1.6">책을 사두기만 하고<br>끝까지 못 읽는 분</span><span style="font-size: 14px; color: #55555C; line-height: 1.6">독서모임 일정이 완독까지 이끌어줘요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: 30px; font-weight: 800; color: #DAAB5B">“</span><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 700; line-height: 1.6">읽은 책이 기억나지 않아<br>아쉬웠던 분</span><span style="font-size: 14px; color: #55555C; line-height: 1.6">캘린더에 기록이 차곡차곡 남아요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: 30px; font-weight: 800; color: #DAAB5B">“</span><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 700; line-height: 1.6">다음에 뭘 읽을지<br>늘 고민인 분</span><span style="font-size: 14px; color: #55555C; line-height: 1.6">테마별 추천에서 다음 책을 찾아요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: 30px; font-weight: 800; color: #DAAB5B">“</span><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 700; line-height: 1.6">책 이야기를 나눌 사람이<br>주변에 없는 분</span><span style="font-size: 14px; color: #55555C; line-height: 1.6">친구와 후기를 나누고 모임에서 만나요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: 30px; font-weight: 800; color: #DAAB5B">“</span><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 700; line-height: 1.6">경제·인문 책을 친구와<br>함께 공부하고 싶은 분</span><span style="font-size: 14px; color: #55555C; line-height: 1.6">공부형 릴레이의 질문 카드와 용어장이 이끌어줘요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: 30px; font-weight: 800; color: #DAAB5B">“</span><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 700; line-height: 1.6">단톡방에선 책 이야기가<br>금방 묻혀버리는 분</span><span style="font-size: 14px; color: #55555C; line-height: 1.6">릴레이 바통 기록에 이야기가 차곡차곡 남아요.</span></div>
+</div>
+</div>
+</section>
+
+<section id="faq" style="padding: clamp(32px, 9vw, 56px) 20px 112px">
+<div style="max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px">
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(25px, 4.8vw, 40px); letter-spacing: -1px; text-align: center">자주 묻는 질문</h2>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 800"><span style="color: #532788">Q.</span> 따로 설치해야 하나요?</span><span style="font-size: 15px; line-height: 1.7; color: #55555C">아니요. 웹 브라우저에서 바로 이용할 수 있어요. 휴대폰 홈 화면에 추가해두면 앱처럼 쓸 수 있어요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 800"><span style="color: #532788">Q.</span> 친구는 어떻게 추가하나요?</span><span style="font-size: 15px; line-height: 1.7; color: #55555C">마이 탭의 ‘친구 찾기’에서 닉네임으로 찾아 팔로우하면 돼요. 친구가 공개한 서재에도 놀러 갈 수 있어요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 800"><span style="color: #532788">Q.</span> 추천 테마는 누가 만드나요?</span><span style="font-size: 15px; line-height: 1.7; color: #55555C">[추천 목록 큐레이션 방식 안내]</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 800"><span style="color: #532788">Q.</span> 비대면 독서모임은 어떻게 진행되나요?</span><span style="font-size: 15px; line-height: 1.7; color: #55555C">커뮤니티의 독서모임 탭에서 모임에 참여하면, 주차별 일정에 맞춰 각자 읽고 정해진 시간에 온라인으로 이야기를 나눠요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 800"><span style="color: #532788">Q.</span> 릴레이 독서 토론은 어떻게 하나요?</span><span style="font-size: 15px; line-height: 1.7; color: #55555C">커뮤니티의 릴레이 탭에서 방을 만들고 초대 코드를 친구에게 보내세요. 2명 이상 모이면 방장이 시작하고, 차례대로 생각을 쓰며 질문으로 바통을 넘겨요. 시작한 뒤에 들어온 친구도 맨 뒤 차례로 함께할 수 있어요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 800"><span style="color: #532788">Q.</span> 내 기록은 다른 사람에게 다 보이나요?</span><span style="font-size: 15px; line-height: 1.7; color: #55555C">아니요. 기본은 비공개예요. 별점·한 줄 평·장소·태그를 항목별로 골라 친구에게만 공개할 수 있고, 언제든 책 상세에서 바꿀 수 있어요.</span></div>
+<div style="background: #FFFFFF; border: 1px solid #E8E8EB; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px"><span style="font-size: clamp(14px, 1.8vw, 17px); font-weight: 800"><span style="color: #532788">Q.</span> 이용 요금이 있나요?</span><span style="font-size: 15px; line-height: 1.7; color: #55555C">[요금 정책 안내]</span></div>
+</div>
+</div>
+</section>
+
+<section id="download" style="padding: 0 20px 72px">
+<div style="max-width: 1200px; margin: 0 auto; background: #532788; border-radius: 32px; padding: 72px 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center">
+<h2 style="margin: 0; font-weight: 800; font-size: clamp(26px, 5vw, 42px); line-height: 1.35; letter-spacing: -1px; color: #FFFFFF">다음 책은 BookLog에서<br>함께 읽어요</h2>
+<p style="margin: 0; font-size: clamp(14px, 1.8vw, 17px); color: #E4DAF2">설치 없이, 지금 바로 내 서재를 시작하세요.</p>
+<a href="https://booklog-azure.vercel.app" style="display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 32px; background: #FFFFFF; color: #532788; border-radius: 999px; text-decoration: none; font-weight: 800; font-size: clamp(14px, 1.8vw, 17px)">
+BookLog 시작하기
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+</a>
+</div>
+</section>
+
+<footer style="border-top: 1px solid #E8E8EB; padding: 32px">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 14px; color: #6E6E75">
+<span style="font-weight: 800; color: #18181A">Book<span style="color: #532788">Log</span></span>
+<span>[문의 이메일] · [개인정보처리방침]</span>
+</div>
+</footer>
+
+</div>
+
+</body>
+</html>
