@@ -11,6 +11,17 @@ import { ensureBooks } from './cloudStore';
  * 차례·정원 규칙을 서버가 지킵니다.
  */
 export type RelayStatus = 'waiting' | 'active' | 'done';
+/** 토론 방식: 감상형(소설·에세이) / 공부형(경제·인문·과학 — 바통마다 질문 카드) */
+export type RelayMode = 'talk' | 'study';
+
+/** 함께 만드는 용어장 (008_relay_study.sql) */
+export interface RelayTerm {
+  id: string;
+  userId: string;
+  term: string;
+  meaning: string;
+  createdAt: string;
+}
 
 export interface RelayMember {
   userId: string;
@@ -37,6 +48,8 @@ export interface Relay {
   title: string;
   code: string;
   status: RelayStatus;
+  /** 008 이전 서버면 항상 감상형 */
+  mode: RelayMode;
   rounds: number;
   turnHours: number;
   turn: number;
@@ -53,6 +66,8 @@ export interface Relay {
 
 export interface RelayDetail extends Relay {
   posts: RelayPost[];
+  /** 공부형만 불러옴 */
+  terms: RelayTerm[];
 }
 
 type RelayRow = {
@@ -62,6 +77,7 @@ type RelayRow = {
   title: string;
   code: string;
   status: RelayStatus;
+  mode?: RelayMode;
   rounds: number;
   turn_hours: number;
   turn: number;
@@ -81,6 +97,7 @@ const fromRow = (r: RelayRow): Relay => ({
   title: r.title,
   code: r.code,
   status: r.status,
+  mode: r.mode === 'study' ? 'study' : 'talk',
   rounds: r.rounds,
   turnHours: r.turn_hours,
   turn: r.turn,
@@ -110,10 +127,14 @@ export function turnInfo(r: Pick<Relay, 'turn' | 'rounds' | 'members' | 'turnSta
   return { total, current, lap, deadline, last: r.status === 'active' && remaining === 1 };
 }
 
+type TermRow = { id: string; user_id: string; term: string; meaning: string; created_at: string };
+const fromTermRow = (t: TermRow): RelayTerm => ({ id: t.id, userId: t.user_id, term: t.term, meaning: t.meaning, createdAt: t.created_at });
+
 /** 서버 오류 메시지 → 사람이 읽을 문장 (서버 함수가 이미 한국어로 알려 줌) */
 export function relayError(e: unknown): string {
   const msg = e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : '';
   if (/[가-힣]/.test(msg)) return msg;
+  if (/relay_terms_unique|duplicate key/i.test(msg)) return '이미 용어장에 있는 용어예요.';
   if (/relay|function|does not exist|schema cache/i.test(msg)) return '릴레이 기능을 준비 중이에요. 잠시 후 다시 시도해 주세요.';
   return '잠시 후 다시 시도해 주세요.';
 }
@@ -130,7 +151,7 @@ interface RelayState {
   details: Record<string, RelayDetail>;
   loadList: () => Promise<void>;
   loadDetail: (id: string) => Promise<RelayDetail | null>;
-  create: (input: { book: Book; title: string; rounds: number; turnHours: number }) => Promise<string>;
+  create: (input: { book: Book; title: string; rounds: number; turnHours: number; mode: RelayMode }) => Promise<string>;
   join: (code: string) => Promise<string>;
   start: (id: string) => Promise<void>;
   leave: (id: string) => Promise<void>;
@@ -140,6 +161,10 @@ interface RelayState {
   updateSettings: (id: string, rounds: number, turnHours: number) => Promise<void>;
   /** 방장: 멤버 내보내기 (다시 들어올 수 없음) */
   kick: (id: string, userId: string) => Promise<void>;
+  /** 용어장: 추가·고치기(쓴 사람만)·지우기(쓴 사람만) */
+  addTerm: (id: string, term: string, meaning: string) => Promise<void>;
+  updateTerm: (id: string, termId: string, term: string, meaning: string) => Promise<void>;
+  removeTerm: (id: string, termId: string) => Promise<void>;
   clear: () => void;
 }
 
@@ -170,8 +195,16 @@ export const useRelayStore = create<RelayState>()((set, get) => ({
     if (relay.error) throw relay.error;
     if (!relay.data) return null;
     if (posts.error) throw posts.error;
+    const base = fromRow(relay.data as RelayRow);
+    let terms: RelayTerm[] = [];
+    if (base.mode === 'study') {
+      const t = await client.from('relay_terms').select('id, user_id, term, meaning, created_at').eq('relay_id', id).order('created_at', { ascending: true });
+      if (t.error) throw t.error;
+      terms = (t.data as TermRow[]).map(fromTermRow);
+    }
     const detail: RelayDetail = {
-      ...fromRow(relay.data as RelayRow),
+      ...base,
+      terms,
       posts: (
         posts.data as { id: string; user_id: string; turn: number; lap?: number | null; skipped?: boolean; body: string | null; question: string | null; created_at: string }[]
       ).map((p) => ({
@@ -190,11 +223,13 @@ export const useRelayStore = create<RelayState>()((set, get) => ({
     return detail;
   },
 
-  create: async ({ book, title, rounds, turnHours }) => {
+  create: async ({ book, title, rounds, turnHours, mode }) => {
     const client = db();
     // 도서 API에서 고른 책이면 다른 참여자도 볼 수 있게 서버 books 에 저장
     if (!SAMPLE_CATALOG.some((b) => b.id === book.id)) await client.from('books').upsert(toBookRow(book));
-    const { data, error } = await client.rpc('create_relay', { p_book_id: book.id, p_title: title, p_rounds: rounds, p_turn_hours: turnHours });
+    // 감상형은 예전 함수 그대로 (008 실행 전 서버에서도 동작), 공부형만 방식을 함께 보냄
+    const args = { p_book_id: book.id, p_title: title, p_rounds: rounds, p_turn_hours: turnHours };
+    const { data, error } = await client.rpc('create_relay', mode === 'study' ? { ...args, p_mode: mode } : args);
     if (error) throw error;
     const id = (data as RelayRow).id;
     void get().loadList();
@@ -244,6 +279,31 @@ export const useRelayStore = create<RelayState>()((set, get) => ({
 
   kick: async (id, userId) => {
     const { error } = await db().rpc('kick_relay_member', { p_id: id, p_user_id: userId });
+    if (error) throw error;
+    await get().loadDetail(id);
+  },
+
+  addTerm: async (id, term, meaning) => {
+    const client = db();
+    const { data: auth } = await client.auth.getSession();
+    const uid = auth.session?.user.id;
+    if (!uid) throw new Error('로그인이 필요해요');
+    const { error } = await client.from('relay_terms').insert({ relay_id: id, user_id: uid, term: term.trim(), meaning: meaning.trim() });
+    if (error) throw error;
+    await get().loadDetail(id);
+  },
+
+  updateTerm: async (id, termId, term, meaning) => {
+    const { error } = await db()
+      .from('relay_terms')
+      .update({ term: term.trim(), meaning: meaning.trim(), updated_at: new Date().toISOString() })
+      .eq('id', termId);
+    if (error) throw error;
+    await get().loadDetail(id);
+  },
+
+  removeTerm: async (id, termId) => {
+    const { error } = await db().from('relay_terms').delete().eq('id', termId);
     if (error) throw error;
     await get().loadDetail(id);
   },

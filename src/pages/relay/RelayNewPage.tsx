@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Repeat, X } from 'lucide-react';
 import type { Book } from '@/types/book';
+import type { RelayMode } from '@/store/relayStore';
 import { relayError, useRelayStore } from '@/store/relayStore';
 import { useAuthGate } from '@/store/loginGate';
 import { GuestScreen } from '@/components/auth/LoginPrompt';
@@ -11,7 +12,7 @@ import { Button, IconButton, SegmentedControl, TextField, useToast } from '@/com
 import { paths } from '@/routes/paths';
 import editor from '@/pages/clubs/ClubNewPage.module.scss';
 import styles from './Relay.module.scss';
-import { HOUR_OPTIONS, ROUND_OPTIONS, type Hours, type Rounds } from './relayOptions';
+import { HOUR_OPTIONS, MODE_HINT, MODE_OPTIONS, ROUND_OPTIONS, STUDY_STEPS, type Hours, type Rounds } from './relayOptions';
 
 
 function RelayNewInner() {
@@ -22,6 +23,13 @@ function RelayNewInner() {
   const [title, setTitle] = useState('');
   const [rounds, setRounds] = useState<Rounds>('2');
   const [hours, setHours] = useState<Hours>('24');
+  // 경제·인문·과학 같은 책을 고르면 공부형을 먼저 골라 둠 (직접 바꾸면 그대로)
+  const [mode, setMode] = useState<RelayMode>('talk');
+  const [modeTouched, setModeTouched] = useState(false);
+  const pickBook = (b: Book | null) => {
+    setBook(b);
+    if (b && !modeTouched) setMode(['경제경영', '인문', '과학', '역사', '자기계발'].includes(b.genre) ? 'study' : 'talk');
+  };
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
@@ -35,7 +43,7 @@ function RelayNewInner() {
     setSaving(true);
     setError(undefined);
     try {
-      const id = await create({ book, title: finalTitle, rounds: Number(rounds), turnHours: Number(hours) });
+      const id = await create({ book, title: finalTitle, rounds: Number(rounds), turnHours: Number(hours), mode });
       showToast('릴레이를 만들었어요. 친구를 초대해 보세요');
       navigate(paths.relay(id), { replace: true });
     } catch (e) {
@@ -65,7 +73,7 @@ function RelayNewInner() {
 
       <div className={editor.body}>
         <div>
-          <BookPicker label="함께 이야기할 책" value={book} onChange={setBook} />
+          <BookPicker label="함께 이야기할 책" value={book} onChange={pickBook} />
           {bookError && <p className={editor.error}>{bookError}</p>}
         </div>
         <TextField
@@ -77,6 +85,28 @@ function RelayNewInner() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+        <div className={styles.modeField}>
+          <SegmentedControl
+            label="토론 방식"
+            value={mode}
+            onChange={(v) => {
+              setMode(v);
+              setModeTouched(true);
+            }}
+            options={MODE_OPTIONS}
+          />
+          <p className={styles.modeHint}>{MODE_HINT[mode]}</p>
+          {mode === 'study' && (
+            <ol className={styles.stepPreview} aria-label="바통마다 나오는 질문 카드">
+              {STUDY_STEPS.map((s, i) => (
+                <li key={s.key}>
+                  <span>{i + 1}</span>
+                  {s.label}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
         <SegmentedControl
           label="몇 바퀴 돌까요?"
           value={rounds}
