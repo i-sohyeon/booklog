@@ -574,3 +574,173 @@
   flex-direction: column;
   gap: var(--space-5);
 }
+
+// ---- 공부형 · 용어장 ----
+.modeField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.modeHint {
+  font-size: var(--text-caption);
+  line-height: var(--leading-snug);
+  color: var(--color-text-tertiary);
+}
+.stepPreview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 var(--space-3) 0 6px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-subtle);
+    font-size: var(--text-caption);
+    font-weight: var(--font-bold);
+    color: var(--color-text-brand);
+    span {
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-surface);
+      font-size: 11px;
+    }
+  }
+}
+.modeTag {
+  display: inline-block;
+  margin-right: var(--space-2);
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-subtle);
+  font-size: var(--text-micro);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+  vertical-align: 1px;
+}
+.roomTabs {
+  margin-bottom: var(--space-4);
+}
+.stepTag {
+  display: inline-block;
+  margin-right: var(--space-2);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-subtle);
+  font-size: var(--text-micro);
+  font-weight: var(--font-bold);
+  color: var(--color-text-brand);
+}
+.stepCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1.5px var(--color-primary);
+  > p {
+    font-size: var(--text-body);
+    font-weight: var(--font-bold);
+    line-height: var(--leading-snug);
+  }
+  .stepTag {
+    margin: 0;
+  }
+  .textLink {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    min-height: 32px;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+.glossary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.glossaryHead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.glossaryEmpty {
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-sunken);
+  font-size: var(--text-label);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+.terms {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+.term {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  & + & {
+    border-top: 1px solid var(--color-border);
+  }
+  dt {
+    font-size: var(--text-body-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-text-brand);
+  }
+  dd {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    p {
+      font-size: var(--text-body);
+      line-height: var(--leading-body);
+      white-space: pre-wrap;
+    }
+  }
+}
+.termBy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: var(--text-micro);
+  color: var(--color-text-tertiary);
+}
+.termActions {
+  display: inline-flex;
+  margin-left: auto;
+  margin-right: -8px;
+}
+.termForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.postStep {
+  align-self: flex-start;
+  margin: 0;
+}

@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { Copy, Crown, Repeat, Send, Share2, UserPlus } from 'lucide-react';
+import { BookA, Copy, Crown, Pencil, Plus, Repeat, Send, Share2, Trash2, UserPlus } from 'lucide-react';
 import { useBookLookup, useMemberLookup, useMyCloudId } from '@/hooks/useSocial';
-import { relayError, turnInfo, useRelayStore, type RelayDetail } from '@/store/relayStore';
+import { relayError, turnInfo, useRelayStore, type RelayDetail, type RelayTerm } from '@/store/relayStore';
 import { useCloudStore } from '@/store/cloudStore';
 import { useAuthGate } from '@/store/loginGate';
 import { GuestScreen } from '@/components/auth/LoginPrompt';
 import { Page, PageHeader } from '@/components/layout/Page';
-import { Avatar, BookCover, Button, EmptyState, SegmentedControl, Sheet, Skeleton, TextArea, TextField, useToast, Card } from '@/components/ui';
+import { Avatar, BookCover, Button, EmptyState, IconButton, SegmentedControl, Sheet, Skeleton, Tabs, TextArea, TextField, useToast, Card } from '@/components/ui';
 import { formatRelative } from '@/lib/date';
 import { paths } from '@/routes/paths';
 import { cn } from '@/lib/cn';
 import styles from './Relay.module.scss';
-import { HOUR_OPTIONS, ROUND_OPTIONS, toHours, toRounds, type Hours, type Rounds } from './relayOptions';
+import { HOUR_OPTIONS, ROUND_OPTIONS, STUDY_STEPS, studyStep, toHours, toRounds, type Hours, type Rounds } from './relayOptions';
 
 /** 마감까지 남은 시간 */
 function remaining(deadline: Date | undefined, now: number) {
@@ -96,6 +96,8 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
   const book = findBook(relay.bookId);
   const info = turnInfo(relay);
   const isHost = relay.hostId === me;
+  const study = relay.mode === 'study';
+  const [tab, setTab] = useState<'thread' | 'terms'>('thread');
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 60_000);
@@ -129,6 +131,7 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
           </Link>
         )}
         <p className={styles.roomMeta}>
+          {study && <span className={styles.modeTag}>공부형</span>}
           {relay.rounds}바퀴 · 한 사람당 {relay.turnHours >= 24 ? `${relay.turnHours / 24}일` : `${relay.turnHours}시간`} · {relay.members.length}명
         </p>
         {relay.status !== 'waiting' && (
@@ -154,9 +157,23 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
         </details>
       )}
 
-      {relay.status !== 'waiting' && (
+      {study && relay.status !== 'waiting' && (
+        <Tabs
+          label="릴레이 보기"
+          className={styles.roomTabs}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: 'thread', label: '바통 기록' },
+            { value: 'terms', label: '용어장', count: relay.terms.length },
+          ]}
+        />
+      )}
+      {study && (relay.status === 'waiting' || tab === 'terms') && <Glossary relay={relay} me={me} heading={relay.status === 'waiting'} />}
+
+      {relay.status !== 'waiting' && (!study || tab === 'thread') && (
         <section className={styles.thread} aria-labelledby="thread-title">
-          <h2 id="thread-title" className={styles.h2}>
+          <h2 id="thread-title" className={study ? 'sr-only' : styles.h2}>
             바통 기록
           </h2>
           {timeline.length === 0 && <p className={styles.muted}>첫 바통을 기다리고 있어요.</p>}
@@ -193,6 +210,7 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
                       ) : undefined
                     }
                   >
+                    {study && post && <span className={cn(styles.stepTag, styles.postStep)}>{studyStep(turn).label}</span>}
                     {post ? <p className={styles.body}>{post.body}</p> : <p className={styles.muted}>차례를 방장이 넘겼어요.</p>}
                   </Card>
                 </li>
@@ -202,7 +220,7 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
         </section>
       )}
 
-      {relay.status === 'active' && info.current && (
+      {relay.status === 'active' && info.current && (!study || tab === 'thread') && (
         <CurrentTurn
           relay={relay}
           mine={info.current.userId === me}
@@ -213,6 +231,7 @@ function RelayView({ relay, reload }: { relay: RelayDetail; reload: () => Promis
           last={info.last}
           deadline={remaining(info.deadline, now)}
           reload={reload}
+          onOpenTerms={() => setTab('terms')}
         />
       )}
 
@@ -463,8 +482,10 @@ function CurrentTurn({
   last,
   deadline,
   reload,
+  onOpenTerms,
 }: {
   relay: RelayDetail;
+  onOpenTerms: () => void;
   mine: boolean;
   isHost: boolean;
   name: string;
@@ -481,6 +502,9 @@ function CurrentTurn({
   const [next, setNext] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmSkip, setConfirmSkip] = useState(false);
+  // 공부형: 이번 바통의 질문 카드와 다음 카드
+  const step = relay.mode === 'study' ? studyStep(relay.turn) : undefined;
+  const nextStep = relay.mode === 'study' ? studyStep(relay.turn + 1) : undefined;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -503,7 +527,10 @@ function CurrentTurn({
     return (
       <section className={styles.turnBox} aria-label="지금 차례">
         <p className={styles.turnTitle}>지금 {name}님 차례예요</p>
-        <p className={styles.muted}>{deadline}</p>
+        <p className={styles.muted}>
+          {step ? `‘${step.label}’ 카드 · ` : ''}
+          {deadline}
+        </p>
         {isHost && (
           <>
             <button type="button" className={styles.textLink} onClick={() => setConfirmSkip(true)}>
@@ -550,6 +577,20 @@ function CurrentTurn({
     <form className={cn(styles.turnBox, styles.turnMine)} onSubmit={submit} aria-label="내 차례">
       <p className={styles.turnTitle}>내 차례예요!</p>
       <p className={styles.muted}>{deadline}</p>
+      {step && (
+        <div className={styles.stepCard}>
+          <span className={styles.stepTag}>
+            질문 카드 {(relay.turn % STUDY_STEPS.length) + 1}/{STUDY_STEPS.length} · {step.label}
+          </span>
+          <p>{step.prompt}</p>
+          {step.key === 'term' && (
+            <button type="button" className={styles.textLink} onClick={onOpenTerms}>
+              <BookA aria-hidden />
+              용어장에도 남기기
+            </button>
+          )}
+        </div>
+      )}
       {question ? (
         <p className={styles.question}>
           <Send aria-hidden />
@@ -559,15 +600,23 @@ function CurrentTurn({
           </span>
         </p>
       ) : (
-        <p className={styles.muted}>첫 바통이에요. 책을 읽고 든 생각으로 이야기를 열어 주세요.</p>
+        !step && <p className={styles.muted}>첫 바통이에요. 책을 읽고 든 생각으로 이야기를 열어 주세요.</p>
       )}
-      <TextArea label="내 생각" maxLength={1000} placeholder="질문에 답하거나, 읽으며 든 생각을 자유롭게 써 주세요." value={body} onChange={(e) => setBody(e.target.value)} />
+      <TextArea
+        label={step ? '내 답' : '내 생각'}
+        maxLength={1000}
+        placeholder={step ? step.placeholder : '질문에 답하거나, 읽으며 든 생각을 자유롭게 써 주세요.'}
+        hint={step && question ? '질문 카드와 앞사람 질문 중 편한 쪽에 답해도 좋아요.' : undefined}
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+      />
       {!last && (
         <TextField
           label="다음 사람에게 넘길 질문"
           optional
           maxLength={200}
-          placeholder="예: 가장 오래 남은 장면은 어디였나요?"
+          hint={nextStep ? `다음 사람은 ‘${nextStep.label}’ 카드를 받아요. 덧붙이고 싶은 질문이 있으면 남겨 주세요.` : undefined}
+          placeholder={nextStep ? '예: 그 용어가 우리 생활에선 어디에 보일까요?' : '예: 가장 오래 남은 장면은 어디였나요?'}
           value={next}
           onChange={(e) => setNext(e.target.value)}
         />
@@ -639,6 +688,158 @@ function SettingsSheet({ relay, open, onClose }: { relay: RelayDetail; open: boo
           </p>
         )}
       </div>
+    </Sheet>
+  );
+}
+
+/** 공부형: 참여자끼리 함께 채우는 용어장 (읽기·추가는 누구나, 고치기·지우기는 쓴 사람만) */
+function Glossary({ relay, me, heading }: { relay: RelayDetail; me: string | null; heading: boolean }) {
+  const findMember = useMemberLookup();
+  const [editing, setEditing] = useState<RelayTerm | 'new' | null>(null);
+  const [removing, setRemoving] = useState<RelayTerm | null>(null);
+  const removeTerm = useRelayStore((s) => s.removeTerm);
+  const showToast = useToast((s) => s.show);
+  const [busy, setBusy] = useState(false);
+  const terms = useMemo(() => [...relay.terms].sort((a, b) => a.term.localeCompare(b.term, 'ko')), [relay.terms]);
+
+  return (
+    <section className={styles.glossary} aria-labelledby="glossary-title">
+      <div className={styles.glossaryHead}>
+        <h2 id="glossary-title" className={heading ? styles.h2 : 'sr-only'}>
+          용어장 <span>{terms.length}개</span>
+        </h2>
+        <p className={styles.muted}>책에서 만난 낯선 용어를 내 말로 풀어 두세요. 다 읽고 나면 둘만의 사전이 남아요.</p>
+        <Button size="sm" variant="outline" leadingIcon={<Plus aria-hidden />} onClick={() => setEditing('new')}>
+          용어 추가
+        </Button>
+      </div>
+
+      {terms.length === 0 ? (
+        <p className={styles.glossaryEmpty}>아직 용어가 없어요. 처음 본 용어 하나로 시작해 볼까요?</p>
+      ) : (
+        <dl className={styles.terms}>
+          {terms.map((t) => {
+            const m = findMember(t.userId);
+            const mine = t.userId === me;
+            return (
+              <div key={t.id} className={styles.term}>
+                <dt>{t.term}</dt>
+                <dd>
+                  <p>{t.meaning}</p>
+                  <span className={styles.termBy}>
+                    <Avatar name={m.nickname} tone={m.tone} size="xs" />
+                    {mine ? '내가 풀이' : `${m.nickname}님 풀이`}
+                    {mine && (
+                      <span className={styles.termActions}>
+                        <IconButton label={`${t.term} 고치기`} size="sm" onClick={() => setEditing(t)}>
+                          <Pencil />
+                        </IconButton>
+                        <IconButton label={`${t.term} 지우기`} size="sm" onClick={() => setRemoving(t)}>
+                          <Trash2 />
+                        </IconButton>
+                      </span>
+                    )}
+                  </span>
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      )}
+
+      <TermSheet key={editing === 'new' ? 'new' : (editing?.id ?? 'none')} relay={relay} target={editing} onClose={() => setEditing(null)} />
+      <Sheet
+        open={removing !== null}
+        onClose={() => !busy && setRemoving(null)}
+        title={`‘${removing?.term ?? ''}’을 지울까요?`}
+        description="용어장에서 모두에게 사라져요."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRemoving(null)} disabled={busy}>
+              취소
+            </Button>
+            <Button
+              variant="danger"
+              loading={busy}
+              onClick={async () => {
+                if (!removing) return;
+                setBusy(true);
+                try {
+                  await removeTerm(relay.id, removing.id);
+                  showToast('용어를 지웠어요');
+                  setRemoving(null);
+                } catch (e) {
+                  showToast(relayError(e));
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              지우기
+            </Button>
+          </>
+        }
+      >
+        {null}
+      </Sheet>
+    </section>
+  );
+}
+
+function TermSheet({ relay, target, onClose }: { relay: RelayDetail; target: RelayTerm | 'new' | null; onClose: () => void }) {
+  const addTerm = useRelayStore((s) => s.addTerm);
+  const updateTerm = useRelayStore((s) => s.updateTerm);
+  const showToast = useToast((s) => s.show);
+  const editing = target && target !== 'new' ? target : undefined;
+  const [term, setTerm] = useState(editing?.term ?? '');
+  const [meaning, setMeaning] = useState(editing?.meaning ?? '');
+  const [submitted, setSubmitted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const errors = {
+    term: term.trim() ? undefined : '용어를 적어 주세요.',
+    meaning: meaning.trim() ? undefined : '뜻을 내 말로 적어 주세요.',
+  };
+
+  const save = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+    if (errors.term || errors.meaning || busy) return;
+    setBusy(true);
+    setError(undefined);
+    try {
+      if (editing) await updateTerm(relay.id, editing.id, term, meaning);
+      else await addTerm(relay.id, term, meaning);
+      showToast(editing ? '풀이를 고쳤어요' : '용어장에 추가했어요');
+      onClose();
+    } catch (err) {
+      setError(relayError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Sheet open={target !== null} onClose={() => !busy && onClose()} title={editing ? '풀이 고치기' : '용어 추가'} description="사전 뜻보다 내가 이해한 말로 쓰면 더 오래 기억나요.">
+      <form className={styles.termForm} onSubmit={save} noValidate>
+        <TextField label="용어" maxLength={30} placeholder="예: 기회비용" value={term} onChange={(e) => setTerm(e.target.value)} error={submitted ? errors.term : undefined} />
+        <TextArea
+          label="내 말로 풀이"
+          maxLength={300}
+          placeholder="예: 하나를 고르면 포기해야 하는 다른 것의 가치. 만 원으로 점심을 먹으면, 그 돈으로 살 수 있던 책 한 권이 기회비용."
+          value={meaning}
+          onChange={(e) => setMeaning(e.target.value)}
+          error={submitted ? errors.meaning : undefined}
+        />
+        {error && (
+          <p className={styles.kickError} role="alert">
+            {error}
+          </p>
+        )}
+        <Button type="submit" block size="lg" loading={busy}>
+          {editing ? '고치기' : '추가하기'}
+        </Button>
+      </form>
     </Sheet>
   );
 }
