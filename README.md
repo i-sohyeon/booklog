@@ -9,6 +9,7 @@
 | 무엇 | 주소 | 비고 |
 |---|---|---|
 | 서비스 | https://booklog-azure.vercel.app | |
+| 랜딩페이지 | https://booklog-azure.vercel.app/landing | 서비스 소개 페이지. 메뉴에는 없고 주소로만 들어감. 파일은 `public/landing.html`, 이미지는 `public/landing/` |
 | 디자인 가이드 | https://booklog-azure.vercel.app/design | 컬러·글자·아이콘·컴포넌트·간격·로고를 한 화면에서 확인. 메뉴에는 없고 주소로만 들어감. 로컬은 `http://localhost:5180/design` |
 | 테스트 계정 로그인 | https://booklog-azure.vercel.app/login?test | **작업자 확인용.** `?test`로 들어올 때만 로그인 화면 아래에 테스트독자A·B가 보임. 계정 정보는 `src/config/demoAccounts.ts` |
 
