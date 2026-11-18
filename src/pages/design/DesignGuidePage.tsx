@@ -46,6 +46,21 @@ const SAMPLE_BOOKS: Array<{ id: string; title: string; authors: string[]; coverT
 ];
 
 /** 화면 공통 간격 규칙 (docs/DESIGN_SYSTEM.md 와 같음) */
+const NAV_PATTERNS: Array<{
+  name: string;
+  where: string;
+  lead: 'back' | 'close';
+  title?: string;
+  trail?: 'close' | 'save';
+  center?: boolean;
+  photo?: boolean;
+}> = [
+  { name: '하위 화면', where: '설정 · 문장 모아보기 · 모임/릴레이 상세 · 친구 서재', lead: 'back', title: '문장 모아보기' },
+  { name: '단계가 있는 시트', where: '책 기록하기 (검색 → 상태 → 완독 기록)', lead: 'back', title: '이 책은 지금', trail: 'close' },
+  { name: '사진 위 화면', where: '책 상세 — 표지 위에 떠 있는 둥근 버튼', lead: 'back', photo: true },
+  { name: '작성 화면', where: '기록하기 · 글쓰기 · 모임/릴레이 만들기', lead: 'close', title: '기록하기', trail: 'save', center: true },
+];
+
 const SPACING_RULES: Array<[string, string, string]> = [
   ['화면 좌우 여백', '24px (태블릿 이상 40px)', 'page-gutter'],
   ['섹션과 섹션 사이', '40px', 'space-10'],
@@ -627,6 +642,52 @@ function ComponentSection() {
 
         <Demo name="ErrorState" use="실패하면 다음 행동을. 사과보다 다시 시도.">
           <ErrorState compact onRetry={() => showToast('다시 불러왔어요')} />
+        </Demo>
+
+        <Demo
+          name="뒤로가기 · 닫기"
+          use="뒤로(←)는 언제나 왼쪽 위, 제목과 같은 줄. 시트의 닫기(×)는 오른쪽 위. 한 화면에 ←는 하나만."
+          wide
+        >
+          <div className={styles.navDemo}>
+            {NAV_PATTERNS.map((n) => (
+              <figure key={n.name} className={styles.navCase}>
+                <div className={cn(styles.navBar, n.photo && styles.navPhoto)}>
+                  {n.lead === 'back' ? (
+                    <IconButton label="뒤로가기" size="sm" variant={n.photo ? 'solid' : 'ghost'} tabIndex={-1}>
+                      <ArrowLeft />
+                    </IconButton>
+                  ) : (
+                    <IconButton label="닫기" size="sm" tabIndex={-1}>
+                      <X />
+                    </IconButton>
+                  )}
+                  {n.title && <strong className={cn(n.center && styles.navCenter)}>{n.title}</strong>}
+                  {n.trail === 'close' && (
+                    <IconButton label="닫기" size="sm" variant="soft" tabIndex={-1} className={styles.navTrail}>
+                      <X />
+                    </IconButton>
+                  )}
+                  {n.trail === 'save' && (
+                    <Button size="sm" tabIndex={-1} className={styles.navTrail}>
+                      저장
+                    </Button>
+                  )}
+                </div>
+                <figcaption>
+                  <strong>{n.name}</strong>
+                  <span>{n.where}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <ul className={styles.navRules}>
+            <li>← 는 이전 화면·이전 단계로, × 는 지금 하던 일을 끝내고 닫기로. 둘의 뜻을 섞지 않아요.</li>
+            <li>← 를 닫기(×) 옆이나 제목 위 다른 줄에 따로 두지 않아요.</li>
+            <li>
+              하위 화면은 <code>PageHeader back</code>, 단계가 있는 시트는 <code>Sheet onBack</code>을 쓰면 자리가 자동으로 맞춰져요.
+            </li>
+          </ul>
         </Demo>
 
         <Demo name="Sheet · Toast" use="확인·짧은 선택은 시트, 끝난 일 알림은 토스트(과거형 해요체).">

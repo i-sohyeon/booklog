@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { IconButton } from './Button';
 import styles from './Sheet.module.scss';
 
@@ -10,13 +10,16 @@ interface SheetProps {
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** 여러 단계 시트에서 이전 단계로 — 제목 왼쪽에 놓입니다 (닫기는 항상 오른쪽) */
+  onBack?: () => void;
+  backLabel?: string;
 }
 
 /**
  * 모바일: 하단 시트 / 데스크톱: 중앙 다이얼로그.
  * 네이티브 <dialog>로 포커스 트랩, ESC 닫기, inert 배경을 보장합니다.
  */
-export function Sheet({ open, onClose, title, description, children, footer }: SheetProps) {
+export function Sheet({ open, onClose, title, description, children, footer, onBack, backLabel = '이전 단계' }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descId = useId();
@@ -48,7 +51,12 @@ export function Sheet({ open, onClose, title, description, children, footer }: S
         <div className={styles.panel}>
           <span className={styles.grabber} aria-hidden />
           <header className={styles.header}>
-            <div>
+            {onBack && (
+              <IconButton label={backLabel} size="sm" className={styles.back} onClick={onBack}>
+                <ArrowLeft />
+              </IconButton>
+            )}
+            <div className={styles.headText}>
               <h2 id={titleId} className={styles.title}>
                 {title}
               </h2>

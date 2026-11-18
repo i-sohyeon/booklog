@@ -1,62 +1,115 @@
-import { SAMPLE_CATALOG } from '@/mocks/catalog';
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { ArrowLeft, BookCheck, BookMarked, BookOpen, ChevronRight } from 'lucide-react';
-import type { Book, Genre, ReadingStatus } from '@/types/book';
-import { GENRES, ONE_LINER_MAX, READING_STATUS_LABEL } from '@/types/book';
-import { useLibraryStore } from '@/store/libraryStore';
-import { useShelf } from '@/hooks/useShelf';
-import { useMyCloudId } from '@/hooks/useSocial';
-import { useBookSearch } from '@/services/bookSearch';
-import { toDateKey } from '@/lib/date';
-import { josa } from '@/lib/josa';
-import { paths } from '@/routes/paths';
-import { BookCover, Button, IconButton, SearchField, Sheet, StarRating, TextField, useToast } from '@/components/ui';
-import { useRecord } from './recordStore';
-import { byline } from '@/lib/byline';
-import { cn } from '@/lib/cn';
-import styles from './RecordSheet.module.scss';
+import { SAMPLE_CATALOG } from "@/mocks/catalog";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { BookCheck, BookMarked, BookOpen, ChevronRight } from "lucide-react";
+import type { Book, Genre, ReadingStatus } from "@/types/book";
+import { GENRES, ONE_LINER_MAX, READING_STATUS_LABEL } from "@/types/book";
+import { useLibraryStore } from "@/store/libraryStore";
+import { useShelf } from "@/hooks/useShelf";
+import { useMyCloudId } from "@/hooks/useSocial";
+import { useBookSearch } from "@/services/bookSearch";
+import { toDateKey } from "@/lib/date";
+import { josa } from "@/lib/josa";
+import { paths } from "@/routes/paths";
+import {
+  BookCover,
+  Button,
+  SearchField,
+  Sheet,
+  StarRating,
+  TextField,
+  useToast,
+} from "@/components/ui";
+import { useRecord } from "./recordStore";
+import { byline } from "@/lib/byline";
+import { cn } from "@/lib/cn";
+import styles from "./RecordSheet.module.scss";
 
 /** 화면 어디서든 열리는 기록 시트: 책 검색 → 상태 → (다 읽었으면) 별점·한 줄 평·완독일 → 서재에 저장 */
 export function RecordSheet() {
   const { open, book, step, setBook, setStep, close } = useRecord();
   if (!open) return null;
 
-  const title = step === 'pick' ? '어떤 책을 기록할까요?' : step === 'status' ? '이 책은 지금' : '다 읽은 책 기록';
+  const title =
+    step === "pick"
+      ? "어떤 책을 기록할까요?"
+      : step === "status"
+        ? "이 책은 지금"
+        : "다 읽은 책 기록";
   return (
-    <Sheet open onClose={close} title={title} description={book && step !== 'pick' ? `「${book.title}」 · ${book.authors.join(', ')}` : undefined}>
-      {step !== 'pick' && (
-        <IconButton label="이전 단계" size="sm" className={styles.back} onClick={() => setStep(step === 'finish' && book ? 'status' : 'pick')}>
-          <ArrowLeft />
-        </IconButton>
+    <Sheet
+      open
+      onClose={close}
+      title={title}
+      description={
+        book && step !== "pick"
+          ? `「${book.title}」 · ${book.authors.join(", ")}`
+          : undefined
+      }
+      onBack={
+        step !== "pick"
+          ? () => setStep(step === "finish" && book ? "status" : "pick")
+          : undefined
+      }
+    >
+      {step === "pick" && <PickStep onPick={setBook} />}
+      {step === "status" && book && (
+        <StatusStep
+          key={book.id}
+          book={book}
+          onDone={() => setStep("finish")}
+          onClose={close}
+        />
       )}
-      {step === 'pick' && <PickStep onPick={setBook} />}
-      {step === 'status' && book && <StatusStep key={book.id} book={book} onDone={() => setStep('finish')} onClose={close} />}
-      {step === 'finish' && book && <FinishStep key={book.id} book={book} onClose={close} />}
+      {step === "finish" && book && (
+        <FinishStep key={book.id} book={book} onClose={close} />
+      )}
     </Sheet>
   );
 }
 
 function PickStep({ onPick }: { onPick: (b: Book) => void }) {
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState("");
   const shelf = useShelf();
   const { items: results, loading, isSample } = useBookSearch(q);
-  const reading = shelf.filter((i) => i.entry.status === 'reading').map((i) => i.book);
+  const reading = shelf
+    .filter((i) => i.entry.status === "reading")
+    .map((i) => i.book);
   const list = q.trim() ? results : reading;
 
   return (
     <div className={styles.pick}>
-      <SearchField label="책 검색" placeholder="제목, 저자로 찾기" value={q} onValueChange={setQ} autoFocus />
-      {!q.trim() && reading.length > 0 && <p className={styles.hint}>읽는 중인 책</p>}
-      {q.trim() && loading && results.length === 0 && <p className={styles.hint}>찾는 중…</p>}
-      {q.trim() && !loading && results.length === 0 && (
-        <p className={styles.hint}>‘{q}’에 맞는 책이 없어요.{isSample && ` (지금은 샘플 도서 ${SAMPLE_CATALOG.length}권 안에서 검색돼요)`}</p>
+      <SearchField
+        label="책 검색"
+        placeholder="제목, 저자로 찾기"
+        value={q}
+        onValueChange={setQ}
+        autoFocus
+      />
+      {!q.trim() && reading.length > 0 && (
+        <p className={styles.hint}>읽는 중인 책</p>
       )}
-      {!q.trim() && reading.length === 0 && <p className={styles.hint}>읽은 책이나 읽고 싶은 책을 검색해 보세요.</p>}
+      {q.trim() && loading && results.length === 0 && (
+        <p className={styles.hint}>찾는 중…</p>
+      )}
+      {q.trim() && !loading && results.length === 0 && (
+        <p className={styles.hint}>
+          ‘{q}’에 맞는 책이 없어요.
+          {isSample &&
+            ` (지금은 샘플 도서 ${SAMPLE_CATALOG.length}권 안에서 검색돼요)`}
+        </p>
+      )}
+      {!q.trim() && reading.length === 0 && (
+        <p className={styles.hint}>읽은 책이나 읽고 싶은 책을 검색해 보세요.</p>
+      )}
       <ul role="list" className={styles.results}>
         {list.map((b) => (
           <li key={b.id}>
-            <button type="button" className={styles.result} onClick={() => onPick(b)}>
+            <button
+              type="button"
+              className={styles.result}
+              onClick={() => onPick(b)}
+            >
               <BookCover book={b} size="xs" />
               <span className={styles.resultText}>
                 <strong>{b.title}</strong>
@@ -71,21 +124,34 @@ function PickStep({ onPick }: { onPick: (b: Book) => void }) {
   );
 }
 
-const STATUS_META: Record<ReadingStatus, { icon: typeof BookOpen; hint: string }> = {
-  want: { icon: BookMarked, hint: '나중에 읽을 책으로 담아둬요' },
-  reading: { icon: BookOpen, hint: '진도는 기록하지 않아요' },
-  done: { icon: BookCheck, hint: '별점과 한 줄 평을 남겨요' },
+const STATUS_META: Record<
+  ReadingStatus,
+  { icon: typeof BookOpen; hint: string }
+> = {
+  want: { icon: BookMarked, hint: "나중에 읽을 책으로 담아둬요" },
+  reading: { icon: BookOpen, hint: "진도는 기록하지 않아요" },
+  done: { icon: BookCheck, hint: "별점과 한 줄 평을 남겨요" },
 };
 
-function StatusStep({ book, onDone, onClose }: { book: Book; onDone: () => void; onClose: () => void }) {
+function StatusStep({
+  book,
+  onDone,
+  onClose,
+}: {
+  book: Book;
+  onDone: () => void;
+  onClose: () => void;
+}) {
   const entry = useLibraryStore((s) => s.entries[book.id]);
   const setStatus = useLibraryStore((s) => s.setStatus);
   const showToast = useToast((s) => s.show);
 
   const choose = (status: ReadingStatus) => {
-    if (status === 'done') return onDone();
+    if (status === "done") return onDone();
     setStatus(book, status);
-    showToast(`「${book.title}」${josa(book.title, '을/를')} ${READING_STATUS_LABEL[status]} 책으로 담았어요`);
+    showToast(
+      `「${book.title}」${josa(book.title, "을/를")} ${READING_STATUS_LABEL[status]} 책으로 담았어요`,
+    );
     onClose();
   };
 
@@ -94,16 +160,24 @@ function StatusStep({ book, onDone, onClose }: { book: Book; onDone: () => void;
       <div className={styles.bookHero}>
         <BookCover book={book} size="lg" />
       </div>
-      {(['done', 'reading', 'want'] as ReadingStatus[]).map((s) => {
+      {(["done", "reading", "want"] as ReadingStatus[]).map((s) => {
         const { icon: Icon, hint } = STATUS_META[s];
         return (
-          <button key={s} type="button" className={styles.status} aria-pressed={entry?.status === s} onClick={() => choose(s)}>
+          <button
+            key={s}
+            type="button"
+            className={styles.status}
+            aria-pressed={entry?.status === s}
+            onClick={() => choose(s)}
+          >
             <Icon aria-hidden />
             <span>
               <strong>{READING_STATUS_LABEL[s]}</strong>
               <em>{hint}</em>
             </span>
-            {entry?.status === s && <span className={styles.current}>현재</span>}
+            {entry?.status === s && (
+              <span className={styles.current}>현재</span>
+            )}
           </button>
         );
       })}
@@ -119,19 +193,25 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
   const today = toDateKey(new Date());
 
   const [rating, setRating] = useState<number | undefined>(entry?.rating);
-  const [oneLiner, setOneLiner] = useState(entry?.oneLiner ?? '');
+  const [oneLiner, setOneLiner] = useState(entry?.oneLiner ?? "");
   const [finishedAt, setFinishedAt] = useState(entry?.finishedAt ?? today);
   // 책 검색 API는 장르를 주지 않아 '기타'로 들어옴 → 이미 완독 기록이 있거나 장르가 정해진 책만 미리 선택
-  const [genre, setGenre] = useState<Genre | undefined>(entry?.status === 'done' || book.genre !== '기타' ? book.genre : undefined);
+  const [genre, setGenre] = useState<Genre | undefined>(
+    entry?.status === "done" || book.genre !== "기타" ? book.genre : undefined,
+  );
   // 로그인 중일 때만: 별점·한 줄 평을 다른 사용자에게 공개 (기본 비공개)
   const signedIn = useMyCloudId() !== null;
   const [share, setShare] = useState(Boolean(entry?.visibility?.rating));
   const [submitted, setSubmitted] = useState(false);
 
   const errors = {
-    rating: rating ? undefined : '별점을 골라주세요.',
-    genre: genre ? undefined : '장르를 골라주세요.',
-    date: !finishedAt ? '완독일을 입력해 주세요.' : finishedAt > today ? '미래 날짜는 고를 수 없어요.' : undefined,
+    rating: rating ? undefined : "별점을 골라주세요.",
+    genre: genre ? undefined : "장르를 골라주세요.",
+    date: !finishedAt
+      ? "완독일을 입력해 주세요."
+      : finishedAt > today
+        ? "미래 날짜는 고를 수 없어요."
+        : undefined,
   };
   const valid = !Object.values(errors).some(Boolean);
 
@@ -143,9 +223,15 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
       oneLiner,
       finishedAt,
       spoiler: entry?.spoiler,
-      visibility: signedIn ? { ...entry?.visibility, rating: share, oneLiner: share } : undefined,
+      visibility: signedIn
+        ? { ...entry?.visibility, rating: share, oneLiner: share }
+        : undefined,
     });
-    showToast(entry?.status === 'done' ? '기록을 고쳤어요' : `「${book.title}」${josa(book.title, '을/를')} 서재에 기록했어요`);
+    showToast(
+      entry?.status === "done"
+        ? "기록을 고쳤어요"
+        : `「${book.title}」${josa(book.title, "을/를")} 서재에 기록했어요`,
+    );
     onClose();
     if (more) navigate(paths.recordEdit(book.id));
   };
@@ -161,16 +247,28 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
     >
       <div className={styles.rating}>
         <StarRating value={rating} size="lg" onChange={setRating} />
-        <p className={submitted && errors.rating ? styles.error : styles.ratingHint}>
-          {rating ? `${rating.toFixed(1)}점` : submitted && errors.rating ? errors.rating : '별을 눌러주세요 (반 개 단위)'}
+        <p
+          className={
+            submitted && errors.rating ? styles.error : styles.ratingHint
+          }
+        >
+          {rating
+            ? `${rating.toFixed(1)}점`
+            : submitted && errors.rating
+              ? errors.rating
+              : "별을 눌러주세요 (반 개 단위)"}
         </p>
       </div>
 
       <label className={styles.genre}>
         <span className={styles.genreLabel}>장르</span>
         <select
-          className={cn(styles.genreSelect, !genre && styles.genrePlaceholder, submitted && errors.genre && styles.genreInvalid)}
-          value={genre ?? ''}
+          className={cn(
+            styles.genreSelect,
+            !genre && styles.genrePlaceholder,
+            submitted && errors.genre && styles.genreInvalid,
+          )}
+          value={genre ?? ""}
           onChange={(e) => setGenre(e.target.value as Genre)}
           aria-invalid={submitted && Boolean(errors.genre)}
           required
@@ -184,7 +282,9 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
             </option>
           ))}
         </select>
-        {submitted && errors.genre && <span className={styles.error}>{errors.genre}</span>}
+        {submitted && errors.genre && (
+          <span className={styles.error}>{errors.genre}</span>
+        )}
       </label>
 
       <TextField
@@ -197,11 +297,23 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
         hint={`${oneLiner.length}/${ONE_LINER_MAX}`}
       />
 
-      <TextField label="완독일" type="date" max={today} value={finishedAt} onChange={(e) => setFinishedAt(e.target.value)} error={errors.date} fieldClassName="field-narrow" />
+      <TextField
+        label="완독일"
+        type="date"
+        max={today}
+        value={finishedAt}
+        onChange={(e) => setFinishedAt(e.target.value)}
+        error={errors.date}
+        fieldClassName="field-narrow"
+      />
 
       {signedIn && (
         <label className={styles.share}>
-          <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={share}
+            onChange={(e) => setShare(e.target.checked)}
+          />
           <span>
             <strong>별점·한 줄 평 공개</strong>
             <span>가입한 친구에게 보여요 (팔로워의 홈 · 책 상세)</span>
@@ -211,7 +323,7 @@ function FinishStep({ book, onClose }: { book: Book; onClose: () => void }) {
 
       <div className={styles.saveRow}>
         <Button type="submit" size="lg" block>
-          {entry?.status === 'done' ? '고치기' : '서재에 저장'}
+          {entry?.status === "done" ? "고치기" : "서재에 저장"}
         </Button>
         <Button type="button" variant="ghost" block onClick={() => save(true)}>
           저장하고 자세히 쓰기 (감상·문장·태그)

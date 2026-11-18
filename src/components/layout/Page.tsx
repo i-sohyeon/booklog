@@ -15,24 +15,24 @@ interface PageHeaderProps {
   description?: ReactNode;
   eyebrow?: string;
   actions?: ReactNode;
-  /** 뒤로가기 버튼 노출 (하위 화면) */
+  /** 뒤로가기 버튼 노출 (하위 화면) — 제목 왼쪽, 같은 줄에 놓입니다 */
   back?: boolean | string;
 }
 
 export function PageHeader({ title, description, eyebrow, actions, back }: PageHeaderProps) {
   const navigate = useNavigate();
   return (
-    <header className={styles.header}>
-      {back && (
-        <IconButton
-          label="뒤로가기"
-          className={styles.back}
-          onClick={() => (typeof back === 'string' ? navigate(back) : window.history.length > 1 ? navigate(-1) : navigate('/'))}
-        >
-          <ArrowLeft />
-        </IconButton>
-      )}
+    <header className={cn(styles.header, back && styles.withBack)}>
       <div className={styles.headRow}>
+        {back && (
+          <IconButton
+            label="뒤로가기"
+            className={styles.back}
+            onClick={() => (typeof back === 'string' ? navigate(back) : window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          >
+            <ArrowLeft />
+          </IconButton>
+        )}
         <div className={styles.headText}>
           {eyebrow && <p className="t-eyebrow">{eyebrow}</p>}
           <h1 className="t-title-1">{title}</h1>

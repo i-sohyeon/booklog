@@ -17,8 +17,10 @@
     padding-bottom: var(--space-8);
   }
 }
+// 뒤로가기: 제목과 같은 줄 왼쪽. 아이콘 여백만큼 당겨서 화살표가 본문 왼쪽 선에 맞게
 .back {
-  margin: 0 0 var(--space-2) -10px;
+  flex-shrink: 0;
+  margin: -6px -6px 0 -10px;
 }
 .headRow {
   display: flex;
@@ -41,4 +43,10 @@
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+}
+.withBack .headRow {
+  align-items: flex-start;
+}
+.withBack .headText {
+  flex: 1;
 }
